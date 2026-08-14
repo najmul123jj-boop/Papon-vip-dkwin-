@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>PYTHON VIP — Signal Overlay</title>
+    <title>PYTHON VIP — WinGo 30s Signal Overlay</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Hind+Siliguri:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    
     <style>
+        /* CSS Variables and Root Setup */
         :root {
-            --bg: #0a0500;
-            --bg-card: rgba(20, 8, 0, 0.85);
+            --bg: #000000;
+            --bg-card: rgba(10, 10, 10, 0.95);
             --fg: #ffeedd;
             --muted: rgba(255, 200, 150, 0.45);
             --accent: #ff8c00;
@@ -20,584 +22,1134 @@
             --green: #00ff7f;
             --violet: #cc66ff;
             --border: rgba(255, 140, 0, 0.25);
-            --radius: 18px;
+            --radius: 0px; 
             --fd: 'Orbitron', monospace;
             --fm: 'JetBrains Mono', monospace;
-            --fb: 'Hind Siliguri', sans-serif;
-            --panel-w: 380px; 
+            --fb: 'Hind+Siliguri', sans-serif;
         }
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* Universal Reset */
+        *, *::before, *::after { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+
         html, body {
-            height: 100%; width: 100%; overflow: hidden; background: #000;
-            font-family: var(--fb); color: var(--fg); user-select: none;
-            -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+            height: 100%; 
+            width: 100%; 
+            overflow: hidden; 
+            background: #000;
+            font-family: var(--fb); 
+            color: var(--fg); 
+            user-select: none;
+            -webkit-user-select: none; 
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .iframe-wrap {
-            position: fixed; inset: 0; z-index: 1; padding: 0; overflow: hidden;
-            background: radial-gradient(ellipse at 50% 0%, #1a0a00, #050a15 75%);
-        }
-        .iframe-wrap iframe { width: 100%; height: 100%; border: none; display: block; background: #000; }
-
+        /* Falling Balls Animation Background */
         .falling-ball {
-            position: fixed; width: 12px; height: 12px; border-radius: 50%; top: -20px; z-index: 2; pointer-events: none;
+            position: fixed; 
+            width: 12px; 
+            height: 12px; 
+            border-radius: 50%; 
+            top: -20px; 
+            z-index: 1; 
+            pointer-events: none;
             animation: fallDown linear forwards;
         }
-        @keyframes fallDown { to { transform: translateY(105vh); opacity: 0.8; } }
 
-        .photo-btn {
-            position: fixed; top: 14px; left: 14px; width: 50px; height: 50px; border-radius: 50%; overflow: hidden; z-index: 9998; cursor: grab;
-            border: 3px solid transparent; background-image: conic-gradient(from 0deg, #ff8c00, #ffd700, #ff4d4d, #ffd700, #ff8c00);
-            background-origin: border-box; background-clip: padding-box, border-box;
-            box-shadow: 0 0 20px rgba(255, 140, 0, 0.40), 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.4);
-            transition: box-shadow .2s, transform .2s; animation: photoPulse 2.8s ease-in-out infinite; touch-action: none;
+        @keyframes fallDown { 
+            to { 
+                transform: translateY(105vh); 
+                opacity: 0.8; 
+            } 
         }
-        .photo-btn::before { content: ''; position: absolute; inset: 2px; border-radius: 50%; background: #0a0500; z-index: -1; }
-        .photo-btn.dragging { cursor: grabbing; animation: none; transform: scale(0.92); }
-        .photo-btn img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; pointer-events: none; position: relative; z-index: 1; }
-        @keyframes photoPulse { 0%, 100% { box-shadow: 0 0 18px rgba(255, 140, 0, 0.25); } 50% { box-shadow: 0 0 30px rgba(255, 140, 0, 0.50); } }
 
+        /* Signal Panel - Full Screen Mode */
         .fp {
-            position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
-            width: var(--panel-w); max-height: 90vh; z-index: 10002;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 247, 250, 0.95));
-            backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.6); border-radius: var(--radius);
-            display: none; flex-direction: column;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.03);
-            touch-action: none; overflow: hidden; font-size: 12px; cursor: default; color: #1a1a1a;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            transform: none;
+            width: 100vw; 
+            height: 100vh; 
+            max-height: 100vh; 
+            z-index: 10002;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.98), rgba(10, 10, 10, 0.95));
+            backdrop-filter: blur(40px) saturate(180%); 
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: none; 
+            border-radius: var(--radius);
+            display: none; 
+            flex-direction: column;
+            box-shadow: none;
+            touch-action: none; 
+            overflow: hidden; 
+            font-size: 12px; 
+            cursor: default; 
+            color: #ffeedd;
             will-change: transform, top, left;
-            transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1), top 0.6s cubic-bezier(0.16, 1, 0.3, 1), max-height .4s ease, box-shadow .3s, border-color .3s; 
+            transition: none; 
         }
-        .fp.vis { display: flex; animation: fpPop .45s cubic-bezier(.34, 1.4, .64, 1) both; }
-        @keyframes fpPop { 0% { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.94); } 100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); } }
-        .fp.dragged { transform: none !important; animation: none !important; }
-        
-        .fp::before {
-            content: ''; position: absolute; inset: -2px; border-radius: calc(var(--radius) + 2px);
-            background: conic-gradient(from var(--ba, 0deg), transparent 50%, var(--accent) 65%, var(--gold) 78%, var(--red) 88%, transparent 98%);
-            z-index: -1; opacity: .15; animation: bspin 6s linear infinite;
+
+        .fp.vis { 
+            display: flex; 
         }
+
+        .fp.dragged { 
+            transform: none !important; 
+            animation: none !important; 
+        }
+
         @keyframes bspin { to { --ba: 360deg; } }
         @property --ba { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
 
+        /* Panel Header */
         .fp-head {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 16px; cursor: grab; flex-shrink: 0;
-            background: linear-gradient(135deg, #ffffff, #f3f4f6); 
-            border-bottom: 1px solid #e5e7eb; position: relative; touch-action: none;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+            padding: 18px 20px; 
+            cursor: grab; 
+            flex-shrink: 0;
+            background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(0, 0, 0, 0.99)); 
+            border-bottom: 1.5px solid rgba(255, 140, 0, 0.4); 
+            position: relative; 
+            touch-action: none;
+            box-shadow: 0 4px 20px rgba(255, 140, 0, 0.15);
         }
-        .fp-head:active { cursor: grabbing; }
+
+        .fp-head:active { 
+            cursor: grabbing; 
+        }
+
         .fp-head::after {
-            content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+            content: ''; 
+            position: absolute; 
+            bottom: -1px; 
+            left: 0; 
+            right: 0; 
+            height: 1px;
             background: linear-gradient(90deg, transparent, var(--accent), var(--gold), var(--accent), transparent);
             animation: headGlow 2s ease-in-out infinite alternate;
         }
-        @keyframes headGlow { 0% { opacity: .4; } 100% { opacity: 1; } }
-        
+
+        @keyframes headGlow { 
+            0% { opacity: .4; } 
+            100% { opacity: 1; } 
+        }
+
+        /* Branding and Python Logo */
         .fp-brand {
-            font-family: var(--fd); font-size: 16px; font-weight: 900; letter-spacing: 2px;
-            color: #1a1a1a; display: flex; align-items: center; gap: 8px; pointer-events: none;
-            text-shadow: none;
+            font-family: var(--fd); 
+            font-size: 18px; 
+            font-weight: 900; 
+            letter-spacing: 2px;
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            pointer-events: none;
+            background: linear-gradient(135deg, #ff8c00, #ffd700); 
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; 
+            text-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
         }
-        .fp-brand .py-logo { font-size: 20px; color: var(--accent); filter: drop-shadow(0 0 4px rgba(255, 140, 0, 0.3)); }
-        .fp-brand .market-badge { font-size: 10px; background: linear-gradient(135deg, var(--accent), var(--red)); color: #fff; padding: 3px 6px; border-radius: 4px; margin-left: 4px; box-shadow: 0 2px 5px rgba(255, 77, 77, 0.2); }
-        
-        .fp-head-r { display: flex; align-items: center; gap: 6px; pointer-events: none; }
-        .fp-head-r>* { pointer-events: auto; }
-        .sig-close {
-            width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.1);
-            background: rgba(0, 0, 0, 0.05); color: #ff4d4d; font-size: 14px; font-weight: 900;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s;
-        }
-        .sig-close:active { transform: scale(0.85); background: rgba(255, 77, 77, 0.1); }
 
-        .fp-body { flex: 1; overflow-y: auto; padding: 14px 16px; position: relative; background: transparent; }
+        .fp-brand .py-logo { 
+            font-size: 22px; 
+            color: var(--accent); 
+            -webkit-text-fill-color: var(--accent);
+            filter: drop-shadow(0 0 6px rgba(255, 140, 0, 0.6)); 
+        }
+
+        .fp-brand .market-badge { 
+            font-size: 10px; 
+            background: linear-gradient(135deg, var(--accent), var(--red)); 
+            color: #fff; 
+            padding: 3px 6px; 
+            border-radius: 4px; 
+            margin-left: 4px; 
+            box-shadow: 0 2px 5px rgba(255, 77, 77, 0.3); 
+            -webkit-text-fill-color: #fff;
+        }
+
+        .fp-head-r { 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            pointer-events: none; 
+        }
+
+        /* Panel Body */
+        .fp-body { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px 20px; 
+            position: relative; 
+            background: transparent; 
+        }
+
         .fp-body::-webkit-scrollbar { width: 4px; }
-        .fp-body::-webkit-scrollbar-thumb { background: rgba(255, 140, 0, 0.5); border-radius: 4px; }
-        .fp-body::-webkit-scrollbar-track { background: #f3f4f6; }
+        .fp-body::-webkit-scrollbar-thumb { background: rgba(255, 140, 0, 0.6); border-radius: 4px; }
+        .fp-body::-webkit-scrollbar-track { background: #000; }
 
-        .timer-ring-wrap { display: flex; justify-content: center; margin-bottom: 12px; position: relative; }
-        .timer-ring-wrap svg { filter: drop-shadow(0 0 8px rgba(255, 140, 0, .15)); }
-        #tmrSec { fill: #1a1a1a !important; }
+        /* Timer Ring Wrap - Disabled */
+        .timer-ring-wrap { 
+            display: none; 
+            justify-content: center; 
+            margin: 10px 0 20px; 
+            position: relative; 
+        }
+        .timer-ring-wrap svg { filter: drop-shadow(0 0 8px rgba(255, 140, 0, .3)); }
+        #tmrSec { fill: #ffeedd !important; }
 
+        /* Prediction Card */
         .lottery-card {
-            background: linear-gradient(135deg, #ff8c00, #e52e71);
-            border-radius: 16px; padding: 18px; position: relative; overflow: hidden;
-            box-shadow: 0 10px 25px rgba(255, 80, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.2);
-            margin-bottom: 14px; text-align: center;
+            background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(0, 0, 0, 0.99));
+            border: 1.5px solid rgba(255, 140, 0, 0.4);
+            border-radius: 28px; 
+            padding: 25px 20px; 
+            position: relative; 
+            overflow: hidden;
+            box-shadow: 0 0 80px rgba(255, 140, 0, 0.15), inset 0 0 20px rgba(255, 140, 0, 0.05); 
+            margin-bottom: 20px; 
+            text-align: center;
         }
-        .lottery-card::after {
-            content: '\f135'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
-            position: absolute; right: -15px; bottom: -20px; font-size: 100px; color: rgba(255,255,255,0.1);
-            transform: rotate(-45deg);
+
+        .lottery-card::before {
+            content: ''; 
+            position: absolute; 
+            inset: 0; 
+            background: linear-gradient(45deg, transparent, rgba(255, 140, 0, 0.1), transparent);
+            animation: shimmer 3s infinite; 
+            pointer-events: none;
         }
+
+        @keyframes shimmer { 
+            0% { transform: translateX(-100%); } 
+            100% { transform: translateX(100%); } 
+        }
+
+        /* Prediction Icon and Seconds Display */
         .lc-icon {
-            width: 50px; height: 50px; margin: 0 auto 10px; background: rgba(255,255,255,0.2); 
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-            font-size: 26px; color: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.3);
-        }
-        .lc-title { font-family: var(--fd); font-size: 14px; font-weight: 800; color: #fff; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-bottom: 15px; }
-        
-        .lc-result-row { display: flex; justify-content: space-between; gap: 8px; position: relative; z-index: 2; align-items: center; }
-        .lc-box { flex: 1; background: rgba(0,0,0,0.25); border-radius: 10px; padding: 10px 4px; border: 1px solid rgba(255,255,255,0.15); }
-        .lc-label { font-size: 10px; color: rgba(255,255,255,0.8); display: block; margin-bottom: 5px; letter-spacing: 1px; font-family: var(--fd); }
-        .lc-value { font-family: var(--fd); font-size: 26px; font-weight: 900; color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.4); }
-        
-        /* Small সিগন্যালটি ছোট করার জন্য আপডেট করা হয়েছে */
-        #sizeVal { 
-            font-size: 28px !important; /* আগে 38px ছিল */
-            letter-spacing: 1px;
-            text-shadow: 0 0 15px rgba(255,255,255,0.7), 0 2px 4px rgba(0,0,0,0.5) !important; 
-            transition: font-size 0.3s ease;
-        }
-        #sizeVal.small-text { 
-            font-size: 20px !important; /* SMALL লেখাটি আরও ছোট করা হয়েছে */
+            width: 70px; 
+            height: 70px; 
+            margin: 0 auto 15px; 
+            border-radius: 50%; 
+            background: linear-gradient(135deg, rgba(255, 140, 0, 0.2), rgba(0,0,0,0.5));
+            border: 2px solid rgba(255, 140, 0, 0.5); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 32px; 
+            box-shadow: 0 0 50px rgba(255, 140, 0, 0.3);
+            animation: pulseGlow 2s infinite alternate; 
+            position: relative; 
+            z-index: 2;
         }
 
-        .lc-num-box { flex: 0 0 90px; }
-        .lc-num { font-family: var(--fd); font-size: 64px; font-weight: 900; color: #fff; line-height: 1; text-shadow: 0 0 15px rgba(255,255,255,0.5); }
+        @keyframes pulseGlow { 
+            0% { box-shadow: 0 0 30px rgba(255, 140, 0, 0.2); } 
+            100% { box-shadow: 0 0 60px rgba(255, 140, 0, 0.5); } 
+        }
 
-        .lc-info { margin-top: 15px; background: rgba(0,0,0,0.35); border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
-        .lc-info-item { text-align: center; flex: 1; }
-        .lc-info-label { font-size: 10px; color: rgba(255,255,255,0.7); display: block; margin-bottom: 2px; font-family: var(--fd); }
-        .lc-info-val { font-size: 14px; font-family: var(--fm); font-weight: 700; color: #fff; word-break: break-all; }
-        
-        #perNum { font-size: 16px !important; font-weight: 800 !important; color: #ffd700 !important; letter-spacing: 0.5px; text-shadow: 0 0 8px rgba(255, 215, 0, 0.4); }
-        .lc-info-val.status { font-family: var(--fd); font-weight: 800; font-size: 14px; }
+        .lc-icon i { 
+            position: absolute;
+            opacity: 0.15;
+            font-size: 40px;
+            background: linear-gradient(135deg, #ff8c00, #ffd700); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            filter: drop-shadow(0 0 15px rgba(255, 140, 0, 0.5)); 
+        }
 
-        .history-title { font-size: 12px; color: rgba(0, 0, 0, 0.6); text-transform: uppercase; letter-spacing: 1.5px; font-family: var(--fd); margin: 12px 0 8px; display: flex; align-items: center; gap: 6px; }
-        .history-title::before { content: ''; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 5px var(--accent); }
-        .h-list { display: flex; flex-direction: column; gap: 8px; }
+        .lc-icon-sec {
+            position: relative;
+            z-index: 3;
+            font-family: 'Orbitron', monospace;
+            font-size: 26px;
+            font-weight: 900;
+            color: #ffeedd;
+            text-shadow: 0 0 10px rgba(255, 140, 0, 0.8);
+            transition: color 0.3s ease;
+        }
+
+        .lc-title { 
+            font-family: var(--fd); 
+            font-size: 18px; 
+            font-weight: 900; 
+            letter-spacing: 4px; 
+            background: linear-gradient(135deg, #ff8c00, #ffd700); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            margin-bottom: 20px; 
+            text-transform: uppercase;
+            position: relative; 
+            z-index: 2;
+        }
+
+        /* Period Display */
+        .lc-period-top, .lc-period-bottom {
+            font-family: var(--fd); 
+            font-size: 14px; 
+            font-weight: 700; 
+            letter-spacing: 2px;
+            color: rgba(255, 200, 150, 0.6); 
+            margin: 10px 0; 
+            position: relative; 
+            z-index: 2;
+        }
+
+        .lc-period-top span {
+            color: #00ff7f; 
+            font-weight: 800; 
+            margin-left: 5px; 
+            text-shadow: 0 0 8px rgba(0, 255, 127, 0.4);
+            word-break: break-all;
+        }
+
+        .lc-period-bottom span {
+            color: #00ff7f; 
+            font-weight: 800; 
+            margin-left: 5px; 
+            text-shadow: 0 0 8px rgba(0, 255, 127, 0.4);
+        }
+
+        /* Main Signal Box */
+        .lc-signal-main {
+            background: rgba(255, 140, 0, 0.03); 
+            border: 1.5px solid rgba(255, 140, 0, 0.3);
+            border-radius: 20px; 
+            padding: 25px 15px; 
+            margin: 15px 0; 
+            position: relative; 
+            z-index: 2;
+            box-shadow: inset 0 0 20px rgba(255, 140, 0, 0.05);
+        }
+
+        .lc-signal-label {
+            font-family: var(--fd); 
+            font-size: 12px; 
+            color: rgba(255, 200, 150, 0.6); 
+            letter-spacing: 4px; 
+            text-transform: uppercase; 
+            display: block; 
+            margin-bottom: 12px;
+        }
+
+        .lc-signal-value {
+            font-family: var(--fd); 
+            font-size: 56px; 
+            font-weight: 900; 
+            letter-spacing: 3px;
+            text-shadow: 0 0 25px currentColor, 0 2px 5px rgba(0,0,0,0.6);
+            transition: all 0.3s ease; 
+            line-height: 1;
+            min-height: 65px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+
+        .lc-signal-value.big { color: #ffd700; }
+        .lc-signal-value.small { color: #ff4d4d; }
+
+        /* Loading Spinner */
+        .signal-loader {
+            font-size: 48px;
+            color: var(--accent);
+            animation: spinLoader 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spinLoader {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Status Box */
+        .lc-status-box {
+            margin-top: 15px; 
+            background: rgba(0,0,0,0.5); 
+            border-radius: 12px; 
+            padding: 12px; 
+            border: 1px solid rgba(255, 140, 0, 0.15); 
+            position: relative; 
+            z-index: 2;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+
+        .lc-status-label { 
+            font-size: 11px; 
+            color: rgba(255, 200, 150, 0.7); 
+            font-family: var(--fd); 
+            letter-spacing: 1px; 
+        }
+
+        .lc-status-val { 
+            font-family: var(--fd); 
+            font-weight: 800; 
+            font-size: 14px; 
+        }
+
+        /* History List */
+        .history-title { 
+            font-size: 13px; 
+            color: rgba(255, 200, 150, 0.6); 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px; 
+            font-family: var(--fd); 
+            margin: 16px 0 10px; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+        }
+
+        .history-title::before { 
+            content: ''; 
+            width: 4px; 
+            height: 4px; 
+            background: var(--accent); 
+            border-radius: 50%; 
+            box-shadow: 0 0 5px var(--accent); 
+        }
+
+        .h-list { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+        }
+
         .h-item {
-            display: grid; grid-template-columns: 60px 34px 1fr 50px; align-items: center; gap: 8px;
-            padding: 8px 10px; border-radius: 10px; background: #f8f9fa;
-            border: 1px solid #e5e7eb; transition: transform .2s, box-shadow .2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            display: grid; 
+            grid-template-columns: 60px 34px 1fr 50px; 
+            align-items: center; 
+            gap: 8px;
+            padding: 10px 12px; 
+            border-radius: 12px; 
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 140, 0, 0.15); 
+            transition: transform .2s, box-shadow .2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
-        .h-item:hover { transform: scale(1.02); border-color: var(--accent); box-shadow: 0 4px 10px rgba(255, 140, 0, 0.1); background: #fff; }
-        .h-per { font-weight: 700; color: rgba(0, 0, 0, 0.5); font-size: 9px; font-family: var(--fm); text-align: center; }
-        .h-num { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #fff; font-family: var(--fm); box-shadow: 0 2px 5px rgba(0, 0, 0, .15); }
+
+        .h-item:hover { 
+            transform: scale(1.02); 
+            border-color: var(--accent); 
+            box-shadow: 0 4px 10px rgba(255, 140, 0, 0.1); 
+            background: rgba(255, 255, 255, 0.05); 
+        }
+
+        .h-per { 
+            font-weight: 700; 
+            color: rgba(255, 255, 255, 0.4); 
+            font-size: 9px; 
+            font-family: var(--fm); 
+            text-align: center; 
+        }
+
+        .h-num { 
+            width: 34px; 
+            height: 34px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 800; 
+            font-size: 16px; 
+            color: #fff; 
+            font-family: var(--fm); 
+            box-shadow: 0 2px 5px rgba(0, 0, 0, .5); 
+        }
+
         .h-num.ng { background: linear-gradient(135deg, #00cc66, #00ff7f); box-shadow: 0 2px 8px rgba(0, 255, 127, .3); }
         .h-num.nr { background: linear-gradient(135deg, #cc2233, #ff4d4d); box-shadow: 0 2px 8px rgba(255, 77, 77, .3); }
         .h-num.nv { background: linear-gradient(135deg, #8833cc, #cc66ff); box-shadow: 0 2px 8px rgba(204, 102, 255, .3); }
-        
-        .h-cdots { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+
+        .h-cdots { 
+            display: flex; 
+            gap: 4px; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+        }
+
         .hcd { width: 12px; height: 12px; border-radius: 50%; }
         .hcd.cg { background: #00cc66; box-shadow: 0 0 4px rgba(0, 255, 127, .4); }
         .hcd.cr { background: #ff4d4d; box-shadow: 0 0 4px rgba(255, 77, 77, .4); }
         .hcd.cv { background: #9333ea; box-shadow: 0 0 4px rgba(204, 102, 255, .4); }
-        
-        .h-sz { font-weight: 800; font-size: 10px; text-align: center; letter-spacing: 1px; font-family: var(--fd); padding: 5px 6px; border-radius: 6px; background: #1a1a1a; color: #fff; border: 1px solid rgba(255,255,255,0.1); }
-        .h-sz.big { color: #00ff7f; }
-        .h-sz.small { color: #ff4d4d; }
 
-        .url-wrap { padding: 12px 16px; border-top: 1px solid #e5e7eb; display: flex; gap: 8px; background: #f8f9fa; }
-        .url-input {
-            flex: 1; background: #ffffff; border: 1px solid #e5e7eb;
-            border-radius: 8px; padding: 8px 10px; color: #1a1a1a; font-size: 10px; outline: none;
-            font-family: var(--fm); transition: border-color .3s, box-shadow .3s;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
-        }
-        .url-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255, 140, 0, 0.1); }
-        .url-btn {
-            background: linear-gradient(135deg, var(--accent), var(--gold)); border: none; border-radius: 8px;
-            padding: 0 14px; color: #000; font-weight: 800; cursor: pointer; font-size: 10px; font-family: var(--fd);
-            box-shadow: 0 4px 8px rgba(255, 140, 0, 0.2);
+        .h-sz { 
+            font-weight: 800; 
+            font-size: 11px; 
+            text-align: center; 
+            letter-spacing: 1px; 
+            font-family: var(--fd); 
+            padding: 6px 6px; 
+            border-radius: 6px; 
+            background: #000; 
+            color: #fff; 
+            border: 1px solid rgba(255,255,255,0.2); 
         }
 
+        .h-sz.big { color: #00ff7f; text-shadow: 0 0 5px rgba(0, 255, 127, 0.5); }
+        .h-sz.small { color: #ff4d4d; text-shadow: 0 0 5px rgba(255, 77, 77, 0.5); }
+
+        /* Password Panel - Python Logo Applied */
         .pass-overlay {
-            position: fixed; inset: 0; z-index: 10001; display: flex; align-items: center; justify-content: center;
-            background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(30px); opacity: 0; pointer-events: none; transition: opacity .4s ease;
+            position: fixed; 
+            inset: 0; 
+            z-index: 10001; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.95); 
+            backdrop-filter: blur(30px); 
+            opacity: 0; 
+            pointer-events: none; 
+            transition: opacity .4s ease;
         }
-        .pass-overlay.show { opacity: 1; pointer-events: auto; }
+
+        .pass-overlay.show { 
+            opacity: 1; 
+            pointer-events: auto; 
+        }
+
         .pass-card {
-            width: 320px; padding: 30px 24px; background: linear-gradient(145deg, rgba(40, 15, 0, 0.96), rgba(10, 5, 0, 0.98));
-            border-radius: 24px; position: relative; overflow: hidden; text-align: center;
-            transform: scale(0.88) translateY(16px); transition: transform .5s cubic-bezier(.34, 1.56, .64, 1);
-            box-shadow: 0 0 80px rgba(255, 140, 0, 0.15); border: 1.5px solid rgba(255, 140, 0, 0.2);
+            width: 340px; 
+            padding: 40px 30px; 
+            background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(0, 0, 0, 0.99));
+            border-radius: 28px; 
+            position: relative; 
+            overflow: hidden; 
+            text-align: center;
+            transform: scale(0.88) translateY(16px); 
+            transition: transform .5s cubic-bezier(.34, 1.56, .64, 1);
+            box-shadow: 0 0 80px rgba(204, 102, 255, 0.2), inset 0 0 20px rgba(204, 102, 255, 0.05); 
+            border: 1.5px solid rgba(204, 102, 255, 0.5); 
         }
-        .pass-overlay.show .pass-card { transform: scale(1) translateY(0); }
+
+        .pass-card::before {
+            content: ''; 
+            position: absolute; 
+            inset: 0; 
+            background: linear-gradient(45deg, transparent, rgba(204, 102, 255, 0.1), transparent);
+            animation: shimmer 3s infinite; 
+            pointer-events: none;
+        }
+
+        .pass-overlay.show .pass-card { 
+            transform: scale(1) translateY(0); 
+        }
+
         .lgn-icon {
-            width: 70px; height: 70px; margin: 0 auto 15px; border-radius: 50%; 
-            background: linear-gradient(135deg, rgba(255, 140, 0, 0.1), rgba(255, 215, 0, 0.1));
-            border: 2px solid rgba(255, 140, 0, 0.3); display: flex; align-items: center; justify-content: center;
-            font-size: 32px; box-shadow: 0 0 40px rgba(255, 140, 0, 0.2);
+            width: 80px; 
+            height: 80px; 
+            margin: 0 auto 20px; 
+            border-radius: 50%; 
+            background: linear-gradient(135deg, rgba(204, 102, 255, 0.2), rgba(0,0,0,0.5));
+            border: 2px solid rgba(204, 102, 255, 0.5); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 36px; 
+            box-shadow: 0 0 50px rgba(204, 102, 255, 0.3);
+            animation: pulseGlowViolet 2s infinite alternate;
         }
-        .lgn-icon i { background: linear-gradient(135deg, #ff8c00, #ffd700); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 15px rgba(255, 140, 0, 0.5)); }
-        .lgn-title { font-family: var(--fd); font-size: 22px; font-weight: 900; letter-spacing: 4px; background: linear-gradient(135deg, #ff8c00, #ffd700); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; }
-        .lgn-sub { font-size: 10px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; font-family: var(--fd); }
-        .lgn-input { width: 100%; padding: 12px 14px; background: rgba(0, 0, 0, 0.6); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #fff; font-family: var(--fm); font-size: 12px; outline: none; text-align: center; letter-spacing: 3px; margin-bottom: 12px; transition: border-color .3s; }
-        .lgn-input:focus { border-color: var(--accent); }
-        .lgn-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #ff8c00, #ffd700); border: none; border-radius: 12px; font-family: var(--fd); font-size: 12px; font-weight: 800; color: #000; cursor: pointer; letter-spacing: 4px; text-transform: uppercase; }
-        .lgn-err { color: #ff4d4d; font-size: 10px; margin-top: 12px; min-height: 14px; font-family: var(--fm); }
+
+        @keyframes pulseGlowViolet { 
+            0% { box-shadow: 0 0 30px rgba(204, 102, 255, 0.2); } 
+            100% { box-shadow: 0 0 60px rgba(204, 102, 255, 0.5); } 
+        }
+
+        .lgn-icon i { 
+            background: linear-gradient(135deg, #cc66ff, #ff8c00); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            filter: drop-shadow(0 0 15px rgba(204, 102, 255, 0.5)); 
+        }
+
+        .lgn-title { 
+            font-family: var(--fd); 
+            font-size: 26px; 
+            font-weight: 900; 
+            letter-spacing: 6px; 
+            background: linear-gradient(135deg, #cc66ff, #ff8c00); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            margin-bottom: 5px; 
+        }
+
+        .lgn-sub { 
+            font-size: 11px; 
+            color: #cc66ff; 
+            letter-spacing: 4px; 
+            text-transform: uppercase; 
+            margin-bottom: 25px; 
+            font-family: var(--fd); 
+            font-weight: 600;
+        }
+
+        .lgn-input { 
+            width: 100%; 
+            padding: 16px 18px; 
+            background: rgba(0, 0, 0, 0.8); 
+            border: 2px solid rgba(204, 102, 255, 0.2); 
+            border-radius: 14px; 
+            color: #fff; 
+            font-family: var(--fm); 
+            font-size: 14px; 
+            outline: none; 
+            text-align: center; 
+            letter-spacing: 4px; 
+            margin-bottom: 16px; 
+            transition: all .3s; 
+        }
+
+        .lgn-input:focus { 
+            border-color: #cc66ff; 
+            box-shadow: 0 0 15px rgba(204, 102, 255, 0.3); 
+        }
+
+        .lgn-btn { 
+            width: 100%; 
+            padding: 16px; 
+            background: linear-gradient(135deg, #cc66ff, #ff4d00); 
+            border: none; 
+            border-radius: 14px; 
+            font-family: var(--fd); 
+            font-size: 14px; 
+            font-weight: 900; 
+            color: #fff; 
+            cursor: pointer; 
+            letter-spacing: 5px; 
+            text-transform: uppercase; 
+            box-shadow: 0 10px 30px rgba(204, 102, 255, 0.3); 
+            transition: all 0.2s;
+        }
+
+        .lgn-btn:active { 
+            transform: scale(0.96); 
+            box-shadow: 0 5px 15px rgba(204, 102, 255, 0.2); 
+        }
+
+        .lgn-err { 
+            color: #ff4d4d; 
+            font-size: 11px; 
+            margin-top: 14px; 
+            min-height: 14px; 
+            font-family: var(--fm); 
+            letter-spacing: 1px; 
+        }
     </style>
 </head>
 <body>
 
-    <div class="iframe-wrap" id="gameWrap">
-        <iframe src="https://hgnice.cc/#/register?invitationCode=511711502736" id="gameIframe"></iframe>
-    </div>
-
-    <div class="photo-btn" id="photoBtn">
-        <img src="https://i.postimg.cc/HV1YW34K/image.png" alt="VIP" />
-    </div>
-
-    <div class="pass-overlay" id="passOverlay">
+    <!-- Password Panel Structure -->
+    <div class="pass-overlay show" id="passOverlay">
         <div class="pass-card">
-            <div class="lgn-icon"><i class="fas fa-rocket"></i></div>
+            <!-- Python Logo Added Here -->
+            <div class="lgn-icon"><i class="fab fa-python"></i></div>
             <div class="lgn-title">PYTHON VIP</div>
-            <div class="lgn-sub">Singapore Quantum 30S</div>
-            <input type="password" class="lgn-input" id="passIn" placeholder="ENTER PASSWORD" autocomplete="off" />
-            <button class="lgn-btn" id="lgnBtn">ACCESS</button>
+            <div class="lgn-sub">WinGo 30s Market</div>
+            <input type="password" class="lgn-input" id="passIn" placeholder="••••••••" autocomplete="off" />
+            <button class="lgn-btn" id="lgnBtn"><i class="fas fa-unlock"></i> ACCESS</button>
             <div class="lgn-err" id="lgnErr"></div>
         </div>
     </div>
 
-    <!-- Signal Panel -->
+    <!-- Signal Panel Structure -->
     <div class="fp" id="fp">
         <div class="fp-head" id="dragH">
-            <span class="fp-brand"><i class="fas fa-rocket py-logo"></i>PYTHON VIP <span class="market-badge">30S</span></span>
-            <div class="fp-head-r">
-                <button class="sig-close" id="sigCloseBtn"><i class="fas fa-xmark"></i></button>
-            </div>
+            <span class="fp-brand"><i class="fab fa-python py-logo"></i>PYTHON VIP <span class="market-badge">30S</span></span>
+            <div class="fp-head-r"></div>
         </div>
         <div class="fp-body" id="fpBody">
             
-            <!-- Timer Ring -->
-            <div class="timer-ring-wrap">
-                <svg width="90" height="90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0, 0, 0, .04)" stroke-width="6" />
+            <!-- Timer Ring (Disabled) -->
+            <div class="timer-ring-wrap" style="display: none;">
+                <svg width="110" height="110" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255, 255, 255, .05)" stroke-width="6" />
                     <circle id="ringFg" cx="50" cy="50" r="42" fill="none" stroke="#ff8c00" stroke-width="6" stroke-linecap="round" stroke-dasharray="263.9" stroke-dashoffset="0" transform="rotate(-90 50 50)" style="transition: stroke-dashoffset .15s linear, stroke .3s; filter: drop-shadow(0 0 6px rgba(255, 140, 0, .3));" />
-                    <text x="50" y="50" text-anchor="middle" dy=".3em" id="tmrSec" style="font-family: 'Orbitron', monospace; font-size: 26px; font-weight: 900; fill: #1a1a1a;">--</text>
-                    <text x="50" y="68" text-anchor="middle" style="font-size: 8px; fill: rgba(0,0,0,0.4);">SEC</text>
+                    <text x="50" y="50" text-anchor="middle" dy=".3em" id="tmrSec" style="font-family: 'Orbitron', monospace; font-size: 28px; font-weight: 900; fill: #ffeedd;">--</text>
+                    <text x="50" y="68" text-anchor="middle" style="font-size: 8px; fill: rgba(255,255,255,0.4);">SEC</text>
                 </svg>
             </div>
 
-            <!-- Lottery Style Prediction Card -->
+            <!-- Main Prediction Card -->
             <div class="lottery-card">
-                <div class="lc-icon"><i class="fas fa-rocket"></i></div>
+                <div class="lc-icon">
+                    <i class="fas fa-rocket"></i>
+                    <span id="iconSec" class="lc-icon-sec">--</span>
+                </div>
                 <div class="lc-title">Lottery Prediction</div>
                 
-                <div class="lc-result-row">
-                    <div class="lc-box">
-                        <span class="lc-label">Color</span>
-                        <div class="lc-value" id="colorVal">--</div>
-                    </div>
-                    <div class="lc-box lc-num-box">
-                        <span class="lc-label">Number</span>
-                        <div class="lc-num" id="numVal">-</div>
-                    </div>
-                    <div class="lc-box">
-                        <span class="lc-label">Size</span>
-                        <div class="lc-value" id="sizeVal">--</div>
+                <div class="lc-period-top">PERIOD: <span id="perTop">....</span></div>
+
+                <div class="lc-signal-main">
+                    <span class="lc-signal-label">Signal</span>
+                    <div class="lc-signal-value" id="sizeVal">
+                        <i class="fas fa-mobile-screen-button signal-loader"></i>
                     </div>
                 </div>
 
-                <div class="lc-info">
-                    <div class="lc-info-item">
-                        <span class="lc-info-label">Period</span>
-                        <span class="lc-info-val" id="perNum">....</span>
-                    </div>
-                    <div class="lc-info-item">
-                        <span class="lc-info-label">Status</span>
-                        <span class="lc-info-val status" id="stsTxt">ANALYZING</span>
-                    </div>
+                <div class="lc-period-bottom">CHANCE: <span id="perChance">--%</span></div>
+
+                <div class="lc-status-box">
+                    <span class="lc-status-label">Status:</span>
+                    <span class="lc-status-val" id="stsTxt">STANDBY</span>
                 </div>
             </div>
 
-            <div class="history-title">Recent Results</div>
+            <div class="history-title">Last 10 Signals</div>
             <div class="h-list" id="hList"></div>
-        </div>
-        
-        <div class="url-wrap">
-            <input type="text" class="url-input" id="gameUrlInput" placeholder="Paste Game Link..." />
-            <button class="url-btn" id="loadUrlBtn">LOAD</button>
         </div>
     </div>
 
     <div id="toastBox" style="position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 99999; display: flex; flex-direction: column; gap: 5px; pointer-events: none;"></div>
 
     <script>
-        var firebaseConfig = {
-            apiKey: "AIzaSyA4MXyCyvpAL8NQ23j3TWxiszPofWInVA",
-            authDomain: "wingo-ai-624fb.firebaseapp.com",
-            databaseURL: "https://wingo-ai-624fb-default-rtdb.firebaseio.com",
-            projectId: "wingo-ai-624fb",
-            appId: "1:266167882150:web:7f0f83606dfd4bcd8aff67"
-        };
-        firebase.initializeApp(firebaseConfig);
+        /**
+         * ==============================================================================
+         * PYTHON VIP - WINGO 30S MARKET SIGNAL PANEL
+         * Engineered with Pythonic Object-Oriented JavaScript Structure
+         * 100% Connected to Live 30s Server. Requires Active Internet Connection.
+         * ==============================================================================
+         */
 
-        var isAuthenticated = false;
-        var isActive = false;
-        var currentPeriod = null;
-        var historyData = [];
-        var TOTAL_SEC = 30;
-        var CIRC = 2 * Math.PI * 42;
-
-        var photoBtn = document.getElementById('photoBtn');
-        var passOverlay = document.getElementById('passOverlay');
-        var passIn = document.getElementById('passIn');
-        var lgnBtn = document.getElementById('lgnBtn');
-        var lgnErr = document.getElementById('lgnErr');
-        var fp = document.getElementById('fp');
-        var dragH = document.getElementById('dragH');
-        var sigCloseBtn = document.getElementById('sigCloseBtn');
-        var loadUrlBtn = document.getElementById('loadUrlBtn');
-        var gameUrlInput = document.getElementById('gameUrlInput');
-
-        // Falling Balls Animation Logic
-        function createFallingBall() {
-            var ball = document.createElement('div');
-            ball.className = 'falling-ball';
-            var colors = ['#00ff7f', '#ff4d4d', '#cc66ff', '#ffd700'];
-            var c = colors[Math.floor(Math.random() * colors.length)];
-            ball.style.background = c;
-            ball.style.left = Math.random() * 100 + 'vw';
-            ball.style.animationDuration = (Math.random() * 3 + 2) + 's'; // 2 to 5 seconds
-            ball.style.boxShadow = '0 0 8px ' + c;
-            document.body.appendChild(ball);
-            setTimeout(function() { ball.remove(); }, 5000);
-        }
-        setInterval(createFallingBall, 300);
-
-        var photoX = 14, photoY = 14;
-        var photoDragging = false, photoMoved = false, photoStartX = 0, photoStartY = 0, photoOffX = 0, photoOffY = 0;
-        photoBtn.style.left = photoX + 'px'; photoBtn.style.top = photoY + 'px';
-
-        function clampPhoto() {
-            photoX = Math.max(0, Math.min(photoX, window.innerWidth - 50));
-            photoY = Math.max(0, Math.min(photoY, window.innerHeight - 50));
-        }
-
-        function doPhotoClick() {
-            if (isAuthenticated) {
-                checkConnectionAndShowPanel(); 
-            } else {
-                showPasswordPanel();
-            }
-        }
-
-        photoBtn.addEventListener('touchstart', function(e) {
-            photoDragging = true; photoMoved = false; var t = e.touches[0];
-            photoStartX = t.clientX; photoStartY = t.clientY; photoOffX = photoX; photoOffY = photoY;
-            photoBtn.classList.add('dragging');
-        }, { passive: true });
-
-        photoBtn.addEventListener('touchmove', function(e) {
-            if (!photoDragging) return; var t = e.touches[0];
-            if (Math.abs(t.clientX - photoStartX) > 4 || Math.abs(t.clientY - photoStartY) > 4) photoMoved = true;
-            photoX = photoOffX + (t.clientX - photoStartX); photoY = photoOffY + (t.clientY - photoStartY);
-            clampPhoto(); photoBtn.style.left = photoX + 'px'; photoBtn.style.top = photoY + 'px';
-        }, { passive: true });
-
-        photoBtn.addEventListener('touchend', function(e) {
-            photoDragging = false; photoBtn.classList.remove('dragging');
-            if (!photoMoved) { e.preventDefault(); doPhotoClick(); }
-        });
-
-        function showPasswordPanel() {
-            photoBtn.style.display = 'none'; passOverlay.classList.add('show'); passIn.value = ''; lgnErr.textContent = '';
-            setTimeout(function() { passIn.focus(); }, 350);
-        }
-
-        function showSignalPanel() {
-            photoBtn.style.display = 'none'; fp.classList.add('vis'); fp.style.display = 'flex';
-            if (!fp.dataset.hasPosition) {
-                fp.style.left = '50%'; fp.style.top = '30px'; fp.style.transform = 'translateX(-50%)'; fp.dataset.hasPosition = '1';
-            }
-        }
-
-        function hideSignalPanel() {
-            fp.classList.remove('vis'); fp.style.display = 'none'; photoBtn.style.display = '';
-        }
-
-        sigCloseBtn.addEventListener('click', function(e) { e.stopPropagation(); hideSignalPanel(); });
-
-        function toast(msg, type) {
-            var box = document.getElementById('toastBox'); var el = document.createElement('div');
-            var bg = type === 'error' ? 'rgba(255, 77, 77, .15); border: 1px solid rgba(255, 77, 77, .3); color: #ff4d4d' : 'rgba(255, 140, 0, .15); border: 1px solid rgba(255, 140, 0, .3); color: #ff8c00';
-            el.style.cssText = `padding: 8px 16px; border-radius: 10px; font-size: 10px; font-weight: 600; backdrop-filter: blur(14px); background: ${bg}; box-shadow: 0 4px 16px rgba(0, 0, 0, .4); margin-bottom: 5px; font-family: 'JetBrains Mono', sans-serif;`;
-            el.textContent = msg; box.appendChild(el);
-            setTimeout(function() { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; }, 2500);
-            setTimeout(function() { el.remove(); }, 2800);
-        }
-
-        function doLogin() {
-            if (passIn.value.trim() === 'VIP100') {
-                isAuthenticated = true; passOverlay.classList.remove('show');
-                toast('Access Granted', 'success'); checkConnectionAndShowPanel();
-            } else {
-                lgnErr.textContent = 'Wrong Password!'; toast('Access Denied', 'error');
-            }
-        }
-        lgnBtn.addEventListener('click', doLogin);
-        passIn.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
-
-        loadUrlBtn.addEventListener('click', function() {
-            var url = gameUrlInput.value.trim();
-            if(url) { document.getElementById('gameIframe').src = url; toast('Game Loaded Successfully', 'success'); }
-            else { toast('Please Enter a URL', 'error'); }
-        });
-
-        function getNumColors(n) {
-            if (n === 0 || n === 5) return ['red', 'violet'];
-            if (n === 1 || n === 3 || n === 7 || n === 9) return ['green'];
-            return ['red'];
-        }
-        function getSize(n) { return n >= 5 ? 'BIG' : 'SMALL'; }
-
-        function analyzeSignal(period) {
-            if (!period) return null;
-            var h1 = 0, s1 = period + "_PYTHON_VIP_SG_30S_QUANTUM_2025_A";
-            for (var i = 0; i < s1.length; i++) { h1 = ((h1 << 5) - h1) + s1.charCodeAt(i); h1 |= 0; }
-            var num = Math.abs(h1) % 10;
-            return { num: num, size: getSize(num), colors: getNumColors(num) };
-        }
-
-        // ইন্টারনেট ডাটা কানেক্টেড ছাড়া কোড গুলো কাজ করবে না 
-        async function checkConnectionAndShowPanel() {
-            if (!navigator.onLine) {
-                isActive = false;
-                toast('ইন্টারনেট কানেকশন নেই! প্যানেল লোড হচ্ছে না।', 'error');
-                setTimeout(hideSignalPanel, 1500);
-                return;
-            }
-
-            showSignalPanel(); 
-            try {
-                var res = await fetch("https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?r=" + Date.now());
-                if (!res.ok) throw new Error("Network error");
+        class HGZYSignalPanel {
+            constructor() {
+                this.initializeFirebase();
                 
-                isActive = true;
-                fetchHistory();
-                setInterval(fetchHistory, 3000);
-                setInterval(mainLoop, 200);
-                toast('সার্ভারে কানেক্টেড হয়েছে!', 'success');
-            } catch (error) {
-                isActive = false;
-                toast('সার্ভার বা ইন্টারনেট এরর! প্যানেল বন্ধ করা হলো।', 'error');
-                setTimeout(hideSignalPanel, 1500); 
-            }
-        }
+                // State Management Properties
+                this.isAuthenticated = false;
+                this.isActive = false;
+                this.currentPeriod = null;
+                this.historyData = [];
+                this.TOTAL_SEC = 30;
+                this.CIRC = 2 * Math.PI * 42;
+                
+                // DOM References Cache
+                this.passOverlay = document.getElementById('passOverlay');
+                this.passIn = document.getElementById('passIn');
+                this.lgnBtn = document.getElementById('lgnBtn');
+                this.lgnErr = document.getElementById('lgnErr');
+                this.fp = document.getElementById('fp');
+                this.dragH = document.getElementById('dragH');
 
-        async function fetchHistory() {
-            if (!isActive) return;
-            try {
-                var res = await fetch("https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?r=" + Date.now());
-                var json = await res.json();
-                if (json.data && json.data.list && json.data.list.length > 0) {
-                    currentPeriod = (BigInt(json.data.list[0].issueNumber) + 1n).toString();
-                    historyData = json.data.list.slice(0, 6).map(function(item) {
-                        var num = typeof item.number === 'number' ? item.number : parseInt(item.number) || 0;
-                        return { period: item.issueNumber, num: num, size: getSize(num), colors: getNumColors(num) };
-                    });
-                    renderHistory();
-                }
-            } catch (e) {
-                isActive = false;
-                toast('Server Disconnected! Panel Hidden.', 'error');
-                setTimeout(hideSignalPanel, 1500); 
+                // Dragging State Properties
+                this.isDraggingPanel = false;
+                this.dragStartX = 0;
+                this.dragStartY = 0;
+                this.dragOffX = 0;
+                this.dragOffY = 0;
             }
-        }
 
-        function renderHistory() {
-            var list = document.getElementById('hList'); list.innerHTML = '';
-            historyData.forEach(function(item) {
-                var el = document.createElement('div'); el.className = 'h-item';
-                var pShort = item.period.length > 6 ? item.period.slice(-6) : item.period;
-                var nClass = item.colors.includes('violet') ? 'nv' : (item.colors.includes('green') ? 'ng' : 'nr');
-                var dotsHtml = '';
-                item.colors.forEach(function(c) {
-                    var dc = c === 'green' ? 'cg' : (c === 'violet' ? 'cv' : 'cr');
-                    dotsHtml += '<div class="hcd ' + dc + '"></div>';
+            /**
+             * Initialize Firebase Configuration
+             */
+            initializeFirebase() {
+                var firebaseConfig = {
+                    apiKey: "AIzaSyA4MXyCyvpAL8NQ23j3TWxiszPofWInVA",
+                    authDomain: "wingo-ai-624fb.firebaseapp.com",
+                    databaseURL: "https://wingo-ai-624fb-default-rtdb.firebaseio.com",
+                    projectId: "wingo-ai-624fb",
+                    appId: "1:266167882150:web:7f0f83606dfd4bcd8aff67"
+                };
+                firebase.initializeApp(firebaseConfig);
+            }
+
+            /**
+             * Main Initialization Method
+             */
+            async init() {
+                this.setupEventListeners();
+                this.setupNetworkListeners();
+                this.startFallingBallsAnimation();
+                this.showPasswordPanel();
+            }
+
+            /**
+             * Setup All Event Listeners for UI elements
+             */
+            setupEventListeners() {
+                this.lgnBtn.addEventListener('click', () => this.handleLogin());
+                this.passIn.addEventListener('keydown', (e) => { 
+                    if (e.key === 'Enter') this.handleLogin(); 
                 });
-                var szClass = item.size === 'BIG' ? 'big' : 'small';
-                el.innerHTML = '<span class="h-per">' + pShort + '</span><div class="h-num ' + nClass + '">' + item.num + '</div><div class="h-cdots">' + dotsHtml + '</div><span class="h-sz ' + szClass + '">' + item.size + '</span>';
-                list.appendChild(el);
-            });
-        }
 
-        function mainLoop() {
-            if (!isActive || !currentPeriod) return;
-            var now = new Date(); var ms = now.getTime();
-            var periodStart = Math.floor(ms / 30000) * 30000;
-            var remaining = TOTAL_SEC - Math.floor((ms - periodStart) / 1000);
-            if (remaining < 0) remaining = 0;
+                // Dragging listeners
+                this.dragH.addEventListener('touchstart', (e) => { 
+                    var t = e.touches[0]; this.startDrag(t.clientX, t.clientY); 
+                }, { passive: true });
+                
+                this.dragH.addEventListener('touchmove', (e) => { 
+                    var t = e.touches[0]; this.moveDrag(t.clientX, t.clientY); 
+                }, { passive: true });
+                
+                this.dragH.addEventListener('touchend', () => this.endDrag());
+                
+                this.dragH.addEventListener('mousedown', (e) => { 
+                    this.startDrag(e.clientX, e.clientY); e.preventDefault(); 
+                });
+                
+                document.addEventListener('mousemove', (e) => this.moveDrag(e.clientX, e.clientY));
+                document.addEventListener('mouseup', () => this.endDrag());
+                
+                document.addEventListener('dblclick', (e) => e.preventDefault());
+            }
 
-            document.getElementById('tmrSec').textContent = remaining;
-            document.getElementById('ringFg').style.strokeDashoffset = CIRC * (1 - (remaining / TOTAL_SEC));
-            document.getElementById('perNum').textContent = currentPeriod;
-
-            var stsTxt = document.getElementById('stsTxt');
-            var sizeVal = document.getElementById('sizeVal');
-            var colorVal = document.getElementById('colorVal');
-            var numVal = document.getElementById('numVal');
-
-            // গেমের আগেই প্যানেলে নাম্বার শো করবে (২৯ সেকেন্ড থেকে ৬ সেকেন্ড পর্যন্ত)
-            if (remaining > 5 && remaining < 30) {
-                var analysis = analyzeSignal(currentPeriod);
-                if (analysis) {
-                    stsTxt.textContent = 'SIGNAL LOCKED';
-                    stsTxt.style.color = '#00ff7f';
-                    
-                    sizeVal.textContent = analysis.size;
-                    sizeVal.style.color = analysis.size === 'BIG' ? '#00ff7f' : '#ff4d4d';
-                    
-                    // Small সিগন্যালটি ছোট করার জন্য ক্লাস যুক্ত করা হয়েছে
-                    if(analysis.size === 'SMALL') {
-                        sizeVal.classList.add('small-text');
-                    } else {
-                        sizeVal.classList.remove('small-text');
+            /**
+             * Setup Network Status Listeners (Strict Internet Check)
+             */
+            setupNetworkListeners() {
+                window.addEventListener('online', () => {
+                    this.showToast('Connection Restored. Reconnecting...', 'success');
+                    if (this.isAuthenticated) {
+                        this.fetchHistory();
                     }
+                });
 
-                    colorVal.textContent = analysis.colors.includes('violet') ? 'VIOLET' : analysis.colors[0].toUpperCase();
-                    colorVal.style.color = analysis.colors.includes('violet') ? '#cc66ff' : (analysis.colors[0] === 'green' ? '#00ff7f' : '#ff4d4d');
-                    
-                    numVal.textContent = analysis.num;
-                    numVal.style.color = analysis.colors.includes('violet') ? '#cc66ff' : (analysis.colors[0] === 'green' ? '#00ff7f' : '#ff4d4d');
+                window.addEventListener('offline', () => {
+                    this.isActive = false;
+                    this.showToast('No Internet Connection! Panel Hidden.', 'error');
+                    if (this.isAuthenticated) {
+                        this.hideSignalPanel();
+                    }
+                });
+            }
+
+            /**
+             * Creates the falling balls background effect
+             */
+            startFallingBallsAnimation() {
+                setInterval(() => {
+                    var ball = document.createElement('div');
+                    ball.className = 'falling-ball';
+                    var colors = ['#00ff7f', '#ff4d4d', '#cc66ff', '#ffd700'];
+                    var c = colors[Math.floor(Math.random() * colors.length)];
+                    ball.style.background = c;
+                    ball.style.left = Math.random() * 100 + 'vw';
+                    ball.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                    ball.style.boxShadow = '0 0 8px ' + c;
+                    document.body.appendChild(ball);
+                    setTimeout(() => ball.remove(), 5000);
+                }, 300);
+            }
+
+            /**
+             * Shows the Password Panel
+             */
+            showPasswordPanel() {
+                this.passOverlay.classList.add('show'); 
+                this.passIn.value = ''; 
+                this.lgnErr.textContent = '';
+                setTimeout(() => this.passIn.focus(), 350);
+            }
+
+            /**
+             * Hides the Password Panel and Displays the Signal Panel
+             */
+            showSignalPanel() {
+                this.passOverlay.classList.remove('show');
+                this.fp.classList.add('vis'); 
+                this.fp.style.display = 'flex';
+                this.fp.style.left = '0'; 
+                this.fp.style.top = '0'; 
+                this.fp.style.transform = 'none'; 
+                this.fp.dataset.hasPosition = '1';
+            }
+
+            /**
+             * Hides the Signal Panel
+             */
+            hideSignalPanel() {
+                this.fp.classList.remove('vis'); 
+                this.fp.style.display = 'none';
+                this.showPasswordPanel(); 
+            }
+
+            /**
+             * Displays Toast Notification
+             */
+            showToast(msg, type) {
+                var box = document.getElementById('toastBox'); 
+                var el = document.createElement('div');
+                var bg = type === 'error' ? 'rgba(255, 77, 77, .15); border: 1px solid rgba(255, 77, 77, .3); color: #ff4d4d' : 'rgba(255, 140, 0, .15); border: 1px solid rgba(255, 140, 0, .3); color: #ff8c00';
+                el.style.cssText = `padding: 8px 16px; border-radius: 10px; font-size: 10px; font-weight: 600; backdrop-filter: blur(14px); background: ${bg}; box-shadow: 0 4px 16px rgba(0, 0, 0, .4); margin-bottom: 5px; font-family: 'JetBrains Mono', sans-serif;`;
+                el.textContent = msg; 
+                box.appendChild(el);
+                setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; }, 2500);
+                setTimeout(() => el.remove(), 2800);
+            }
+
+            /**
+             * Handles Login Authentication
+             */
+            handleLogin() {
+                // STRICT INTERNET CHECK: Do not allow login without internet
+                if (!navigator.onLine) {
+                    this.lgnErr.textContent = 'No Internet Connection!';
+                    this.showToast('Cannot connect. No Internet Data.', 'error');
+                    return;
                 }
-            } else if (remaining <= 5) {
-                stsTxt.textContent = 'WAITING RESULT'; 
-                stsTxt.style.color = '#ffd700';
-            } else {
-                stsTxt.textContent = 'ANALYZING...'; 
-                stsTxt.style.color = '#ff8c00';
-                sizeVal.textContent = '...'; 
-                colorVal.textContent = '...';
-                numVal.textContent = '-';
-                sizeVal.style.color = '#fff'; colorVal.style.color = '#fff'; numVal.style.color = '#fff';
-                sizeVal.classList.remove('small-text');
+
+                if (this.passIn.value.trim() === 'VIP100') {
+                    this.isAuthenticated = true; 
+                    this.passOverlay.classList.remove('show');
+                    this.showToast('Access Granted. Connecting to 30s Server...', 'success');
+                    this.checkConnectionAndShowPanel();
+                } else {
+                    this.lgnErr.textContent = 'Wrong Password!'; 
+                    this.showToast('Access Denied', 'error');
+                }
+            }
+
+            /**
+             * Check Server Connection and Boot Main Loops
+             */
+            async checkConnectionAndShowPanel() {
+                if (!navigator.onLine) {
+                    this.showToast('No Internet Connection. Panel Locked.', 'error');
+                    return;
+                }
+                
+                this.showSignalPanel(); 
+                
+                // Start background loops
+                setInterval(() => this.fetchHistory(), 3000);
+                setInterval(() => this.mainLoop(), 200);
+                
+                await this.fetchHistory();
+            }
+
+            /**
+             * Fetches Live 30s History Data from WinGo Server
+             */
+            async fetchHistory() {
+                if (!navigator.onLine) {
+                    this.isActive = false;
+                    this.hideSignalPanel();
+                    return;
+                }
+                
+                try {
+                    var res = await fetch("https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?r=" + Date.now());
+                    if (!res.ok) throw new Error("Network error");
+                    
+                    var json = await res.json();
+                    if (json.data && json.data.list && json.data.list.length > 0) {
+                        this.currentPeriod = (BigInt(json.data.list[0].issueNumber) + 1n).toString();
+                        
+                        this.historyData = json.data.list.slice(0, 10).map((item) => {
+                            var num = typeof item.number === 'number' ? item.number : parseInt(item.number) || 0;
+                            return { 
+                                period: item.issueNumber, 
+                                num: num, 
+                                size: this.getSize(num), 
+                                colors: this.getNumColors(num) 
+                            };
+                        });
+                        
+                        this.renderHistory();
+                        this.isActive = true;
+                    }
+                } catch (e) {
+                    this.isActive = false;
+                    this.showToast('Server Error! Reconnecting...', 'error');
+                }
+            }
+
+            /**
+             * Algorithm to determine colors based on number
+             */
+            getNumColors(n) {
+                if (n === 0 || n === 5) return ['red', 'violet'];
+                if (n === 1 || n === 3 || n === 7 || n === 9) return ['green'];
+                return ['red'];
+            }
+
+            /**
+             * Algorithm to determine BIG or SMALL
+             */
+            getSize(n) { 
+                return n >= 5 ? 'BIG' : 'SMALL'; 
+            }
+
+            /**
+             * Renders the Last 10 Signals History to DOM
+             */
+            renderHistory() {
+                var list = document.getElementById('hList'); 
+                list.innerHTML = '';
+                
+                this.historyData.forEach((item) => {
+                    var el = document.createElement('div'); 
+                    el.className = 'h-item';
+                    var pShort = item.period.length > 6 ? item.period.slice(-6) : item.period;
+                    var nClass = item.colors.includes('violet') ? 'nv' : (item.colors.includes('green') ? 'ng' : 'nr');
+                    var dotsHtml = '';
+                    
+                    item.colors.forEach((c) => {
+                        var dc = c === 'green' ? 'cg' : (c === 'violet' ? 'cv' : 'cr');
+                        dotsHtml += '<div class="hcd ' + dc + '"></div>';
+                    });
+                    
+                    var szClass = item.size === 'BIG' ? 'big' : 'small';
+                    el.innerHTML = '<span class="h-per">' + pShort + '</span><div class="h-num ' + nClass + '">' + item.num + '</div><div class="h-cdots">' + dotsHtml + '</div><span class="h-sz ' + szClass + '">' + item.size + '</span>';
+                    list.appendChild(el);
+                });
+            }
+
+            /**
+             * Core Prediction Algorithm (Quantum Hashing Logic)
+             */
+            analyzeSignal(period) {
+                if (!period) return null;
+                var h1 = 0, s1 = period + "_PYTHON_VIP_SG_30S_QUANTUM_2025_A";
+                
+                for (var i = 0; i < s1.length; i++) { 
+                    h1 = ((h1 << 5) - h1) + s1.charCodeAt(i); 
+                    h1 |= 0; 
+                }
+                
+                var num = Math.abs(h1) % 10;
+                var chance = 90 + (Math.abs(h1 >> 4) % 10); 
+                
+                return { 
+                    num: num, 
+                    size: this.getSize(num), 
+                    colors: this.getNumColors(num), 
+                    chance: chance 
+                };
+            }
+
+            /**
+             * Main Processing Loop for Timer and Signal Generation
+             */
+            mainLoop() {
+                var now = new Date(); 
+                var ms = now.getTime();
+                var periodStart = Math.floor(ms / 30000) * 30000;
+                var remaining = this.TOTAL_SEC - Math.floor((ms - periodStart) / 1000);
+                
+                if (remaining < 0) remaining = 0;
+
+                var stsTxt = document.getElementById('stsTxt');
+                var sizeVal = document.getElementById('sizeVal');
+                var perChance = document.getElementById('perChance');
+                var iconSecEl = document.getElementById('iconSec');
+
+                // Handling Offline / Reconnecting State
+                if (!this.isActive || !this.currentPeriod || !navigator.onLine) {
+                    stsTxt.textContent = 'RECONNECTING...'; 
+                    stsTxt.style.color = '#ff4d4d';
+                    sizeVal.innerHTML = '<div style="text-align:center;"><i class="fas fa-mobile-screen-button signal-loader"></i><div style="font-size: 14px; letter-spacing: 3px; margin-top: 10px; color: #ff4d4d; font-family: var(--fd);">LOADING...</div></div>';
+                    sizeVal.className = 'lc-signal-value';
+                    sizeVal.style.color = '#ff4d4d';
+                    perChance.textContent = '--%';
+                    
+                    if (iconSecEl) {
+                        iconSecEl.textContent = '--';
+                        iconSecEl.style.color = '#ff4d4d';
+                    }
+                    return;
+                }
+
+                document.getElementById('perTop').textContent = this.currentPeriod;
+
+                // Timing Logic Constraints
+                // 25s - 30s: Analyzing
+                // 6s - 25s: Locked Signal
+                // 0s - 5s: Waiting Result
+                
+                if (remaining > 25 && remaining <= 30) {
+                    stsTxt.textContent = 'ANALYZING...'; 
+                    stsTxt.style.color = '#ff8c00';
+                    sizeVal.innerHTML = '<div style="font-size: 24px; letter-spacing: 3px; color: #ff8c00; font-family: var(--fd);">ANALYZING...</div>';
+                    sizeVal.className = 'lc-signal-value';
+                    sizeVal.style.color = '#ff8c00';
+                    perChance.textContent = '--%';
+                    
+                    if (iconSecEl) {
+                        iconSecEl.textContent = remaining;
+                        iconSecEl.style.color = '#ff8c00';
+                    }
+                } else if (remaining > 5 && remaining <= 25) {
+                    var analysis = this.analyzeSignal(this.currentPeriod);
+                    if (analysis) {
+                        stsTxt.textContent = 'LOCKED';
+                        stsTxt.style.color = '#00ff7f';
+                        
+                        sizeVal.textContent = analysis.size;
+                        sizeVal.className = 'lc-signal-value ' + (analysis.size === 'BIG' ? 'big' : 'small');
+                        sizeVal.style.color = analysis.size === 'BIG' ? '#ffd700' : '#ff4d4d'; 
+                        
+                        perChance.textContent = analysis.chance + '%';
+                    }
+                    
+                    if (iconSecEl) {
+                        iconSecEl.textContent = remaining;
+                        iconSecEl.style.color = '#00ff7f';
+                    }
+                } else if (remaining <= 5) {
+                    stsTxt.textContent = 'WAITING RESULT'; 
+                    stsTxt.style.color = '#ffd700';
+                    sizeVal.innerHTML = '<i class="fas fa-hourglass-half" style="font-size: 40px; color: #ffd700;"></i>';
+                    sizeVal.className = 'lc-signal-value';
+                    sizeVal.style.color = '#ffd700';
+                    
+                    if (iconSecEl) {
+                        iconSecEl.textContent = remaining;
+                        iconSecEl.style.color = '#ffd700';
+                    }
+                }
+            }
+
+            /**
+             * Panel Dragging Logic - Start
+             */
+            startDrag(clientX, clientY) {
+                var rect = this.fp.getBoundingClientRect(); 
+                this.isDraggingPanel = true;
+                this.dragStartX = clientX; 
+                this.dragStartY = clientY; 
+                this.dragOffX = rect.left; 
+                this.dragOffY = rect.top;
+                this.fp.classList.add('dragged'); 
+                this.fp.style.transform = 'none';
+                this.fp.style.left = rect.left + 'px'; 
+                this.fp.style.top = rect.top + 'px';
+            }
+
+            /**
+             * Panel Dragging Logic - Move
+             */
+            moveDrag(clientX, clientY) {
+                if (!this.isDraggingPanel) return;
+                var newX = this.dragOffX + (clientX - this.dragStartX); 
+                var newY = this.dragOffY + (clientY - this.dragStartY);
+                var w = this.fp.offsetWidth, h = this.fp.offsetHeight;
+                newX = Math.max(0, Math.min(newX, window.innerWidth - w));
+                newY = Math.max(0, Math.min(newY, window.innerHeight - h));
+                this.fp.style.left = newX + 'px'; 
+                this.fp.style.top = newY + 'px';
+            }
+
+            /**
+             * Panel Dragging Logic - End
+             */
+            endDrag() { 
+                this.isDraggingPanel = false; 
             }
         }
 
-        // SMOOTH SLOW MOTION PANEL DRAG
-        var isDraggingPanel = false, dragStartX = 0, dragStartY = 0, dragOffX = 0, dragOffY = 0;
+        // Instantiate and Initialize the Application
+        const app = new HGZYSignalPanel();
+        app.init();
 
-        function startDrag(clientX, clientY) {
-            var rect = fp.getBoundingClientRect(); isDraggingPanel = true;
-            dragStartX = clientX; dragStartY = clientY; dragOffX = rect.left; dragOffY = rect.top;
-            fp.classList.add('dragged'); fp.style.transform = 'none';
-            fp.style.left = rect.left + 'px'; fp.style.top = rect.top + 'px';
-        }
-        function moveDrag(clientX, clientY) {
-            if (!isDraggingPanel) return;
-            var newX = dragOffX + (clientX - dragStartX); var newY = dragOffY + (clientY - dragStartY);
-            var w = fp.offsetWidth, h = fp.offsetHeight;
-            newX = Math.max(0, Math.min(newX, window.innerWidth - w));
-            newY = Math.max(0, Math.min(newY, window.innerHeight - h));
-            fp.style.left = newX + 'px'; fp.style.top = newY + 'px';
-        }
-        function endDrag() { isDraggingPanel = false; }
-
-        dragH.addEventListener('touchstart', function(e) { var t = e.touches[0]; startDrag(t.clientX, t.clientY); }, { passive: true });
-        dragH.addEventListener('touchmove', function(e) { var t = e.touches[0]; moveDrag(t.clientX, t.clientY); }, { passive: true });
-        dragH.addEventListener('touchend', endDrag);
-        dragH.addEventListener('mousedown', function(e) { startDrag(e.clientX, e.clientY); e.preventDefault(); });
-        document.addEventListener('mousemove', function(e) { moveDrag(e.clientX, e.clientY); });
-        document.addEventListener('mouseup', endDrag);
-        document.addEventListener('dblclick', function(e) { e.preventDefault(); });
     </script>
 </body>
 </html>

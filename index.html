@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>PYTHON VIP — WinGo 30s Signal Overlay</title>
+    <title> HGZY VIP </title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Hind+Siliguri:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    
+
     <style>
-        /* CSS Variables and Root Setup */
         :root {
             --bg: #000000;
             --bg-card: rgba(10, 10, 10, 0.95);
@@ -22,680 +22,409 @@
             --green: #00ff7f;
             --violet: #cc66ff;
             --border: rgba(255, 140, 0, 0.25);
-            --radius: 0px; 
+            --radius: 0px;
             --fd: 'Orbitron', monospace;
             --fm: 'JetBrains Mono', monospace;
             --fb: 'Hind+Siliguri', sans-serif;
         }
 
-        /* Universal Reset */
-        *, *::before, *::after { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         html, body {
-            height: 100%; 
-            width: 100%; 
-            overflow: hidden; 
-            background: #000;
-            font-family: var(--fb); 
-            color: var(--fg); 
-            user-select: none;
-            -webkit-user-select: none; 
-            -webkit-tap-highlight-color: transparent;
+            height: 100%; width: 100%; overflow: hidden; background: #000;
+            font-family: var(--fb); color: var(--fg); user-select: none;
+            -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
         }
 
-        /* Falling Balls Animation Background */
         .falling-ball {
-            position: fixed; 
-            width: 12px; 
-            height: 12px; 
-            border-radius: 50%; 
-            top: -20px; 
-            z-index: 1; 
-            pointer-events: none;
+            position: fixed; width: 12px; height: 12px; border-radius: 50%;
+            top: -20px; z-index: 1; pointer-events: none;
             animation: fallDown linear forwards;
         }
 
-        @keyframes fallDown { 
-            to { 
-                transform: translateY(105vh); 
-                opacity: 0.8; 
-            } 
-        }
+        @keyframes fallDown { to { transform: translateY(105vh); opacity: 0.8; } }
 
-        /* Signal Panel - Full Screen Mode */
         .fp {
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            transform: none;
-            width: 100vw; 
-            height: 100vh; 
-            max-height: 100vh; 
-            z-index: 10002;
+            position: fixed; top: 0; left: 0; transform: none;
+            width: 100vw; height: 100vh; max-height: 100vh; z-index: 10002;
             background: linear-gradient(180deg, rgba(0, 0, 0, 0.98), rgba(10, 10, 10, 0.95));
-            backdrop-filter: blur(40px) saturate(180%); 
+            backdrop-filter: blur(40px) saturate(180%);
             -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: none; 
-            border-radius: var(--radius);
-            display: none; 
-            flex-direction: column;
-            box-shadow: none;
-            touch-action: none; 
-            overflow: hidden; 
-            font-size: 12px; 
-            cursor: default; 
-            color: #ffeedd;
-            will-change: transform, top, left;
-            transition: none; 
+            border: none; border-radius: var(--radius);
+            display: none; flex-direction: column;
+            touch-action: none; overflow: hidden;
+            font-size: 12px; color: #ffeedd;
+            will-change: transform, top, left; transition: none;
         }
 
-        .fp.vis { 
-            display: flex; 
-        }
+        .fp.vis { display: flex; }
+        .fp.dragged { transform: none !important; animation: none !important; }
 
-        .fp.dragged { 
-            transform: none !important; 
-            animation: none !important; 
-        }
-
-        @keyframes bspin { to { --ba: 360deg; } }
-        @property --ba { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
-
-        /* Panel Header */
         .fp-head {
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between;
-            padding: 18px 20px; 
-            cursor: grab; 
-            flex-shrink: 0;
-            background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(0, 0, 0, 0.99)); 
-            border-bottom: 1.5px solid rgba(255, 140, 0, 0.4); 
-            position: relative; 
-            touch-action: none;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 20px; cursor: grab; flex-shrink: 0;
+            background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(0, 0, 0, 0.99));
+            border-bottom: 1.5px solid rgba(255, 140, 0, 0.4);
+            position: relative; touch-action: none;
             box-shadow: 0 4px 20px rgba(255, 140, 0, 0.15);
         }
 
-        .fp-head:active { 
-            cursor: grabbing; 
-        }
+        .fp-head:active { cursor: grabbing; }
 
         .fp-head::after {
-            content: ''; 
-            position: absolute; 
-            bottom: -1px; 
-            left: 0; 
-            right: 0; 
-            height: 1px;
+            content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
             background: linear-gradient(90deg, transparent, var(--accent), var(--gold), var(--accent), transparent);
             animation: headGlow 2s ease-in-out infinite alternate;
         }
 
-        @keyframes headGlow { 
-            0% { opacity: .4; } 
-            100% { opacity: 1; } 
-        }
+        @keyframes headGlow { 0% { opacity: .4; } 100% { opacity: 1; } }
 
-        /* Branding and Python Logo */
         .fp-brand {
-            font-family: var(--fd); 
-            font-size: 18px; 
-            font-weight: 900; 
-            letter-spacing: 2px;
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
+            font-family: var(--fd); font-size: 18px; font-weight: 900;
+            letter-spacing: 2px; display: flex; align-items: center; gap: 8px;
             pointer-events: none;
-            background: linear-gradient(135deg, #ff8c00, #ffd700); 
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent; 
+            background: linear-gradient(135deg, #ff8c00, #ffd700);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             text-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
         }
 
-        .fp-brand .py-logo { 
-            font-size: 22px; 
-            color: var(--accent); 
-            -webkit-text-fill-color: var(--accent);
-            filter: drop-shadow(0 0 6px rgba(255, 140, 0, 0.6)); 
+        .fp-brand .py-logo {
+            font-size: 22px; color: var(--accent); -webkit-text-fill-color: var(--accent);
+            filter: drop-shadow(0 0 6px rgba(255, 140, 0, 0.6));
         }
 
-        .fp-brand .market-badge { 
-            font-size: 10px; 
-            background: linear-gradient(135deg, var(--accent), var(--red)); 
-            color: #fff; 
-            padding: 3px 6px; 
-            border-radius: 4px; 
-            margin-left: 4px; 
-            box-shadow: 0 2px 5px rgba(255, 77, 77, 0.3); 
-            -webkit-text-fill-color: #fff;
+        .fp-brand .market-badge {
+            font-size: 10px; background: linear-gradient(135deg, var(--accent), var(--red));
+            color: #fff; padding: 3px 6px; border-radius: 4px; margin-left: 4px;
+            box-shadow: 0 2px 5px rgba(255, 77, 77, 0.3); -webkit-text-fill-color: #fff;
         }
 
-        .fp-head-r { 
-            display: flex; 
-            align-items: center; 
-            gap: 6px; 
-            pointer-events: none; 
-        }
+        .fp-head-r { display: flex; align-items: center; gap: 6px; pointer-events: none; }
 
-        /* Panel Body */
-        .fp-body { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 20px 20px; 
-            position: relative; 
-            background: transparent; 
-        }
-
+        .fp-body { flex: 1; overflow-y: auto; padding: 20px 20px; position: relative; background: transparent; }
         .fp-body::-webkit-scrollbar { width: 4px; }
         .fp-body::-webkit-scrollbar-thumb { background: rgba(255, 140, 0, 0.6); border-radius: 4px; }
         .fp-body::-webkit-scrollbar-track { background: #000; }
 
-        /* Timer Ring Wrap - Disabled */
-        .timer-ring-wrap { 
-            display: none; 
-            justify-content: center; 
-            margin: 10px 0 20px; 
-            position: relative; 
-        }
-        .timer-ring-wrap svg { filter: drop-shadow(0 0 8px rgba(255, 140, 0, .3)); }
-        #tmrSec { fill: #ffeedd !important; }
-
-        /* Prediction Card */
         .lottery-card {
             background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(0, 0, 0, 0.99));
             border: 1.5px solid rgba(255, 140, 0, 0.4);
-            border-radius: 28px; 
-            padding: 25px 20px; 
-            position: relative; 
-            overflow: hidden;
-            box-shadow: 0 0 80px rgba(255, 140, 0, 0.15), inset 0 0 20px rgba(255, 140, 0, 0.05); 
-            margin-bottom: 20px; 
-            text-align: center;
+            border-radius: 28px; padding: 25px 20px; position: relative; overflow: hidden;
+            box-shadow: 0 0 80px rgba(255, 140, 0, 0.15), inset 0 0 20px rgba(255, 140, 0, 0.05);
+            margin-bottom: 20px; text-align: center;
         }
 
         .lottery-card::before {
-            content: ''; 
-            position: absolute; 
-            inset: 0; 
+            content: ''; position: absolute; inset: 0;
             background: linear-gradient(45deg, transparent, rgba(255, 140, 0, 0.1), transparent);
-            animation: shimmer 3s infinite; 
-            pointer-events: none;
+            animation: shimmer 3s infinite; pointer-events: none;
         }
 
-        @keyframes shimmer { 
-            0% { transform: translateX(-100%); } 
-            100% { transform: translateX(100%); } 
-        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-        /* Prediction Icon and Seconds Display */
         .lc-icon {
-            width: 70px; 
-            height: 70px; 
-            margin: 0 auto 15px; 
-            border-radius: 50%; 
+            width: 70px; height: 70px; margin: 0 auto 15px; border-radius: 50%;
             background: linear-gradient(135deg, rgba(255, 140, 0, 0.2), rgba(0,0,0,0.5));
-            border: 2px solid rgba(255, 140, 0, 0.5); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            font-size: 32px; 
-            box-shadow: 0 0 50px rgba(255, 140, 0, 0.3);
-            animation: pulseGlow 2s infinite alternate; 
-            position: relative; 
-            z-index: 2;
+            border: 2px solid rgba(255, 140, 0, 0.5);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; box-shadow: 0 0 50px rgba(255, 140, 0, 0.3);
+            animation: pulseGlow 2s infinite alternate; position: relative; z-index: 2;
         }
 
-        @keyframes pulseGlow { 
-            0% { box-shadow: 0 0 30px rgba(255, 140, 0, 0.2); } 
-            100% { box-shadow: 0 0 60px rgba(255, 140, 0, 0.5); } 
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 30px rgba(255, 140, 0, 0.2); }
+            100% { box-shadow: 0 0 60px rgba(255, 140, 0, 0.5); }
         }
 
-        .lc-icon i { 
-            position: absolute;
-            opacity: 0.15;
-            font-size: 40px;
-            background: linear-gradient(135deg, #ff8c00, #ffd700); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            filter: drop-shadow(0 0 15px rgba(255, 140, 0, 0.5)); 
+        .lc-icon i {
+            position: absolute; opacity: 0.15; font-size: 40px;
+            background: linear-gradient(135deg, #ff8c00, #ffd700);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(255, 140, 0, 0.5));
         }
 
         .lc-icon-sec {
-            position: relative;
-            z-index: 3;
-            font-family: 'Orbitron', monospace;
-            font-size: 26px;
-            font-weight: 900;
-            color: #ffeedd;
-            text-shadow: 0 0 10px rgba(255, 140, 0, 0.8);
-            transition: color 0.3s ease;
+            position: relative; z-index: 3; font-family: 'Orbitron', monospace;
+            font-size: 26px; font-weight: 900; color: #ffeedd;
+            text-shadow: 0 0 10px rgba(255, 140, 0, 0.8); transition: color 0.3s ease;
         }
 
-        .lc-title { 
-            font-family: var(--fd); 
-            font-size: 18px; 
-            font-weight: 900; 
-            letter-spacing: 4px; 
-            background: linear-gradient(135deg, #ff8c00, #ffd700); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            margin-bottom: 20px; 
-            text-transform: uppercase;
-            position: relative; 
-            z-index: 2;
+        .lc-title {
+            font-family: var(--fd); font-size: 18px; font-weight: 900;
+            letter-spacing: 4px; background: linear-gradient(135deg, #ff8c00, #ffd700);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 20px; text-transform: uppercase; position: relative; z-index: 2;
         }
 
-        /* Period Display */
-        .lc-period-top, .lc-period-bottom {
-            font-family: var(--fd); 
-            font-size: 14px; 
-            font-weight: 700; 
-            letter-spacing: 2px;
-            color: rgba(255, 200, 150, 0.6); 
-            margin: 10px 0; 
-            position: relative; 
-            z-index: 2;
+        .lc-period-top {
+            font-family: var(--fd); font-size: 14px; font-weight: 700;
+            letter-spacing: 2px; color: rgba(255, 200, 150, 0.6);
+            margin: 10px 0; position: relative; z-index: 2;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
 
-        .lc-period-top span {
-            color: #00ff7f; 
-            font-weight: 800; 
-            margin-left: 5px; 
-            text-shadow: 0 0 8px rgba(0, 255, 127, 0.4);
+        .lc-period-top .period-label {
+            font-size: 10px; color: rgba(255, 200, 150, 0.5);
+            text-transform: uppercase; letter-spacing: 1.5px;
+        }
+
+        .lc-period-top span.period-num {
+            color: #00ff7f; font-weight: 800; text-shadow: 0 0 8px rgba(0, 255, 127, 0.4);
             word-break: break-all;
         }
 
+        .lc-period-bottom {
+            font-family: var(--fd); font-size: 14px; font-weight: 700;
+            letter-spacing: 2px; color: rgba(255, 200, 150, 0.6);
+            margin: 10px 0; position: relative; z-index: 2;
+        }
+
         .lc-period-bottom span {
-            color: #00ff7f; 
-            font-weight: 800; 
-            margin-left: 5px; 
+            color: #00ff7f; font-weight: 800; margin-left: 5px;
             text-shadow: 0 0 8px rgba(0, 255, 127, 0.4);
         }
 
-        /* Main Signal Box */
         .lc-signal-main {
-            background: rgba(255, 140, 0, 0.03); 
-            border: 1.5px solid rgba(255, 140, 0, 0.3);
-            border-radius: 20px; 
-            padding: 25px 15px; 
-            margin: 15px 0; 
-            position: relative; 
-            z-index: 2;
-            box-shadow: inset 0 0 20px rgba(255, 140, 0, 0.05);
+            background: rgba(255, 140, 0, 0.03); border: 1.5px solid rgba(255, 140, 0, 0.3);
+            border-radius: 20px; padding: 25px 15px; margin: 15px 0;
+            position: relative; z-index: 2; box-shadow: inset 0 0 20px rgba(255, 140, 0, 0.05);
         }
 
         .lc-signal-label {
-            font-family: var(--fd); 
-            font-size: 12px; 
-            color: rgba(255, 200, 150, 0.6); 
-            letter-spacing: 4px; 
-            text-transform: uppercase; 
-            display: block; 
-            margin-bottom: 12px;
+            font-family: var(--fd); font-size: 12px; color: rgba(255, 200, 150, 0.6);
+            letter-spacing: 4px; text-transform: uppercase;
+            display: block; margin-bottom: 12px;
         }
 
         .lc-signal-value {
-            font-family: var(--fd); 
-            font-size: 56px; 
+            font-family: var(--fd); font-weight: 900;
+            letter-spacing: 3px; text-shadow: 0 0 25px currentColor, 0 2px 5px rgba(0,0,0,0.6);
+            transition: all 0.3s ease; line-height: 1; min-height: 120px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+        }
+
+        /* Big/Small Container */
+        .sig-content { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; }
+        .sig-size { 
+            font-size: 64px; /* Made it even bigger for better visibility */
             font-weight: 900; 
-            letter-spacing: 3px;
-            text-shadow: 0 0 25px currentColor, 0 2px 5px rgba(0,0,0,0.6);
-            transition: all 0.3s ease; 
-            line-height: 1;
-            min-height: 65px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
+            letter-spacing: 4px; 
+            text-shadow: 0 0 20px currentColor;
         }
 
-        .lc-signal-value.big { color: #ffd700; }
-        .lc-signal-value.small { color: #ff4d4d; }
-
-        /* Loading Spinner */
         .signal-loader {
-            font-size: 48px;
-            color: var(--accent);
-            animation: spinLoader 1s linear infinite;
-            display: inline-block;
+            font-size: 48px; color: var(--accent);
+            animation: spinLoader 1s linear infinite; display: inline-block;
         }
 
-        @keyframes spinLoader {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spinLoader { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Status Box */
         .lc-status-box {
-            margin-top: 15px; 
-            background: rgba(0,0,0,0.5); 
-            border-radius: 12px; 
-            padding: 12px; 
-            border: 1px solid rgba(255, 140, 0, 0.15); 
-            position: relative; 
-            z-index: 2;
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
+            margin-top: 15px; background: rgba(0,0,0,0.5); border-radius: 12px;
+            padding: 12px; border: 1px solid rgba(255, 140, 0, 0.15);
+            position: relative; z-index: 2;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .lc-status-label { 
-            font-size: 11px; 
-            color: rgba(255, 200, 150, 0.7); 
-            font-family: var(--fd); 
-            letter-spacing: 1px; 
+        .lc-status-label { font-size: 11px; color: rgba(255, 200, 150, 0.7); font-family: var(--fd); letter-spacing: 1px; }
+        .lc-status-val { font-family: var(--fd); font-weight: 800; font-size: 14px; }
+
+        .history-title {
+            font-size: 13px; color: rgba(255, 200, 150, 0.6);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            font-family: var(--fd); margin: 16px 0 10px;
+            display: flex; align-items: center; gap: 6px;
         }
 
-        .lc-status-val { 
-            font-family: var(--fd); 
-            font-weight: 800; 
-            font-size: 14px; 
+        .history-title::before {
+            content: ''; width: 4px; height: 4px; background: var(--accent);
+            border-radius: 50%; box-shadow: 0 0 5px var(--accent);
         }
 
-        /* History List */
-        .history-title { 
-            font-size: 13px; 
-            color: rgba(255, 200, 150, 0.6); 
-            text-transform: uppercase; 
-            letter-spacing: 1.5px; 
-            font-family: var(--fd); 
-            margin: 16px 0 10px; 
-            display: flex; 
-            align-items: center; 
-            gap: 6px; 
-        }
-
-        .history-title::before { 
-            content: ''; 
-            width: 4px; 
-            height: 4px; 
-            background: var(--accent); 
-            border-radius: 50%; 
-            box-shadow: 0 0 5px var(--accent); 
-        }
-
-        .h-list { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-        }
+        .h-list { display: flex; flex-direction: column; gap: 10px; }
 
         .h-item {
-            display: grid; 
-            grid-template-columns: 60px 34px 1fr 50px; 
-            align-items: center; 
-            gap: 8px;
-            padding: 10px 12px; 
-            border-radius: 12px; 
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 140, 0, 0.15); 
+            display: grid; grid-template-columns: 60px 34px 1fr 50px;
+            align-items: center; gap: 8px; padding: 10px 12px;
+            border-radius: 12px; background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 140, 0, 0.15);
             transition: transform .2s, box-shadow .2s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        .h-item:hover { 
-            transform: scale(1.02); 
-            border-color: var(--accent); 
-            box-shadow: 0 4px 10px rgba(255, 140, 0, 0.1); 
-            background: rgba(255, 255, 255, 0.05); 
+        .h-item:hover {
+            transform: scale(1.02); border-color: var(--accent);
+            box-shadow: 0 4px 10px rgba(255, 140, 0, 0.1);
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .h-per { 
-            font-weight: 700; 
-            color: rgba(255, 255, 255, 0.4); 
-            font-size: 9px; 
-            font-family: var(--fm); 
-            text-align: center; 
-        }
-
-        .h-num { 
-            width: 34px; 
-            height: 34px; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: 800; 
-            font-size: 16px; 
-            color: #fff; 
-            font-family: var(--fm); 
-            box-shadow: 0 2px 5px rgba(0, 0, 0, .5); 
+        .h-per { font-weight: 700; color: rgba(255, 255, 255, 0.4); font-size: 9px; font-family: var(--fm); text-align: center; }
+        .h-num {
+            width: 34px; height: 34px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 16px; color: #fff;
+            font-family: var(--fm); box-shadow: 0 2px 5px rgba(0, 0, 0, .5);
         }
 
         .h-num.ng { background: linear-gradient(135deg, #00cc66, #00ff7f); box-shadow: 0 2px 8px rgba(0, 255, 127, .3); }
         .h-num.nr { background: linear-gradient(135deg, #cc2233, #ff4d4d); box-shadow: 0 2px 8px rgba(255, 77, 77, .3); }
         .h-num.nv { background: linear-gradient(135deg, #8833cc, #cc66ff); box-shadow: 0 2px 8px rgba(204, 102, 255, .3); }
 
-        .h-cdots { 
-            display: flex; 
-            gap: 4px; 
-            flex-wrap: wrap; 
-            justify-content: center; 
-        }
-
+        .h-cdots { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
         .hcd { width: 12px; height: 12px; border-radius: 50%; }
         .hcd.cg { background: #00cc66; box-shadow: 0 0 4px rgba(0, 255, 127, .4); }
         .hcd.cr { background: #ff4d4d; box-shadow: 0 0 4px rgba(255, 77, 77, .4); }
         .hcd.cv { background: #9333ea; box-shadow: 0 0 4px rgba(204, 102, 255, .4); }
 
-        .h-sz { 
-            font-weight: 800; 
-            font-size: 11px; 
-            text-align: center; 
-            letter-spacing: 1px; 
-            font-family: var(--fd); 
-            padding: 6px 6px; 
-            border-radius: 6px; 
-            background: #000; 
-            color: #fff; 
-            border: 1px solid rgba(255,255,255,0.2); 
+        .h-sz {
+            font-weight: 800; font-size: 11px; text-align: center;
+            letter-spacing: 1px; font-family: var(--fd); padding: 6px 6px;
+            border-radius: 6px; background: #000; color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         .h-sz.big { color: #00ff7f; text-shadow: 0 0 5px rgba(0, 255, 127, 0.5); }
         .h-sz.small { color: #ff4d4d; text-shadow: 0 0 5px rgba(255, 77, 77, 0.5); }
 
-        /* Password Panel - Python Logo Applied */
         .pass-overlay {
-            position: fixed; 
-            inset: 0; 
-            z-index: 10001; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.95); 
-            backdrop-filter: blur(30px); 
-            opacity: 0; 
-            pointer-events: none; 
-            transition: opacity .4s ease;
+            position: fixed; inset: 0; z-index: 10001;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(30px);
+            opacity: 0; pointer-events: none; transition: opacity .4s ease;
         }
 
-        .pass-overlay.show { 
-            opacity: 1; 
-            pointer-events: auto; 
-        }
+        .pass-overlay.show { opacity: 1; pointer-events: auto; }
 
         .pass-card {
-            width: 340px; 
-            padding: 40px 30px; 
+            width: 340px; padding: 40px 30px;
             background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(0, 0, 0, 0.99));
-            border-radius: 28px; 
-            position: relative; 
-            overflow: hidden; 
-            text-align: center;
-            transform: scale(0.88) translateY(16px); 
+            border-radius: 28px; position: relative; overflow: hidden; text-align: center;
+            transform: scale(0.88) translateY(16px);
             transition: transform .5s cubic-bezier(.34, 1.56, .64, 1);
-            box-shadow: 0 0 80px rgba(204, 102, 255, 0.2), inset 0 0 20px rgba(204, 102, 255, 0.05); 
-            border: 1.5px solid rgba(204, 102, 255, 0.5); 
+            box-shadow: 0 0 80px rgba(204, 102, 255, 0.2), inset 0 0 20px rgba(204, 102, 255, 0.05);
+            border: 1.5px solid rgba(204, 102, 255, 0.5);
         }
 
         .pass-card::before {
-            content: ''; 
-            position: absolute; 
-            inset: 0; 
+            content: ''; position: absolute; inset: 0;
             background: linear-gradient(45deg, transparent, rgba(204, 102, 255, 0.1), transparent);
-            animation: shimmer 3s infinite; 
-            pointer-events: none;
+            animation: shimmer 3s infinite; pointer-events: none;
         }
 
-        .pass-overlay.show .pass-card { 
-            transform: scale(1) translateY(0); 
-        }
+        .pass-overlay.show .pass-card { transform: scale(1) translateY(0); }
 
         .lgn-icon {
-            width: 80px; 
-            height: 80px; 
-            margin: 0 auto 20px; 
-            border-radius: 50%; 
+            width: 80px; height: 80px; margin: 0 auto 20px; border-radius: 50%;
             background: linear-gradient(135deg, rgba(204, 102, 255, 0.2), rgba(0,0,0,0.5));
-            border: 2px solid rgba(204, 102, 255, 0.5); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            font-size: 36px; 
-            box-shadow: 0 0 50px rgba(204, 102, 255, 0.3);
+            border: 2px solid rgba(204, 102, 255, 0.5);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; box-shadow: 0 0 50px rgba(204, 102, 255, 0.3);
             animation: pulseGlowViolet 2s infinite alternate;
         }
 
-        @keyframes pulseGlowViolet { 
-            0% { box-shadow: 0 0 30px rgba(204, 102, 255, 0.2); } 
-            100% { box-shadow: 0 0 60px rgba(204, 102, 255, 0.5); } 
+        @keyframes pulseGlowViolet {
+            0% { box-shadow: 0 0 30px rgba(204, 102, 255, 0.2); }
+            100% { box-shadow: 0 0 60px rgba(204, 102, 255, 0.5); }
         }
 
-        .lgn-icon i { 
-            background: linear-gradient(135deg, #cc66ff, #ff8c00); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            filter: drop-shadow(0 0 15px rgba(204, 102, 255, 0.5)); 
+        .lgn-icon i {
+            background: linear-gradient(135deg, #cc66ff, #ff8c00);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(204, 102, 255, 0.5));
         }
 
-        .lgn-title { 
-            font-family: var(--fd); 
-            font-size: 26px; 
-            font-weight: 900; 
-            letter-spacing: 6px; 
-            background: linear-gradient(135deg, #cc66ff, #ff8c00); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            margin-bottom: 5px; 
+        .lgn-title {
+            font-family: var(--fd); font-size: 26px; font-weight: 900;
+            letter-spacing: 6px; background: linear-gradient(135deg, #cc66ff, #ff8c00);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
         }
 
-        .lgn-sub { 
-            font-size: 11px; 
-            color: #cc66ff; 
-            letter-spacing: 4px; 
-            text-transform: uppercase; 
-            margin-bottom: 25px; 
-            font-family: var(--fd); 
-            font-weight: 600;
+        .lgn-sub {
+            font-size: 11px; color: #cc66ff; letter-spacing: 4px;
+            text-transform: uppercase; margin-bottom: 25px;
+            font-family: var(--fd); font-weight: 600;
         }
 
-        .lgn-input { 
-            width: 100%; 
-            padding: 16px 18px; 
-            background: rgba(0, 0, 0, 0.8); 
-            border: 2px solid rgba(204, 102, 255, 0.2); 
-            border-radius: 14px; 
-            color: #fff; 
-            font-family: var(--fm); 
-            font-size: 14px; 
-            outline: none; 
-            text-align: center; 
-            letter-spacing: 4px; 
-            margin-bottom: 16px; 
-            transition: all .3s; 
+        .lgn-input {
+            width: 100%; padding: 16px 18px; background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(204, 102, 255, 0.2); border-radius: 14px;
+            color: #fff; font-family: var(--fm); font-size: 14px;
+            outline: none; text-align: center; letter-spacing: 4px;
+            margin-bottom: 16px; transition: all .3s;
         }
 
-        .lgn-input:focus { 
-            border-color: #cc66ff; 
-            box-shadow: 0 0 15px rgba(204, 102, 255, 0.3); 
+        .lgn-input:focus { border-color: #cc66ff; box-shadow: 0 0 15px rgba(204, 102, 255, 0.3); }
+
+        .lgn-btn {
+            width: 100%; padding: 16px; background: linear-gradient(135deg, #cc66ff, #ff4d00);
+            border: none; border-radius: 14px; font-family: var(--fd);
+            font-size: 14px; font-weight: 900; color: #fff; cursor: pointer;
+            letter-spacing: 5px; text-transform: uppercase;
+            box-shadow: 0 10px 30px rgba(204, 102, 255, 0.3); transition: all 0.2s;
         }
 
-        .lgn-btn { 
-            width: 100%; 
-            padding: 16px; 
-            background: linear-gradient(135deg, #cc66ff, #ff4d00); 
-            border: none; 
-            border-radius: 14px; 
-            font-family: var(--fd); 
-            font-size: 14px; 
-            font-weight: 900; 
-            color: #fff; 
-            cursor: pointer; 
-            letter-spacing: 5px; 
-            text-transform: uppercase; 
-            box-shadow: 0 10px 30px rgba(204, 102, 255, 0.3); 
-            transition: all 0.2s;
-        }
+        .lgn-btn:active { transform: scale(0.96); box-shadow: 0 5px 15px rgba(204, 102, 255, 0.2); }
 
-        .lgn-btn:active { 
-            transform: scale(0.96); 
-            box-shadow: 0 5px 15px rgba(204, 102, 255, 0.2); 
-        }
-
-        .lgn-err { 
-            color: #ff4d4d; 
-            font-size: 11px; 
-            margin-top: 14px; 
-            min-height: 14px; 
-            font-family: var(--fm); 
-            letter-spacing: 1px; 
+        .lgn-err {
+            color: #ff4d4d; font-size: 11px; margin-top: 14px;
+            min-height: 14px; font-family: var(--fm); letter-spacing: 1px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Password Panel Structure -->
+    <!-- PASSWORD PANEL -->
     <div class="pass-overlay show" id="passOverlay">
         <div class="pass-card">
-            <!-- Python Logo Added Here -->
-            <div class="lgn-icon"><i class="fab fa-python"></i></div>
+            <div class="lgn-icon">
+                <i class="fab fa-python"></i>
+            </div>
             <div class="lgn-title">PYTHON VIP</div>
-            <div class="lgn-sub">WinGo 30s Market</div>
+            <div class="lgn-sub">HGZY WinGo 30s Market</div>
             <input type="password" class="lgn-input" id="passIn" placeholder="••••••••" autocomplete="off" />
-            <button class="lgn-btn" id="lgnBtn"><i class="fas fa-unlock"></i> ACCESS</button>
+            <button class="lgn-btn" id="lgnBtn">
+                <i class="fas fa-unlock"></i> ACCESS
+            </button>
             <div class="lgn-err" id="lgnErr"></div>
         </div>
     </div>
 
-    <!-- Signal Panel Structure -->
+    <!-- SIGNAL PANEL -->
     <div class="fp" id="fp">
         <div class="fp-head" id="dragH">
-            <span class="fp-brand"><i class="fab fa-python py-logo"></i>PYTHON VIP <span class="market-badge">30S</span></span>
+            <span class="fp-brand">
+                <i class="fab fa-python py-logo"></i>
+                PYTHON VIP 
+                <span class="market-badge">30S</span>
+            </span>
             <div class="fp-head-r"></div>
         </div>
+        
         <div class="fp-body" id="fpBody">
-            
-            <!-- Timer Ring (Disabled) -->
-            <div class="timer-ring-wrap" style="display: none;">
-                <svg width="110" height="110" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255, 255, 255, .05)" stroke-width="6" />
-                    <circle id="ringFg" cx="50" cy="50" r="42" fill="none" stroke="#ff8c00" stroke-width="6" stroke-linecap="round" stroke-dasharray="263.9" stroke-dashoffset="0" transform="rotate(-90 50 50)" style="transition: stroke-dashoffset .15s linear, stroke .3s; filter: drop-shadow(0 0 6px rgba(255, 140, 0, .3));" />
-                    <text x="50" y="50" text-anchor="middle" dy=".3em" id="tmrSec" style="font-family: 'Orbitron', monospace; font-size: 28px; font-weight: 900; fill: #ffeedd;">--</text>
-                    <text x="50" y="68" text-anchor="middle" style="font-size: 8px; fill: rgba(255,255,255,0.4);">SEC</text>
-                </svg>
-            </div>
-
-            <!-- Main Prediction Card -->
             <div class="lottery-card">
                 <div class="lc-icon">
                     <i class="fas fa-rocket"></i>
                     <span id="iconSec" class="lc-icon-sec">--</span>
                 </div>
+                
                 <div class="lc-title">Lottery Prediction</div>
                 
-                <div class="lc-period-top">PERIOD: <span id="perTop">....</span></div>
+                <div class="lc-period-top">
+                    <span class="period-label">Period:</span>
+                    <span id="perTop" class="period-num">....</span>
+                </div>
 
                 <div class="lc-signal-main">
                     <span class="lc-signal-label">Signal</span>
-                    <div class="lc-signal-value" id="sizeVal">
+                    <div class="lc-signal-value" id="sigVal">
                         <i class="fas fa-mobile-screen-button signal-loader"></i>
                     </div>
                 </div>
 
-                <div class="lc-period-bottom">CHANCE: <span id="perChance">--%</span></div>
+                <div class="lc-period-bottom">
+                    CHANCE: <span id="perChance">--%</span>
+                </div>
 
                 <div class="lc-status-box">
                     <span class="lc-status-label">Status:</span>
@@ -713,17 +442,16 @@
     <script>
         /**
          * ==============================================================================
-         * PYTHON VIP - WINGO 30S MARKET SIGNAL PANEL
-         * Engineered with Pythonic Object-Oriented JavaScript Structure
-         * 100% Connected to Live 30s Server. Requires Active Internet Connection.
+         * PYTHON VIP - HGZY WINGO 30S MARKET SIGNAL PANEL
+         * Features: BIG/SMALL Signal Only (Number display removed from main signal)
          * ==============================================================================
          */
 
         class HGZYSignalPanel {
+            
             constructor() {
                 this.initializeFirebase();
                 
-                // State Management Properties
                 this.isAuthenticated = false;
                 this.isActive = false;
                 this.currentPeriod = null;
@@ -731,7 +459,6 @@
                 this.TOTAL_SEC = 30;
                 this.CIRC = 2 * Math.PI * 42;
                 
-                // DOM References Cache
                 this.passOverlay = document.getElementById('passOverlay');
                 this.passIn = document.getElementById('passIn');
                 this.lgnBtn = document.getElementById('lgnBtn');
@@ -739,7 +466,6 @@
                 this.fp = document.getElementById('fp');
                 this.dragH = document.getElementById('dragH');
 
-                // Dragging State Properties
                 this.isDraggingPanel = false;
                 this.dragStartX = 0;
                 this.dragStartY = 0;
@@ -747,9 +473,6 @@
                 this.dragOffY = 0;
             }
 
-            /**
-             * Initialize Firebase Configuration
-             */
             initializeFirebase() {
                 var firebaseConfig = {
                     apiKey: "AIzaSyA4MXyCyvpAL8NQ23j3TWxiszPofWInVA",
@@ -761,9 +484,6 @@
                 firebase.initializeApp(firebaseConfig);
             }
 
-            /**
-             * Main Initialization Method
-             */
             async init() {
                 this.setupEventListeners();
                 this.setupNetworkListeners();
@@ -771,16 +491,13 @@
                 this.showPasswordPanel();
             }
 
-            /**
-             * Setup All Event Listeners for UI elements
-             */
             setupEventListeners() {
                 this.lgnBtn.addEventListener('click', () => this.handleLogin());
+                
                 this.passIn.addEventListener('keydown', (e) => { 
                     if (e.key === 'Enter') this.handleLogin(); 
                 });
 
-                // Dragging listeners
                 this.dragH.addEventListener('touchstart', (e) => { 
                     var t = e.touches[0]; this.startDrag(t.clientX, t.clientY); 
                 }, { passive: true });
@@ -801,9 +518,6 @@
                 document.addEventListener('dblclick', (e) => e.preventDefault());
             }
 
-            /**
-             * Setup Network Status Listeners (Strict Internet Check)
-             */
             setupNetworkListeners() {
                 window.addEventListener('online', () => {
                     this.showToast('Connection Restored. Reconnecting...', 'success');
@@ -821,9 +535,6 @@
                 });
             }
 
-            /**
-             * Creates the falling balls background effect
-             */
             startFallingBallsAnimation() {
                 setInterval(() => {
                     var ball = document.createElement('div');
@@ -839,9 +550,6 @@
                 }, 300);
             }
 
-            /**
-             * Shows the Password Panel
-             */
             showPasswordPanel() {
                 this.passOverlay.classList.add('show'); 
                 this.passIn.value = ''; 
@@ -849,9 +557,6 @@
                 setTimeout(() => this.passIn.focus(), 350);
             }
 
-            /**
-             * Hides the Password Panel and Displays the Signal Panel
-             */
             showSignalPanel() {
                 this.passOverlay.classList.remove('show');
                 this.fp.classList.add('vis'); 
@@ -862,18 +567,12 @@
                 this.fp.dataset.hasPosition = '1';
             }
 
-            /**
-             * Hides the Signal Panel
-             */
             hideSignalPanel() {
                 this.fp.classList.remove('vis'); 
                 this.fp.style.display = 'none';
                 this.showPasswordPanel(); 
             }
 
-            /**
-             * Displays Toast Notification
-             */
             showToast(msg, type) {
                 var box = document.getElementById('toastBox'); 
                 var el = document.createElement('div');
@@ -885,11 +584,7 @@
                 setTimeout(() => el.remove(), 2800);
             }
 
-            /**
-             * Handles Login Authentication
-             */
             handleLogin() {
-                // STRICT INTERNET CHECK: Do not allow login without internet
                 if (!navigator.onLine) {
                     this.lgnErr.textContent = 'No Internet Connection!';
                     this.showToast('Cannot connect. No Internet Data.', 'error');
@@ -907,9 +602,6 @@
                 }
             }
 
-            /**
-             * Check Server Connection and Boot Main Loops
-             */
             async checkConnectionAndShowPanel() {
                 if (!navigator.onLine) {
                     this.showToast('No Internet Connection. Panel Locked.', 'error');
@@ -918,16 +610,12 @@
                 
                 this.showSignalPanel(); 
                 
-                // Start background loops
                 setInterval(() => this.fetchHistory(), 3000);
                 setInterval(() => this.mainLoop(), 200);
                 
                 await this.fetchHistory();
             }
 
-            /**
-             * Fetches Live 30s History Data from WinGo Server
-             */
             async fetchHistory() {
                 if (!navigator.onLine) {
                     this.isActive = false;
@@ -937,9 +625,11 @@
                 
                 try {
                     var res = await fetch("https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?r=" + Date.now());
+                    
                     if (!res.ok) throw new Error("Network error");
                     
                     var json = await res.json();
+                    
                     if (json.data && json.data.list && json.data.list.length > 0) {
                         this.currentPeriod = (BigInt(json.data.list[0].issueNumber) + 1n).toString();
                         
@@ -956,31 +646,21 @@
                         this.renderHistory();
                         this.isActive = true;
                     }
+                    
                 } catch (e) {
                     this.isActive = false;
                     this.showToast('Server Error! Reconnecting...', 'error');
                 }
             }
 
-            /**
-             * Algorithm to determine colors based on number
-             */
             getNumColors(n) {
                 if (n === 0 || n === 5) return ['red', 'violet'];
                 if (n === 1 || n === 3 || n === 7 || n === 9) return ['green'];
-                return ['red'];
+                return ['red']; // 2, 4, 6, 8
             }
 
-            /**
-             * Algorithm to determine BIG or SMALL
-             */
-            getSize(n) { 
-                return n >= 5 ? 'BIG' : 'SMALL'; 
-            }
+            getSize(n) { return n >= 5 ? 'BIG' : 'SMALL'; }
 
-            /**
-             * Renders the Last 10 Signals History to DOM
-             */
             renderHistory() {
                 var list = document.getElementById('hList'); 
                 list.innerHTML = '';
@@ -988,6 +668,7 @@
                 this.historyData.forEach((item) => {
                     var el = document.createElement('div'); 
                     el.className = 'h-item';
+                    
                     var pShort = item.period.length > 6 ? item.period.slice(-6) : item.period;
                     var nClass = item.colors.includes('violet') ? 'nv' : (item.colors.includes('green') ? 'ng' : 'nr');
                     var dotsHtml = '';
@@ -998,17 +679,20 @@
                     });
                     
                     var szClass = item.size === 'BIG' ? 'big' : 'small';
+                    
                     el.innerHTML = '<span class="h-per">' + pShort + '</span><div class="h-num ' + nClass + '">' + item.num + '</div><div class="h-cdots">' + dotsHtml + '</div><span class="h-sz ' + szClass + '">' + item.size + '</span>';
+                    
                     list.appendChild(el);
                 });
             }
 
             /**
-             * Core Prediction Algorithm (Quantum Hashing Logic)
+             * Core Prediction Algorithm - 30s Market BIG/SMALL
              */
             analyzeSignal(period) {
                 if (!period) return null;
-                var h1 = 0, s1 = period + "_PYTHON_VIP_SG_30S_QUANTUM_2025_A";
+                
+                var h1 = 0, s1 = period + "_PYTHON_VIP_SG_30S_QUANTUM_2025_BIG_SMALL";
                 
                 for (var i = 0; i < s1.length; i++) { 
                     h1 = ((h1 << 5) - h1) + s1.charCodeAt(i); 
@@ -1027,7 +711,7 @@
             }
 
             /**
-             * Main Processing Loop for Timer and Signal Generation
+             * Main Loop - 30s Market Signal Display Engine
              */
             mainLoop() {
                 var now = new Date(); 
@@ -1038,55 +722,77 @@
                 if (remaining < 0) remaining = 0;
 
                 var stsTxt = document.getElementById('stsTxt');
-                var sizeVal = document.getElementById('sizeVal');
+                var sigVal = document.getElementById('sigVal');
                 var perChance = document.getElementById('perChance');
                 var iconSecEl = document.getElementById('iconSec');
+                var perTop = document.getElementById('perTop');
 
-                // Handling Offline / Reconnecting State
                 if (!this.isActive || !this.currentPeriod || !navigator.onLine) {
+                    
                     stsTxt.textContent = 'RECONNECTING...'; 
                     stsTxt.style.color = '#ff4d4d';
-                    sizeVal.innerHTML = '<div style="text-align:center;"><i class="fas fa-mobile-screen-button signal-loader"></i><div style="font-size: 14px; letter-spacing: 3px; margin-top: 10px; color: #ff4d4d; font-family: var(--fd);">LOADING...</div></div>';
-                    sizeVal.className = 'lc-signal-value';
-                    sizeVal.style.color = '#ff4d4d';
+                    
+                    sigVal.innerHTML = '<div style="text-align:center;"><i class="fas fa-mobile-screen-button signal-loader"></i><div style="font-size: 14px; letter-spacing: 3px; margin-top: 10px; color: #ff4d4d; font-family: var(--fd);">LOADING...</div></div>';
+                    sigVal.style.color = '#ff4d4d';
+                    
                     perChance.textContent = '--%';
                     
                     if (iconSecEl) {
                         iconSecEl.textContent = '--';
                         iconSecEl.style.color = '#ff4d4d';
                     }
+                    
+                    if (perTop) {
+                        perTop.textContent = '....';
+                    }
+                    
                     return;
                 }
 
-                document.getElementById('perTop').textContent = this.currentPeriod;
+                if (perTop) {
+                    perTop.textContent = this.currentPeriod;
+                }
 
-                // Timing Logic Constraints
-                // 25s - 30s: Analyzing
-                // 6s - 25s: Locked Signal
-                // 0s - 5s: Waiting Result
+                // 30s Market Timing Logic
+                // 26s - 30s: ANALYZING
+                // 6s - 25s: LOCKED Signal (BIG/SMALL Only)
+                // 0s - 5s: WAITING RESULT
                 
                 if (remaining > 25 && remaining <= 30) {
+                    
                     stsTxt.textContent = 'ANALYZING...'; 
                     stsTxt.style.color = '#ff8c00';
-                    sizeVal.innerHTML = '<div style="font-size: 24px; letter-spacing: 3px; color: #ff8c00; font-family: var(--fd);">ANALYZING...</div>';
-                    sizeVal.className = 'lc-signal-value';
-                    sizeVal.style.color = '#ff8c00';
+                    
+                    sigVal.innerHTML = '<div style="font-size: 24px; letter-spacing: 3px; color: #ff8c00; font-family: var(--fd);">ANALYZING...</div>';
+                    sigVal.style.color = '#ff8c00';
+                    
                     perChance.textContent = '--%';
                     
                     if (iconSecEl) {
                         iconSecEl.textContent = remaining;
                         iconSecEl.style.color = '#ff8c00';
                     }
+                    
                 } else if (remaining > 5 && remaining <= 25) {
+                    
                     var analysis = this.analyzeSignal(this.currentPeriod);
+                    
                     if (analysis) {
+                        
                         stsTxt.textContent = 'LOCKED';
                         stsTxt.style.color = '#00ff7f';
                         
-                        sizeVal.textContent = analysis.size;
-                        sizeVal.className = 'lc-signal-value ' + (analysis.size === 'BIG' ? 'big' : 'small');
-                        sizeVal.style.color = analysis.size === 'BIG' ? '#ffd700' : '#ff4d4d'; 
-                        
+                        var sizeColor = analysis.size === 'BIG' ? '#ffd700' : '#ff4d4d';
+
+                        // Construct Signal HTML (ONLY BIG/SMALL) - Number Removed
+                        sigVal.innerHTML = `
+                            <div class="sig-content">
+                                <div class="sig-size" style="color: ${sizeColor};">
+                                    ${analysis.size}
+                                </div>
+                            </div>
+                        `;
+                        sigVal.style.color = '#ffeedd'; // Default text color reset
                         perChance.textContent = analysis.chance + '%';
                     }
                     
@@ -1094,12 +800,14 @@
                         iconSecEl.textContent = remaining;
                         iconSecEl.style.color = '#00ff7f';
                     }
+                    
                 } else if (remaining <= 5) {
+                    
                     stsTxt.textContent = 'WAITING RESULT'; 
                     stsTxt.style.color = '#ffd700';
-                    sizeVal.innerHTML = '<i class="fas fa-hourglass-half" style="font-size: 40px; color: #ffd700;"></i>';
-                    sizeVal.className = 'lc-signal-value';
-                    sizeVal.style.color = '#ffd700';
+                    
+                    sigVal.innerHTML = '<i class="fas fa-hourglass-half" style="font-size: 48px; color: #ffd700;"></i>';
+                    sigVal.style.color = '#ffd700';
                     
                     if (iconSecEl) {
                         iconSecEl.textContent = remaining;
@@ -1108,9 +816,6 @@
                 }
             }
 
-            /**
-             * Panel Dragging Logic - Start
-             */
             startDrag(clientX, clientY) {
                 var rect = this.fp.getBoundingClientRect(); 
                 this.isDraggingPanel = true;
@@ -1124,9 +829,6 @@
                 this.fp.style.top = rect.top + 'px';
             }
 
-            /**
-             * Panel Dragging Logic - Move
-             */
             moveDrag(clientX, clientY) {
                 if (!this.isDraggingPanel) return;
                 var newX = this.dragOffX + (clientX - this.dragStartX); 
@@ -1138,18 +840,13 @@
                 this.fp.style.top = newY + 'px';
             }
 
-            /**
-             * Panel Dragging Logic - End
-             */
             endDrag() { 
                 this.isDraggingPanel = false; 
             }
         }
 
-        // Instantiate and Initialize the Application
         const app = new HGZYSignalPanel();
         app.init();
-
     </script>
 </body>
 </html>

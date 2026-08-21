@@ -2,851 +2,813 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title> HGZY VIP </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>DKWIN </title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Hind+Siliguri:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <!-- Firebase SDK Integration -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <style>
-        :root {
-            --bg: #000000;
-            --bg-card: rgba(10, 10, 10, 0.95);
-            --fg: #ffeedd;
-            --muted: rgba(255, 200, 150, 0.45);
-            --accent: #ff8c00;
-            --gold: #ffd700;
-            --red: #ff4d4d;
-            --green: #00ff7f;
-            --violet: #cc66ff;
-            --border: rgba(255, 140, 0, 0.25);
-            --radius: 0px;
-            --fd: 'Orbitron', monospace;
-            --fm: 'JetBrains Mono', monospace;
-            --fb: 'Hind+Siliguri', sans-serif;
+        /* =========================================================================
+           CSS RESET AND BASE STYLES
+           ========================================================================= */
+        html, body { 
+            margin: 0; 
+            padding: 0; 
+            height: 100%; 
+            width: 100%; 
+            overflow: hidden; 
+            background: #000; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent;
         }
 
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-        html, body {
-            height: 100%; width: 100%; overflow: hidden; background: #000;
-            font-family: var(--fb); color: var(--fg); user-select: none;
-            -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+        /* =========================================================================
+           GAME BACKGROUND IFRAME CONTAINER
+           ========================================================================= */
+        .iframe-container {
+            position: absolute;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            z-index: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        iframe { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+            display: block;
         }
 
-        .falling-ball {
-            position: fixed; width: 12px; height: 12px; border-radius: 50%;
-            top: -20px; z-index: 1; pointer-events: none;
-            animation: fallDown linear forwards;
-        }
-
-        @keyframes fallDown { to { transform: translateY(105vh); opacity: 0.8; } }
-
-        .fp {
-            position: fixed; top: 0; left: 0; transform: none;
-            width: 100vw; height: 100vh; max-height: 100vh; z-index: 10002;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0.98), rgba(10, 10, 10, 0.95));
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: none; border-radius: var(--radius);
-            display: none; flex-direction: column;
-            touch-action: none; overflow: hidden;
-            font-size: 12px; color: #ffeedd;
-            will-change: transform, top, left; transition: none;
-        }
-
-        .fp.vis { display: flex; }
-        .fp.dragged { transform: none !important; animation: none !important; }
-
-        .fp-head {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 18px 20px; cursor: grab; flex-shrink: 0;
-            background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(0, 0, 0, 0.99));
-            border-bottom: 1.5px solid rgba(255, 140, 0, 0.4);
-            position: relative; touch-action: none;
-            box-shadow: 0 4px 20px rgba(255, 140, 0, 0.15);
-        }
-
-        .fp-head:active { cursor: grabbing; }
-
-        .fp-head::after {
-            content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent), var(--gold), var(--accent), transparent);
-            animation: headGlow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes headGlow { 0% { opacity: .4; } 100% { opacity: 1; } }
-
-        .fp-brand {
-            font-family: var(--fd); font-size: 18px; font-weight: 900;
-            letter-spacing: 2px; display: flex; align-items: center; gap: 8px;
+        /* =========================================================================
+           VISUAL EFFECTS LAYER (Only Fireflies - Falling Balls Removed)
+           ========================================================================= */
+        .effects-layer {
+            position: fixed;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
             pointer-events: none;
-            background: linear-gradient(135deg, #ff8c00, #ffd700);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
+            z-index: 50;
+            overflow: hidden;
         }
 
-        .fp-brand .py-logo {
-            font-size: 22px; color: var(--accent); -webkit-text-fill-color: var(--accent);
-            filter: drop-shadow(0 0 6px rgba(255, 140, 0, 0.6));
+        .firefly {
+            position: absolute;
+            width: 5px; 
+            height: 5px;
+            background: #fffb00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #fffb00, 0 0 20px #fffb00;
+            opacity: 0;
+            animation: flyAround 6s infinite ease-in-out;
         }
 
-        .fp-brand .market-badge {
-            font-size: 10px; background: linear-gradient(135deg, var(--accent), var(--red));
-            color: #fff; padding: 3px 6px; border-radius: 4px; margin-left: 4px;
-            box-shadow: 0 2px 5px rgba(255, 77, 77, 0.3); -webkit-text-fill-color: #fff;
+        @keyframes flyAround {
+            0% { transform: translate(0, 0) scale(1); opacity: 0; }
+            20% { opacity: 1; }
+            50% { transform: translate(40px, -50px) scale(1.5); opacity: 0.8; }
+            80% { opacity: 1; }
+            100% { transform: translate(80px, -100px) scale(0.8); opacity: 0; }
         }
 
-        .fp-head-r { display: flex; align-items: center; gap: 6px; pointer-events: none; }
-
-        .fp-body { flex: 1; overflow-y: auto; padding: 20px 20px; position: relative; background: transparent; }
-        .fp-body::-webkit-scrollbar { width: 4px; }
-        .fp-body::-webkit-scrollbar-thumb { background: rgba(255, 140, 0, 0.6); border-radius: 4px; }
-        .fp-body::-webkit-scrollbar-track { background: #000; }
-
-        .lottery-card {
-            background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(0, 0, 0, 0.99));
-            border: 1.5px solid rgba(255, 140, 0, 0.4);
-            border-radius: 28px; padding: 25px 20px; position: relative; overflow: hidden;
-            box-shadow: 0 0 80px rgba(255, 140, 0, 0.15), inset 0 0 20px rgba(255, 140, 0, 0.05);
-            margin-bottom: 20px; text-align: center;
+        /* =========================================================================
+           PREMIUM SIGNAL PANEL (BIGGER & FULLY CIRCULAR/ROUNDED)
+           ========================================================================= */
+        .box { 
+            width: 160px; /* Made bigger */
+            height: auto;
+            background: rgba(5, 5, 5, 0.95); 
+            border-radius: 80px; /* Made completely round (gol) */
+            color: #ffffff; 
+            text-align: center; 
+            padding: 10px; 
+            position: fixed; 
+            top: 20px; 
+            right: 10px;
+            z-index: 9999; 
+            cursor: grab; 
+            backdrop-filter: blur(20px); 
+            box-sizing: border-box;
+            touch-action: none; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+            border: 2px solid #00ff66;
         }
 
-        .lottery-card::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(45deg, transparent, rgba(255, 140, 0, 0.1), transparent);
-            animation: shimmer 3s infinite; pointer-events: none;
+        .box::before {
+            content: "";
+            position: absolute;
+            top: -3px; left: -3px; right: -3px; bottom: -3px;
+            background: linear-gradient(45deg, #ff0055, #00ff66, #0099ff, #ff0055);
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 82px; /* Matching rounded border */
+            animation: rgbBorder 4s linear infinite;
+            opacity: 0.6; 
         }
 
-        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        @keyframes rgbBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .box:active { cursor: grabbing; }
 
-        .lc-icon {
-            width: 70px; height: 70px; margin: 0 auto 15px; border-radius: 50%;
-            background: linear-gradient(135deg, rgba(255, 140, 0, 0.2), rgba(0,0,0,0.5));
-            border: 2px solid rgba(255, 140, 0, 0.5);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 32px; box-shadow: 0 0 50px rgba(255, 140, 0, 0.3);
-            animation: pulseGlow 2s infinite alternate; position: relative; z-index: 2;
+        /* Header & Logo */
+        .panel-header {
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 4px; 
+            width: 100%;
         }
 
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 30px rgba(255, 140, 0, 0.2); }
-            100% { box-shadow: 0 0 60px rgba(255, 140, 0, 0.5); }
+        .premium-logo-area {
+            position: relative; 
+            width: 40px; 
+            height: 40px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
         }
 
-        .lc-icon i {
-            position: absolute; opacity: 0.15; font-size: 40px;
-            background: linear-gradient(135deg, #ff8c00, #ffd700);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 15px rgba(255, 140, 0, 0.5));
+        .logo-image {
+            width: 100%; 
+            height: 100%; 
+            border-radius: 50%; 
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.2); 
+            z-index: 2;
         }
 
-        .lc-icon-sec {
-            position: relative; z-index: 3; font-family: 'Orbitron', monospace;
-            font-size: 26px; font-weight: 900; color: #ffeedd;
-            text-shadow: 0 0 10px rgba(255, 140, 0, 0.8); transition: color 0.3s ease;
+        .logo-ring {
+            position: absolute; 
+            width: 120%; 
+            height: 120%;
+            border: 1px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 50%; 
+            animation: spinRing 4s infinite linear; 
+            z-index: 1;
         }
 
-        .lc-title {
-            font-family: var(--fd); font-size: 18px; font-weight: 900;
-            letter-spacing: 4px; background: linear-gradient(135deg, #ff8c00, #ffd700);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin-bottom: 20px; text-transform: uppercase; position: relative; z-index: 2;
+        @keyframes spinRing { 100% { transform: rotate(360deg); } }
+
+        .server-badge {
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 4px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 20px;
+            padding: 3px 8px; 
+            font-size: 8px; 
+            font-weight: 800; 
+            color: #fff;
+            text-transform: uppercase;
+            width: 100%; 
+            letter-spacing: 0.5px;
+        }
+        
+        .vpn-dot {
+            width: 6px; 
+            height: 6px; 
+            background-color: #00ff66;
+            border-radius: 50%; 
+            box-shadow: 0 0 6px #00ff66;
         }
 
-        .lc-period-top {
-            font-family: var(--fd); font-size: 14px; font-weight: 700;
-            letter-spacing: 2px; color: rgba(255, 200, 150, 0.6);
-            margin: 10px 0; position: relative; z-index: 2;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
+        /* Login Section */
+        .login-part { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 6px; 
+            width: 100%; 
         }
-
-        .lc-period-top .period-label {
-            font-size: 10px; color: rgba(255, 200, 150, 0.5);
-            text-transform: uppercase; letter-spacing: 1.5px;
+        
+        .login-part input { 
+            width: 100%; 
+            padding: 6px; 
+            background: rgba(255, 255, 255, 0.1); 
+            border: 1px solid #00ff66; 
+            border-radius: 20px; 
+            color: #fff; 
+            font-size: 9px; 
+            text-align: center; 
+            outline: none; 
+            box-sizing: border-box;
         }
-
-        .lc-period-top span.period-num {
-            color: #00ff7f; font-weight: 800; text-shadow: 0 0 8px rgba(0, 255, 127, 0.4);
-            word-break: break-all;
-        }
-
-        .lc-period-bottom {
-            font-family: var(--fd); font-size: 14px; font-weight: 700;
-            letter-spacing: 2px; color: rgba(255, 200, 150, 0.6);
-            margin: 10px 0; position: relative; z-index: 2;
-        }
-
-        .lc-period-bottom span {
-            color: #00ff7f; font-weight: 800; margin-left: 5px;
-            text-shadow: 0 0 8px rgba(0, 255, 127, 0.4);
-        }
-
-        .lc-signal-main {
-            background: rgba(255, 140, 0, 0.03); border: 1.5px solid rgba(255, 140, 0, 0.3);
-            border-radius: 20px; padding: 25px 15px; margin: 15px 0;
-            position: relative; z-index: 2; box-shadow: inset 0 0 20px rgba(255, 140, 0, 0.05);
-        }
-
-        .lc-signal-label {
-            font-family: var(--fd); font-size: 12px; color: rgba(255, 200, 150, 0.6);
-            letter-spacing: 4px; text-transform: uppercase;
-            display: block; margin-bottom: 12px;
-        }
-
-        .lc-signal-value {
-            font-family: var(--fd); font-weight: 900;
-            letter-spacing: 3px; text-shadow: 0 0 25px currentColor, 0 2px 5px rgba(0,0,0,0.6);
-            transition: all 0.3s ease; line-height: 1; min-height: 120px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-        }
-
-        /* Big/Small Container */
-        .sig-content { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; }
-        .sig-size { 
-            font-size: 64px; /* Made it even bigger for better visibility */
+        
+        .login-btn { 
+            width: 100%; 
+            padding: 6px; 
+            background: #00ff66; 
+            color: #000; 
+            border: none; 
+            border-radius: 20px; 
             font-weight: 900; 
-            letter-spacing: 4px; 
-            text-shadow: 0 0 20px currentColor;
+            cursor: pointer; 
+            font-size: 9px; 
+            text-transform: uppercase; 
+            box-shadow: 0 4px 10px rgba(0, 255, 102, 0.3);
+            transition: transform 0.2s;
+        }
+        
+        .login-btn:hover { 
+            background: #00cc55; 
+            transform: scale(1.02);
         }
 
-        .signal-loader {
-            font-size: 48px; color: var(--accent);
-            animation: spinLoader 1s linear infinite; display: inline-block;
+        /* Signal Application Section */
+        .app-part { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 6px; 
+            width: 100%; 
+        }
+        
+        .period-top-box {
+            background: transparent;
+            border-radius: 20px; 
+            padding: 0; 
+            width: 100%; 
+            text-align: center; 
+            box-sizing: border-box;
         }
 
-        @keyframes spinLoader { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .lc-status-box {
-            margin-top: 15px; background: rgba(0,0,0,0.5); border-radius: 12px;
-            padding: 12px; border: 1px solid rgba(255, 140, 0, 0.15);
-            position: relative; z-index: 2;
-            display: flex; justify-content: space-between; align-items: center;
+        .period-label { 
+            font-size: 8px; 
+            color: #888; 
+            display: block; 
+            font-weight: 600; 
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        #periodID { 
+            font-size: 11px; 
+            font-weight: 800; 
+            display: block; 
+            color: #fff; 
+            letter-spacing: 0.5px;
         }
 
-        .lc-status-label { font-size: 11px; color: rgba(255, 200, 150, 0.7); font-family: var(--fd); letter-spacing: 1px; }
-        .lc-status-val { font-family: var(--fd); font-weight: 800; font-size: 14px; }
-
-        .history-title {
-            font-size: 13px; color: rgba(255, 200, 150, 0.6);
-            text-transform: uppercase; letter-spacing: 1.5px;
-            font-family: var(--fd); margin: 16px 0 10px;
-            display: flex; align-items: center; gap: 6px;
+        .timer-container { 
+            text-align: center; 
+            width: 100%; 
+        }
+        
+        .timer-txt { 
+            font-size: 11px; 
+            color: #ffaa00; 
+            font-weight: 800; 
+            background: rgba(255, 170, 0, 0.15); 
+            padding: 4px; 
+            border-radius: 20px;
+            display: block;
         }
 
-        .history-title::before {
-            content: ''; width: 4px; height: 4px; background: var(--accent);
-            border-radius: 50%; box-shadow: 0 0 5px var(--accent);
+        /* Signal Output Area - FITTED IN BIGGER ROUND BOX */
+        #signalContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+            padding: 8px; 
+            box-sizing: border-box;
+            border: 1px solid #00ff66; 
+            background: rgba(0, 255, 102, 0.08); 
+            border-radius: 30px; /* Rounded to match panel */
         }
 
-        .h-list { display: flex; flex-direction: column; gap: 10px; }
-
-        .h-item {
-            display: grid; grid-template-columns: 60px 34px 1fr 50px;
-            align-items: center; gap: 8px; padding: 10px 12px;
-            border-radius: 12px; background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 140, 0, 0.15);
-            transition: transform .2s, box-shadow .2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        .signal-label { 
+            font-size: 8px; 
+            color: #00ff66; 
+            text-transform: uppercase; 
+            font-weight: bold; 
+            letter-spacing: 1px;
         }
 
-        .h-item:hover {
-            transform: scale(1.02); border-color: var(--accent);
-            box-shadow: 0 4px 10px rgba(255, 140, 0, 0.1);
-            background: rgba(255, 255, 255, 0.05);
+        .output-row { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            width: 100%; 
+        }
+        
+        /* MASSIVE TEXT, THICK AND TAN-TAN */
+        .size-txt { 
+            font-size: 32px; 
+            font-weight: 950; 
+            text-transform: uppercase; 
+            line-height: 1; 
+            text-shadow: 0 0 15px currentColor;
+            letter-spacing: -2px;
         }
 
-        .h-per { font-weight: 700; color: rgba(255, 255, 255, 0.4); font-size: 9px; font-family: var(--fm); text-align: center; }
-        .h-num {
-            width: 34px; height: 34px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 16px; color: #fff;
-            font-family: var(--fm); box-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+        /* Colors */
+        .res-big { color: #FFFF00; } 
+        .res-small { color: #ff3366; }
+        
+        .processing { 
+            font-size: 10px; 
+            color: #ffaa00; 
+            animation: blink 0.5s infinite; 
+            display: block; 
+            font-weight: 900; 
+            letter-spacing: 1px;
+            padding: 8px 0;
+        }
+        
+        @keyframes blink { 50% { opacity: 0.3; } }
+        
+        .hidden { display: none !important; }
+
+        /* =========================================================================
+           RESULT CHAT PANEL (LIVE RESULT GHOST - UNCHANGED)
+           ========================================================================= */
+        .chat-panel {
+            width: 140px; 
+            max-height: 350px; 
+            background: rgba(5, 5, 5, 0.95);
+            border-radius: 35px; 
+            color: #fff;
+            padding: 8px; 
+            position: fixed;
+            top: 460px; 
+            right: 10px; 
+            z-index: 9998;
+            cursor: grab;
+            backdrop-filter: blur(20px);
+            box-sizing: border-box;
+            display: none;
+            flex-direction: column;
+            gap: 6px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+            border: 2px solid #00ff66;
+            touch-action: none;
         }
 
-        .h-num.ng { background: linear-gradient(135deg, #00cc66, #00ff7f); box-shadow: 0 2px 8px rgba(0, 255, 127, .3); }
-        .h-num.nr { background: linear-gradient(135deg, #cc2233, #ff4d4d); box-shadow: 0 2px 8px rgba(255, 77, 77, .3); }
-        .h-num.nv { background: linear-gradient(135deg, #8833cc, #cc66ff); box-shadow: 0 2px 8px rgba(204, 102, 255, .3); }
+        .chat-panel::before {
+            content: "";
+            position: absolute;
+            top: -4px; left: -4px; right: -4px; bottom: -4px;
+            background: linear-gradient(45deg, #ff0055, #00ff66, #0099ff, #ff0055);
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 38px;
+            animation: rgbBorder 4s linear infinite;
+            opacity: 0.6;
+        }
+        
+        .chat-panel:active { cursor: grabbing; }
 
-        .h-cdots { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
-        .hcd { width: 12px; height: 12px; border-radius: 50%; }
-        .hcd.cg { background: #00cc66; box-shadow: 0 0 4px rgba(0, 255, 127, .4); }
-        .hcd.cr { background: #ff4d4d; box-shadow: 0 0 4px rgba(255, 77, 77, .4); }
-        .hcd.cv { background: #9333ea; box-shadow: 0 0 4px rgba(204, 102, 255, .4); }
-
-        .h-sz {
-            font-weight: 800; font-size: 11px; text-align: center;
-            letter-spacing: 1px; font-family: var(--fd); padding: 6px 6px;
-            border-radius: 6px; background: #000; color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
+        .chat-header {
+            font-size: 9px; 
+            font-weight: 800;
+            text-align: center;
+            color: #00ff66;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-bottom: 6px; 
+            border-bottom: 1px solid rgba(0,255,102,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
-        .h-sz.big { color: #00ff7f; text-shadow: 0 0 5px rgba(0, 255, 127, 0.5); }
-        .h-sz.small { color: #ff4d4d; text-shadow: 0 0 5px rgba(255, 77, 77, 0.5); }
-
-        .pass-overlay {
-            position: fixed; inset: 0; z-index: 10001;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(30px);
-            opacity: 0; pointer-events: none; transition: opacity .4s ease;
+        .chat-header .live-dot {
+            width: 6px; 
+            height: 6px; 
+            background: #ff0044;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ff0044;
+            animation: blink 1s infinite;
         }
 
-        .pass-overlay.show { opacity: 1; pointer-events: auto; }
+        .chat-body {
+            max-height: 290px; 
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px; 
+            padding-right: 3px;
+        }
+        
+        .chat-body::-webkit-scrollbar { width: 3px; }
+        .chat-body::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .chat-body::-webkit-scrollbar-thumb { background: #00ff66; border-radius: 4px; }
 
-        .pass-card {
-            width: 340px; padding: 40px 30px;
-            background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(0, 0, 0, 0.99));
-            border-radius: 28px; position: relative; overflow: hidden; text-align: center;
-            transform: scale(0.88) translateY(16px);
-            transition: transform .5s cubic-bezier(.34, 1.56, .64, 1);
-            box-shadow: 0 0 80px rgba(204, 102, 255, 0.2), inset 0 0 20px rgba(204, 102, 255, 0.05);
-            border: 1.5px solid rgba(204, 102, 255, 0.5);
+        .chat-msg {
+            font-size: 7px; 
+            font-weight: 800;
+            padding: 4px 5px; 
+            border-radius: 12px;
+            text-align: center;
+            letter-spacing: 0.5px;
+            animation: msgIn 0.4s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            flex-direction: column;
         }
 
-        .pass-card::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(45deg, transparent, rgba(204, 102, 255, 0.1), transparent);
-            animation: shimmer 3s infinite; pointer-events: none;
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        .pass-overlay.show .pass-card { transform: scale(1) translateY(0); }
-
-        .lgn-icon {
-            width: 80px; height: 80px; margin: 0 auto 20px; border-radius: 50%;
-            background: linear-gradient(135deg, rgba(204, 102, 255, 0.2), rgba(0,0,0,0.5));
-            border: 2px solid rgba(204, 102, 255, 0.5);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 36px; box-shadow: 0 0 50px rgba(204, 102, 255, 0.3);
-            animation: pulseGlowViolet 2s infinite alternate;
+        .chat-msg.win {
+            background: rgba(0, 255, 102, 0.15);
+            color: #00ff66;
+            border: 1px solid #00ff66;
+        }
+        
+        .chat-msg.loss {
+            background: rgba(255, 0, 68, 0.15);
+            color: #ff0044;
+            border: 1px solid #ff0044;
         }
 
-        @keyframes pulseGlowViolet {
-            0% { box-shadow: 0 0 30px rgba(204, 102, 255, 0.2); }
-            100% { box-shadow: 0 0 60px rgba(204, 102, 255, 0.5); }
+        .chat-msg .msg-label {
+            font-size: 8px; 
+            font-weight: 900;
+        }
+        
+        .chat-msg .msg-period {
+            font-size: 6px; 
+            opacity: 0.8;
+            font-weight: 600;
         }
 
-        .lgn-icon i {
-            background: linear-gradient(135deg, #cc66ff, #ff8c00);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 15px rgba(204, 102, 255, 0.5));
-        }
-
-        .lgn-title {
-            font-family: var(--fd); font-size: 26px; font-weight: 900;
-            letter-spacing: 6px; background: linear-gradient(135deg, #cc66ff, #ff8c00);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin-bottom: 5px;
-        }
-
-        .lgn-sub {
-            font-size: 11px; color: #cc66ff; letter-spacing: 4px;
-            text-transform: uppercase; margin-bottom: 25px;
-            font-family: var(--fd); font-weight: 600;
-        }
-
-        .lgn-input {
-            width: 100%; padding: 16px 18px; background: rgba(0, 0, 0, 0.8);
-            border: 2px solid rgba(204, 102, 255, 0.2); border-radius: 14px;
-            color: #fff; font-family: var(--fm); font-size: 14px;
-            outline: none; text-align: center; letter-spacing: 4px;
-            margin-bottom: 16px; transition: all .3s;
-        }
-
-        .lgn-input:focus { border-color: #cc66ff; box-shadow: 0 0 15px rgba(204, 102, 255, 0.3); }
-
-        .lgn-btn {
-            width: 100%; padding: 16px; background: linear-gradient(135deg, #cc66ff, #ff4d00);
-            border: none; border-radius: 14px; font-family: var(--fd);
-            font-size: 14px; font-weight: 900; color: #fff; cursor: pointer;
-            letter-spacing: 5px; text-transform: uppercase;
-            box-shadow: 0 10px 30px rgba(204, 102, 255, 0.3); transition: all 0.2s;
-        }
-
-        .lgn-btn:active { transform: scale(0.96); box-shadow: 0 5px 15px rgba(204, 102, 255, 0.2); }
-
-        .lgn-err {
-            color: #ff4d4d; font-size: 11px; margin-top: 14px;
-            min-height: 14px; font-family: var(--fm); letter-spacing: 1px;
+        .chat-empty {
+            font-size: 8px; 
+            color: #888;
+            text-align: center;
+            padding: 10px 4px; 
+            font-style: italic;
         }
     </style>
 </head>
 <body>
 
-    <!-- PASSWORD PANEL -->
-    <div class="pass-overlay show" id="passOverlay">
-        <div class="pass-card">
-            <div class="lgn-icon">
-                <i class="fab fa-python"></i>
-            </div>
-            <div class="lgn-title">PYTHON VIP</div>
-            <div class="lgn-sub">HGZY WinGo 30s Market</div>
-            <input type="password" class="lgn-input" id="passIn" placeholder="••••••••" autocomplete="off" />
-            <button class="lgn-btn" id="lgnBtn">
-                <i class="fas fa-unlock"></i> ACCESS
-            </button>
-            <div class="lgn-err" id="lgnErr"></div>
-        </div>
+    <!-- Visual Effects Layer (Only Fireflies - No Falling Balls) -->
+    <div class="effects-layer" id="effectsLayer"></div>
+
+    <!-- ================================================================== 
+         GAME BACKGROUND IFRAME 
+         ================================================================== 
+    -->
+    <div class="iframe-container">
+        <iframe src="https://dkwin9.com/#/register?invitationCode=75518598003" id="gameFrame"></iframe>
     </div>
 
-    <!-- SIGNAL PANEL -->
-    <div class="fp" id="fp">
-        <div class="fp-head" id="dragH">
-            <span class="fp-brand">
-                <i class="fab fa-python py-logo"></i>
-                PYTHON VIP 
-                <span class="market-badge">30S</span>
-            </span>
-            <div class="fp-head-r"></div>
-        </div>
+    <!-- Draggable Signal Panel (Bigger & Fully Round) -->
+    <div class="box" id="dragBox">
         
-        <div class="fp-body" id="fpBody">
-            <div class="lottery-card">
-                <div class="lc-icon">
-                    <i class="fas fa-rocket"></i>
-                    <span id="iconSec" class="lc-icon-sec">--</span>
-                </div>
-                
-                <div class="lc-title">Lottery Prediction</div>
-                
-                <div class="lc-period-top">
-                    <span class="period-label">Period:</span>
-                    <span id="perTop" class="period-num">....</span>
-                </div>
+        <div class="panel-header">
+            <div class="premium-logo-area">
+                <div class="logo-ring"></div>
+                <img class="logo-image" src="https://i.postimg.cc/LqKYxR91/image.png" alt="VIP Logo">
+            </div>
+            <div class="server-badge">
+                <span id="serverStatusText">CONNECTING...</span>
+                <div class="vpn-dot" id="serverDot"></div>
+            </div>
+        </div>
 
-                <div class="lc-signal-main">
-                    <span class="lc-signal-label">Signal</span>
-                    <div class="lc-signal-value" id="sigVal">
-                        <i class="fas fa-mobile-screen-button signal-loader"></i>
+        <div id="loginPart" class="login-part">
+            <input type="password" id="passInput" placeholder="Enter Password">
+            <button class="login-btn" onclick="checkPass()">LOGIN SYSTEM</button>
+        </div>
+
+        <div id="appPart" class="app-part hidden">
+            <div class="period-top-box">
+                <span class="period-label">MARKET PERIOD (30s)</span>
+                <span id="periodID">Wait...</span>
+            </div>
+            
+            <div class="timer-container">
+                <div class="timer-txt">TIME LEFT: <span id="timer">--</span>s</div>
+            </div>
+            
+            <div id="signalContainer">
+                <span class="signal-label">Quantum AI Signal</span>
+                <div id="predictionOutput" style="width:100%;">
+                    <div class="output-row">
+                        <span class="size-txt" id="predictSize">--</span>
                     </div>
                 </div>
-
-                <div class="lc-period-bottom">
-                    CHANCE: <span id="perChance">--%</span>
-                </div>
-
-                <div class="lc-status-box">
-                    <span class="lc-status-label">Status:</span>
-                    <span class="lc-status-val" id="stsTxt">STANDBY</span>
-                </div>
             </div>
-
-            <div class="history-title">Last 10 Signals</div>
-            <div class="h-list" id="hList"></div>
         </div>
     </div>
 
-    <div id="toastBox" style="position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 99999; display: flex; flex-direction: column; gap: 5px; pointer-events: none;"></div>
+    <!-- Result Chat Panel (Draggable & Unchanged) -->
+    <div id="chatPanel" class="chat-panel">
+        <div class="chat-header">
+            <span class="live-dot"></span>
+            <span>LIVE RESULT GHOST</span>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="chat-empty">Waiting for first result...</div>
+        </div>
+    </div>
 
     <script>
-        /**
-         * ==============================================================================
-         * PYTHON VIP - HGZY WINGO 30S MARKET SIGNAL PANEL
-         * Features: BIG/SMALL Signal Only (Number display removed from main signal)
-         * ==============================================================================
-         */
+        /* =========================================================================
+           FIREBASE CONFIGURATION & INITIALIZATION
+           ========================================================================= */
+        const firebaseConfig = {
+            apiKey: "AIzaSyA4MXyCyvpAL8NQ23j3TWxiszPofWInVA",
+            authDomain: "wingo-ai-624fb.firebaseapp.com",
+            databaseURL: "https://wingo-ai-624fb-default-rtdb.firebaseio.com",
+            projectId: "wingo-ai-624fb",
+            appId: "1:266167882150:web:7f0f83606dfd4bcd8aff67"
+        };
+        firebase.initializeApp(firebaseConfig);
+        
+        /* =========================================================================
+           GLOBAL VARIABLES AND STATE MANAGEMENT
+           ========================================================================= */
+        let lastP = null;
+        let _active = false;
+        let currentSignal = null;
+        let evaluatedPeriods = new Set();
 
-        class HGZYSignalPanel {
+        /* =========================================================================
+           VISUAL EFFECTS GENERATOR
+           Only Fireflies - Falling Balls completely removed
+           ========================================================================= */
+        function createVisualEffects() {
+            const layer = document.getElementById('effectsLayer');
             
-            constructor() {
-                this.initializeFirebase();
+            // Create Fireflies (Jonaki Poka) - kept
+            for(let i=0; i<50; i++) {
+                let f = document.createElement('div');
+                f.className = 'firefly';
+                f.style.left = Math.random() * 100 + 'vw';
+                f.style.top = Math.random() * 100 + 'vh';
+                f.style.animationDelay = Math.random() * 5 + 's';
+                f.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                layer.appendChild(f);
+            }
+
+            // Falling Balls - REMOVED COMPLETELY as requested
+        }
+        createVisualEffects();
+
+        /* =========================================================================
+           DRAG LOGIC FOR PANELS
+           ========================================================================= */
+        function makeDraggable(element) {
+            let isDragging = false;
+            let startX, startY;
+            let currentX = 0, currentY = 0;
+
+            function dragStart(e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || 
+                    e.target.classList.contains('vpn-dot') || e.target.closest('.chat-body')) return;
                 
-                this.isAuthenticated = false;
-                this.isActive = false;
-                this.currentPeriod = null;
-                this.historyData = [];
-                this.TOTAL_SEC = 30;
-                this.CIRC = 2 * Math.PI * 42;
+                isDragging = true;
+                element.style.cursor = 'grabbing';
                 
-                this.passOverlay = document.getElementById('passOverlay');
-                this.passIn = document.getElementById('passIn');
-                this.lgnBtn = document.getElementById('lgnBtn');
-                this.lgnErr = document.getElementById('lgnErr');
-                this.fp = document.getElementById('fp');
-                this.dragH = document.getElementById('dragH');
-
-                this.isDraggingPanel = false;
-                this.dragStartX = 0;
-                this.dragStartY = 0;
-                this.dragOffX = 0;
-                this.dragOffY = 0;
-            }
-
-            initializeFirebase() {
-                var firebaseConfig = {
-                    apiKey: "AIzaSyA4MXyCyvpAL8NQ23j3TWxiszPofWInVA",
-                    authDomain: "wingo-ai-624fb.firebaseapp.com",
-                    databaseURL: "https://wingo-ai-624fb-default-rtdb.firebaseio.com",
-                    projectId: "wingo-ai-624fb",
-                    appId: "1:266167882150:web:7f0f83606dfd4bcd8aff67"
-                };
-                firebase.initializeApp(firebaseConfig);
-            }
-
-            async init() {
-                this.setupEventListeners();
-                this.setupNetworkListeners();
-                this.startFallingBallsAnimation();
-                this.showPasswordPanel();
-            }
-
-            setupEventListeners() {
-                this.lgnBtn.addEventListener('click', () => this.handleLogin());
+                const clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
                 
-                this.passIn.addEventListener('keydown', (e) => { 
-                    if (e.key === 'Enter') this.handleLogin(); 
-                });
-
-                this.dragH.addEventListener('touchstart', (e) => { 
-                    var t = e.touches[0]; this.startDrag(t.clientX, t.clientY); 
-                }, { passive: true });
+                startX = clientX - currentX;
+                startY = clientY - currentY;
                 
-                this.dragH.addEventListener('touchmove', (e) => { 
-                    var t = e.touches[0]; this.moveDrag(t.clientX, t.clientY); 
-                }, { passive: true });
-                
-                this.dragH.addEventListener('touchend', () => this.endDrag());
-                
-                this.dragH.addEventListener('mousedown', (e) => { 
-                    this.startDrag(e.clientX, e.clientY); e.preventDefault(); 
-                });
-                
-                document.addEventListener('mousemove', (e) => this.moveDrag(e.clientX, e.clientY));
-                document.addEventListener('mouseup', () => this.endDrag());
-                
-                document.addEventListener('dblclick', (e) => e.preventDefault());
+                if (e.type === "touchstart") e.preventDefault();
             }
 
-            setupNetworkListeners() {
-                window.addEventListener('online', () => {
-                    this.showToast('Connection Restored. Reconnecting...', 'success');
-                    if (this.isAuthenticated) {
-                        this.fetchHistory();
-                    }
-                });
-
-                window.addEventListener('offline', () => {
-                    this.isActive = false;
-                    this.showToast('No Internet Connection! Panel Hidden.', 'error');
-                    if (this.isAuthenticated) {
-                        this.hideSignalPanel();
-                    }
-                });
-            }
-
-            startFallingBallsAnimation() {
-                setInterval(() => {
-                    var ball = document.createElement('div');
-                    ball.className = 'falling-ball';
-                    var colors = ['#00ff7f', '#ff4d4d', '#cc66ff', '#ffd700'];
-                    var c = colors[Math.floor(Math.random() * colors.length)];
-                    ball.style.background = c;
-                    ball.style.left = Math.random() * 100 + 'vw';
-                    ball.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                    ball.style.boxShadow = '0 0 8px ' + c;
-                    document.body.appendChild(ball);
-                    setTimeout(() => ball.remove(), 5000);
-                }, 300);
-            }
-
-            showPasswordPanel() {
-                this.passOverlay.classList.add('show'); 
-                this.passIn.value = ''; 
-                this.lgnErr.textContent = '';
-                setTimeout(() => this.passIn.focus(), 350);
-            }
-
-            showSignalPanel() {
-                this.passOverlay.classList.remove('show');
-                this.fp.classList.add('vis'); 
-                this.fp.style.display = 'flex';
-                this.fp.style.left = '0'; 
-                this.fp.style.top = '0'; 
-                this.fp.style.transform = 'none'; 
-                this.fp.dataset.hasPosition = '1';
-            }
-
-            hideSignalPanel() {
-                this.fp.classList.remove('vis'); 
-                this.fp.style.display = 'none';
-                this.showPasswordPanel(); 
-            }
-
-            showToast(msg, type) {
-                var box = document.getElementById('toastBox'); 
-                var el = document.createElement('div');
-                var bg = type === 'error' ? 'rgba(255, 77, 77, .15); border: 1px solid rgba(255, 77, 77, .3); color: #ff4d4d' : 'rgba(255, 140, 0, .15); border: 1px solid rgba(255, 140, 0, .3); color: #ff8c00';
-                el.style.cssText = `padding: 8px 16px; border-radius: 10px; font-size: 10px; font-weight: 600; backdrop-filter: blur(14px); background: ${bg}; box-shadow: 0 4px 16px rgba(0, 0, 0, .4); margin-bottom: 5px; font-family: 'JetBrains Mono', sans-serif;`;
-                el.textContent = msg; 
-                box.appendChild(el);
-                setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; }, 2500);
-                setTimeout(() => el.remove(), 2800);
-            }
-
-            handleLogin() {
-                if (!navigator.onLine) {
-                    this.lgnErr.textContent = 'No Internet Connection!';
-                    this.showToast('Cannot connect. No Internet Data.', 'error');
-                    return;
-                }
-
-                if (this.passIn.value.trim() === 'VIP100') {
-                    this.isAuthenticated = true; 
-                    this.passOverlay.classList.remove('show');
-                    this.showToast('Access Granted. Connecting to 30s Server...', 'success');
-                    this.checkConnectionAndShowPanel();
-                } else {
-                    this.lgnErr.textContent = 'Wrong Password!'; 
-                    this.showToast('Access Denied', 'error');
+            function dragEnd() {
+                if (isDragging) {
+                    isDragging = false;
+                    element.style.cursor = 'grab';
                 }
             }
 
-            async checkConnectionAndShowPanel() {
-                if (!navigator.onLine) {
-                    this.showToast('No Internet Connection. Panel Locked.', 'error');
-                    return;
+            function drag(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                
+                const clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+                
+                currentX = clientX - startX;
+                currentY = clientY - startY;
+                
+                element.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            }
+
+            element.style.cursor = 'grab';
+            element.addEventListener("mousedown", dragStart);
+            element.addEventListener("touchstart", dragStart, { passive: false });
+
+            window.addEventListener("mouseup", dragEnd);
+            window.addEventListener("touchend", dragEnd);
+            
+            window.addEventListener("mousemove", drag);
+            window.addEventListener("touchmove", drag, { passive: false });
+        }
+
+        makeDraggable(document.getElementById("dragBox"));
+        makeDraggable(document.getElementById("chatPanel"));
+
+        /* =========================================================================
+           INTERNET CONNECTIVITY LOGIC
+           ========================================================================= */
+        function updateConnectionStatus() {
+            const statusText = document.getElementById('serverStatusText');
+            const dot = document.getElementById('serverDot');
+            const dragBox = document.getElementById('dragBox');
+            const chatPanel = document.getElementById('chatPanel');
+            
+            if (navigator.onLine) {
+                statusText.innerText = "SG/BD SERVER ONLINE";
+                statusText.style.color = "#ffffff";
+                dot.style.backgroundColor = "#00ff66";
+                dot.style.boxShadow = "0 0 8px #00ff66";
+                
+                if(_active) {
+                    dragBox.style.display = 'flex';
+                    chatPanel.style.display = 'flex';
                 }
+            } else {
+                statusText.innerText = "NO CONNECTION";
+                statusText.style.color = "#ff3333";
+                dot.style.backgroundColor = "#ff0000";
+                dot.style.boxShadow = "0 0 8px #ff0000";
                 
-                this.showSignalPanel(); 
-                
-                setInterval(() => this.fetchHistory(), 3000);
-                setInterval(() => this.mainLoop(), 200);
-                
-                await this.fetchHistory();
-            }
-
-            async fetchHistory() {
-                if (!navigator.onLine) {
-                    this.isActive = false;
-                    this.hideSignalPanel();
-                    return;
-                }
-                
-                try {
-                    var res = await fetch("https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?r=" + Date.now());
-                    
-                    if (!res.ok) throw new Error("Network error");
-                    
-                    var json = await res.json();
-                    
-                    if (json.data && json.data.list && json.data.list.length > 0) {
-                        this.currentPeriod = (BigInt(json.data.list[0].issueNumber) + 1n).toString();
-                        
-                        this.historyData = json.data.list.slice(0, 10).map((item) => {
-                            var num = typeof item.number === 'number' ? item.number : parseInt(item.number) || 0;
-                            return { 
-                                period: item.issueNumber, 
-                                num: num, 
-                                size: this.getSize(num), 
-                                colors: this.getNumColors(num) 
-                            };
-                        });
-                        
-                        this.renderHistory();
-                        this.isActive = true;
-                    }
-                    
-                } catch (e) {
-                    this.isActive = false;
-                    this.showToast('Server Error! Reconnecting...', 'error');
-                }
-            }
-
-            getNumColors(n) {
-                if (n === 0 || n === 5) return ['red', 'violet'];
-                if (n === 1 || n === 3 || n === 7 || n === 9) return ['green'];
-                return ['red']; // 2, 4, 6, 8
-            }
-
-            getSize(n) { return n >= 5 ? 'BIG' : 'SMALL'; }
-
-            renderHistory() {
-                var list = document.getElementById('hList'); 
-                list.innerHTML = '';
-                
-                this.historyData.forEach((item) => {
-                    var el = document.createElement('div'); 
-                    el.className = 'h-item';
-                    
-                    var pShort = item.period.length > 6 ? item.period.slice(-6) : item.period;
-                    var nClass = item.colors.includes('violet') ? 'nv' : (item.colors.includes('green') ? 'ng' : 'nr');
-                    var dotsHtml = '';
-                    
-                    item.colors.forEach((c) => {
-                        var dc = c === 'green' ? 'cg' : (c === 'violet' ? 'cv' : 'cr');
-                        dotsHtml += '<div class="hcd ' + dc + '"></div>';
-                    });
-                    
-                    var szClass = item.size === 'BIG' ? 'big' : 'small';
-                    
-                    el.innerHTML = '<span class="h-per">' + pShort + '</span><div class="h-num ' + nClass + '">' + item.num + '</div><div class="h-cdots">' + dotsHtml + '</div><span class="h-sz ' + szClass + '">' + item.size + '</span>';
-                    
-                    list.appendChild(el);
-                });
-            }
-
-            /**
-             * Core Prediction Algorithm - 30s Market BIG/SMALL
-             */
-            analyzeSignal(period) {
-                if (!period) return null;
-                
-                var h1 = 0, s1 = period + "_PYTHON_VIP_SG_30S_QUANTUM_2025_BIG_SMALL";
-                
-                for (var i = 0; i < s1.length; i++) { 
-                    h1 = ((h1 << 5) - h1) + s1.charCodeAt(i); 
-                    h1 |= 0; 
-                }
-                
-                var num = Math.abs(h1) % 10;
-                var chance = 90 + (Math.abs(h1 >> 4) % 10); 
-                
-                return { 
-                    num: num, 
-                    size: this.getSize(num), 
-                    colors: this.getNumColors(num), 
-                    chance: chance 
-                };
-            }
-
-            /**
-             * Main Loop - 30s Market Signal Display Engine
-             */
-            mainLoop() {
-                var now = new Date(); 
-                var ms = now.getTime();
-                var periodStart = Math.floor(ms / 30000) * 30000;
-                var remaining = this.TOTAL_SEC - Math.floor((ms - periodStart) / 1000);
-                
-                if (remaining < 0) remaining = 0;
-
-                var stsTxt = document.getElementById('stsTxt');
-                var sigVal = document.getElementById('sigVal');
-                var perChance = document.getElementById('perChance');
-                var iconSecEl = document.getElementById('iconSec');
-                var perTop = document.getElementById('perTop');
-
-                if (!this.isActive || !this.currentPeriod || !navigator.onLine) {
-                    
-                    stsTxt.textContent = 'RECONNECTING...'; 
-                    stsTxt.style.color = '#ff4d4d';
-                    
-                    sigVal.innerHTML = '<div style="text-align:center;"><i class="fas fa-mobile-screen-button signal-loader"></i><div style="font-size: 14px; letter-spacing: 3px; margin-top: 10px; color: #ff4d4d; font-family: var(--fd);">LOADING...</div></div>';
-                    sigVal.style.color = '#ff4d4d';
-                    
-                    perChance.textContent = '--%';
-                    
-                    if (iconSecEl) {
-                        iconSecEl.textContent = '--';
-                        iconSecEl.style.color = '#ff4d4d';
-                    }
-                    
-                    if (perTop) {
-                        perTop.textContent = '....';
-                    }
-                    
-                    return;
-                }
-
-                if (perTop) {
-                    perTop.textContent = this.currentPeriod;
-                }
-
-                // 30s Market Timing Logic
-                // 26s - 30s: ANALYZING
-                // 6s - 25s: LOCKED Signal (BIG/SMALL Only)
-                // 0s - 5s: WAITING RESULT
-                
-                if (remaining > 25 && remaining <= 30) {
-                    
-                    stsTxt.textContent = 'ANALYZING...'; 
-                    stsTxt.style.color = '#ff8c00';
-                    
-                    sigVal.innerHTML = '<div style="font-size: 24px; letter-spacing: 3px; color: #ff8c00; font-family: var(--fd);">ANALYZING...</div>';
-                    sigVal.style.color = '#ff8c00';
-                    
-                    perChance.textContent = '--%';
-                    
-                    if (iconSecEl) {
-                        iconSecEl.textContent = remaining;
-                        iconSecEl.style.color = '#ff8c00';
-                    }
-                    
-                } else if (remaining > 5 && remaining <= 25) {
-                    
-                    var analysis = this.analyzeSignal(this.currentPeriod);
-                    
-                    if (analysis) {
-                        
-                        stsTxt.textContent = 'LOCKED';
-                        stsTxt.style.color = '#00ff7f';
-                        
-                        var sizeColor = analysis.size === 'BIG' ? '#ffd700' : '#ff4d4d';
-
-                        // Construct Signal HTML (ONLY BIG/SMALL) - Number Removed
-                        sigVal.innerHTML = `
-                            <div class="sig-content">
-                                <div class="sig-size" style="color: ${sizeColor};">
-                                    ${analysis.size}
-                                </div>
-                            </div>
-                        `;
-                        sigVal.style.color = '#ffeedd'; // Default text color reset
-                        perChance.textContent = analysis.chance + '%';
-                    }
-                    
-                    if (iconSecEl) {
-                        iconSecEl.textContent = remaining;
-                        iconSecEl.style.color = '#00ff7f';
-                    }
-                    
-                } else if (remaining <= 5) {
-                    
-                    stsTxt.textContent = 'WAITING RESULT'; 
-                    stsTxt.style.color = '#ffd700';
-                    
-                    sigVal.innerHTML = '<i class="fas fa-hourglass-half" style="font-size: 48px; color: #ffd700;"></i>';
-                    sigVal.style.color = '#ffd700';
-                    
-                    if (iconSecEl) {
-                        iconSecEl.textContent = remaining;
-                        iconSecEl.style.color = '#ffd700';
-                    }
-                }
-            }
-
-            startDrag(clientX, clientY) {
-                var rect = this.fp.getBoundingClientRect(); 
-                this.isDraggingPanel = true;
-                this.dragStartX = clientX; 
-                this.dragStartY = clientY; 
-                this.dragOffX = rect.left; 
-                this.dragOffY = rect.top;
-                this.fp.classList.add('dragged'); 
-                this.fp.style.transform = 'none';
-                this.fp.style.left = rect.left + 'px'; 
-                this.fp.style.top = rect.top + 'px';
-            }
-
-            moveDrag(clientX, clientY) {
-                if (!this.isDraggingPanel) return;
-                var newX = this.dragOffX + (clientX - this.dragStartX); 
-                var newY = this.dragOffY + (clientY - this.dragStartY);
-                var w = this.fp.offsetWidth, h = this.fp.offsetHeight;
-                newX = Math.max(0, Math.min(newX, window.innerWidth - w));
-                newY = Math.max(0, Math.min(newY, window.innerHeight - h));
-                this.fp.style.left = newX + 'px'; 
-                this.fp.style.top = newY + 'px';
-            }
-
-            endDrag() { 
-                this.isDraggingPanel = false; 
+                dragBox.style.display = 'none';
+                chatPanel.style.display = 'none';
             }
         }
 
-        const app = new HGZYSignalPanel();
-        app.init();
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+
+        /* =========================================================================
+           ADD CHAT MESSAGE FUNCTION
+           ========================================================================= */
+        function addChatMessage(result, period, predictedSize, actualSize) {
+            const chatBody = document.getElementById('chatBody');
+            
+            const empty = chatBody.querySelector('.chat-empty');
+            if (empty) empty.remove();
+            
+            const msg = document.createElement('div');
+            msg.className = 'chat-msg ' + (result === 'WIN' ? 'win' : 'loss');
+            
+            const shortPeriod = period ? period.toString().slice(-5) : '-----';
+            msg.innerHTML = `
+                <span class="msg-label">${result === 'WIN' ? '✅ WIN' : '❌ LOSS'}</span>
+                <span class="msg-period">#${shortPeriod} | ${predictedSize}→${actualSize}</span>
+            `;
+            
+            chatBody.insertBefore(msg, chatBody.firstChild);
+            
+            while (chatBody.children.length > 30) {
+                chatBody.removeChild(chatBody.lastChild);
+            }
+        }
+
+        /* =========================================================================
+           LOGIN AUTHENTICATION
+           ========================================================================= */
+        function checkPass() {
+            if (document.getElementById('passInput').value.trim() === "VIP100") {
+                document.getElementById('loginPart').classList.add('hidden'); 
+                document.getElementById('appPart').classList.remove('hidden'); 
+                _active = true;
+                
+                updateConnectionStatus();
+                fetchData();
+                setInterval(loop, 1000);
+                setInterval(fetchData, 5000);
+            } else { 
+                alert("❌ Wrong Password!"); 
+            }
+        }
+
+        /* =========================================================================
+           DATA FETCHING & RESULT CHECKING
+           ========================================================================= */
+        async function fetchData() {
+            if (!navigator.onLine) return;
+
+            try {
+                const res = await fetch("https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?r=" + Date.now());
+                const json = await res.json();
+                
+                if (json.data?.list.length > 0) {
+                    const latestIssue = json.data.list[0].issueNumber;
+                    const newLastP = (BigInt(latestIssue) + 1n).toString();
+                    
+                    if (currentSignal && String(currentSignal.period) === String(latestIssue)) {
+                        const actualNum = parseInt(json.data.list[0].number);
+                        const actualSize = (actualNum >= 5) ? "BIG" : "SMALL";
+                        const resultStr = (actualSize === currentSignal.size) ? "WIN" : "LOSS";
+                        
+                        if (!evaluatedPeriods.has(String(latestIssue))) {
+                            evaluatedPeriods.add(String(latestIssue));
+                            addChatMessage(resultStr, latestIssue, currentSignal.size, actualSize);
+                            
+                            if (evaluatedPeriods.size > 50) {
+                                const arr = Array.from(evaluatedPeriods);
+                                evaluatedPeriods = new Set(arr.slice(-25));
+                            }
+                        }
+                    }
+                    
+                    lastP = newLastP;
+                }
+            } catch (e) { 
+                const now = new Date();
+                const totalSeconds = Math.floor(now.getTime() / 1000);
+                lastP = Math.floor(totalSeconds / 30).toString(); 
+            }
+        }
+
+        /* =========================================================================
+           SIGNAL ALGORITHM
+           ========================================================================= */
+        function analyzeQuantumSignal(period) {
+            let hash1 = 0; 
+            const seed1 = period + "DKWIN_SG_SERVER_SECURE_2026_30S_NUM_A";
+            
+            for (let i = 0; i < seed1.length; i++) {
+                hash1 = ((hash1 << 5) - hash1) + seed1.charCodeAt(i);
+                hash1 |= 0;
+            }
+            
+            let targetNumber = Math.abs(hash1) % 10;
+            let sizeResult = (targetNumber >= 5) ? "BIG" : "SMALL";
+            
+            return { size: sizeResult };
+        }
+
+        /* =========================================================================
+           MAIN TIMER & UI LOOP
+           ========================================================================= */
+        function loop() {
+            if (!_active) return;
+            
+            if (!navigator.onLine) {
+                document.getElementById('timer').innerText = "--";
+                return;
+            }
+
+            const now = new Date();
+            const sec = now.getSeconds();
+            
+            const pBox = document.getElementById('periodID');
+            if(lastP) {
+                pBox.innerText = lastP;
+            } else {
+                pBox.innerText = "Sync...";
+            }
+            
+            let rem = 30 - (sec % 30);
+            if (rem === 30) rem = 0; 
+            
+            document.getElementById('timer').innerText = rem < 10 ? "0" + rem : rem;
+
+            const outputWrapper = document.getElementById('predictionOutput');
+
+            if (rem <= 6 || rem === 0) {
+                outputWrapper.innerHTML = '<span class="processing">ANALYZING DATA...</span>';
+            } else {
+                if (!currentSignal || String(currentSignal.period) !== String(lastP)) {
+                    const result = analyzeQuantumSignal(lastP || "0");
+                    currentSignal = { period: lastP, size: result.size };
+                }
+                
+                if (currentSignal) {
+                    outputWrapper.innerHTML = `
+                        <div class="output-row">
+                            <span class="size-txt res-${currentSignal.size.toLowerCase()}">${currentSignal.size}</span>
+                        </div>
+                    `;
+                }
+            }
+        }
     </script>
 </body>
 </html>

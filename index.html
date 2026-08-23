@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <title>DKWIN </title>
+    <title>DKWIN</title>
     
     <!-- Firebase SDK Integration -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -80,18 +80,18 @@
         }
 
         /* =========================================================================
-           PREMIUM SIGNAL PANEL (BIGGER & FULLY CIRCULAR/ROUNDED)
+           PREMIUM SIGNAL PANEL (MADE SLIGHTLY SMALLER & CIRCULAR/ROUNDED)
            ========================================================================= */
         .box { 
-            width: 160px; /* Made bigger */
+            width: 175px; /* Slightly smaller width */
             height: auto;
             background: rgba(5, 5, 5, 0.95); 
-            border-radius: 80px; /* Made completely round (gol) */
+            border-radius: 70px; /* Slightly adjusted for smaller size */
             color: #ffffff; 
             text-align: center; 
-            padding: 10px; 
+            padding: 12px 8px; /* Slightly reduced padding */
             position: fixed; 
-            top: 20px; 
+            top: 40px; /* Adjusted top to fit butterfly */
             right: 10px;
             z-index: 9999; 
             cursor: grab; 
@@ -101,7 +101,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px; 
+            gap: 8px; /* Tighter gap */
             box-shadow: 0 8px 32px rgba(0,0,0,0.7);
             border: 2px solid #00ff66;
         }
@@ -113,7 +113,7 @@
             background: linear-gradient(45deg, #ff0055, #00ff66, #0099ff, #ff0055);
             background-size: 400%;
             z-index: -1;
-            border-radius: 82px; /* Matching rounded border */
+            border-radius: 72px; 
             animation: rgbBorder 4s linear infinite;
             opacity: 0.6; 
         }
@@ -126,19 +126,49 @@
         
         .box:active { cursor: grabbing; }
 
+        /* =========================================================================
+           RED BUTTERFLY COVER (প্রজাপতির ঢাকনা)
+           ========================================================================= */
+        .butterfly-cover {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 65px;
+            height: 65px;
+            z-index: 10001;
+            pointer-events: none;
+            filter: drop-shadow(0 0 12px rgba(255, 0, 0, 0.8));
+            animation: flutter 2s infinite ease-in-out;
+        }
+
+        @keyframes flutter {
+            0% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
+            50% { transform: translateX(-50%) translateY(-8px) rotate(5deg); }
+            100% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
+        }
+
+        .wing-l, .wing-r { transform-origin: 50px 50px; }
+        .wing-l { animation: flapL 0.3s infinite alternate ease-in-out; }
+        .wing-r { animation: flapR 0.3s infinite alternate ease-in-out; }
+
+        @keyframes flapL { from { transform: rotateY(0deg); } to { transform: rotateY(60deg); } }
+        @keyframes flapR { from { transform: rotateY(0deg); } to { transform: rotateY(-60deg); } }
+
         /* Header & Logo */
         .panel-header {
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            gap: 4px; 
+            gap: 5px; 
             width: 100%;
+            margin-top: 15px; /* Added margin to accommodate butterfly */
         }
 
         .premium-logo-area {
             position: relative; 
-            width: 40px; 
-            height: 40px;
+            width: 50px; /* Smaller size */
+            height: 50px; /* Smaller size */
             display: flex; 
             align-items: center; 
             justify-content: center;
@@ -187,6 +217,7 @@
             background-color: #00ff66;
             border-radius: 50%; 
             box-shadow: 0 0 6px #00ff66;
+            animation: blink 1.5s infinite;
         }
 
         /* Login Section */
@@ -259,7 +290,7 @@
         }
         
         #periodID { 
-            font-size: 11px; 
+            font-size: 12px; 
             font-weight: 800; 
             display: block; 
             color: #fff; 
@@ -281,18 +312,18 @@
             display: block;
         }
 
-        /* Signal Output Area - FITTED IN BIGGER ROUND BOX */
+        /* Signal Output Area */
         #signalContainer {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 4px;
             width: 100%;
-            padding: 8px; 
+            padding: 10px; 
             box-sizing: border-box;
             border: 1px solid #00ff66; 
             background: rgba(0, 255, 102, 0.08); 
-            border-radius: 30px; /* Rounded to match panel */
+            border-radius: 30px; 
         }
 
         .signal-label { 
@@ -310,28 +341,34 @@
             width: 100%; 
         }
         
-        /* MASSIVE TEXT, THICK AND TAN-TAN */
+        /* MASSIVE TEXT, THICK AND TAN-TAN (GLOWING) - Made slightly smaller for panel */
         .size-txt { 
-            font-size: 32px; 
+            font-size: 36px; 
             font-weight: 950; 
             text-transform: uppercase; 
             line-height: 1; 
-            text-shadow: 0 0 15px currentColor;
+            text-shadow: 0 0 15px currentColor, 0 0 30px currentColor;
             letter-spacing: -2px;
+            animation: glowPulse 1s infinite alternate;
+        }
+
+        @keyframes glowPulse {
+            from { text-shadow: 0 0 10px currentColor, 0 0 20px currentColor; }
+            to { text-shadow: 0 0 20px currentColor, 0 0 40px currentColor; }
         }
 
         /* Colors */
-        .res-big { color: #FFFF00; } 
-        .res-small { color: #ff3366; }
+        .res-big { color: #FFFF00; }  
+        .res-small { color: #ff3366; } 
         
         .processing { 
-            font-size: 10px; 
+            font-size: 11px; 
             color: #ffaa00; 
             animation: blink 0.5s infinite; 
             display: block; 
             font-weight: 900; 
             letter-spacing: 1px;
-            padding: 8px 0;
+            padding: 12px 0;
         }
         
         @keyframes blink { 50% { opacity: 0.3; } }
@@ -339,17 +376,17 @@
         .hidden { display: none !important; }
 
         /* =========================================================================
-           RESULT CHAT PANEL (LIVE RESULT GHOST - UNCHANGED)
+           RESULT CHAT PANEL (LIVE RESULT GHOST) - INCREASED SIZE
            ========================================================================= */
         .chat-panel {
-            width: 140px; 
-            max-height: 350px; 
+            width: 190px; /* Increased width from 150px */
+            max-height: 420px; /* Increased max-height from 350px */
             background: rgba(5, 5, 5, 0.95);
             border-radius: 35px; 
             color: #fff;
-            padding: 8px; 
+            padding: 12px; /* Increased padding from 8px */
             position: fixed;
-            top: 460px; 
+            top: 520px; 
             right: 10px; 
             z-index: 9998;
             cursor: grab;
@@ -357,7 +394,7 @@
             box-sizing: border-box;
             display: none;
             flex-direction: column;
-            gap: 6px; 
+            gap: 8px; 
             box-shadow: 0 8px 32px rgba(0,0,0,0.7);
             border: 2px solid #00ff66;
             touch-action: none;
@@ -378,13 +415,13 @@
         .chat-panel:active { cursor: grabbing; }
 
         .chat-header {
-            font-size: 9px; 
+            font-size: 11px; /* Increased font size from 9px */
             font-weight: 800;
             text-align: center;
             color: #00ff66;
             text-transform: uppercase;
             letter-spacing: 1px;
-            padding-bottom: 6px; 
+            padding-bottom: 8px; 
             border-bottom: 1px solid rgba(0,255,102,0.3);
             display: flex;
             align-items: center;
@@ -393,8 +430,8 @@
         }
 
         .chat-header .live-dot {
-            width: 6px; 
-            height: 6px; 
+            width: 7px; /* Increased dot size */
+            height: 7px; 
             background: #ff0044;
             border-radius: 50%;
             box-shadow: 0 0 8px #ff0044;
@@ -402,22 +439,22 @@
         }
 
         .chat-body {
-            max-height: 290px; 
+            max-height: 360px; /* Increased max-height from 290px */
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 4px; 
+            gap: 6px; /* Increased gap from 4px */
             padding-right: 3px;
         }
         
-        .chat-body::-webkit-scrollbar { width: 3px; }
+        .chat-body::-webkit-scrollbar { width: 4px; }
         .chat-body::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
         .chat-body::-webkit-scrollbar-thumb { background: #00ff66; border-radius: 4px; }
 
         .chat-msg {
-            font-size: 7px; 
+            font-size: 9px; /* Increased font size from 7px */
             font-weight: 800;
-            padding: 4px 5px; 
+            padding: 6px 8px; /* Increased padding from 4px 5px */
             border-radius: 12px;
             text-align: center;
             letter-spacing: 0.5px;
@@ -447,48 +484,58 @@
         }
 
         .chat-msg .msg-label {
-            font-size: 8px; 
+            font-size: 11px; /* Increased font size from 8px */
             font-weight: 900;
         }
         
         .chat-msg .msg-period {
-            font-size: 6px; 
+            font-size: 8px; /* Increased font size from 6px */
             opacity: 0.8;
             font-weight: 600;
         }
 
         .chat-empty {
-            font-size: 8px; 
+            font-size: 10px; /* Increased font size from 8px */
             color: #888;
             text-align: center;
-            padding: 10px 4px; 
+            padding: 20px 4px; 
             font-style: italic;
         }
     </style>
 </head>
 <body>
 
-    <!-- Visual Effects Layer (Only Fireflies - No Falling Balls) -->
+    <!-- Visual Effects Layer -->
     <div class="effects-layer" id="effectsLayer"></div>
 
-    <!-- ================================================================== 
-         GAME BACKGROUND IFRAME 
-         ================================================================== 
-    -->
+    <!-- Game Background Ifram9 -->
     <div class="iframe-container">
         <iframe src="https://dkwin9.com/#/register?invitationCode=75518598003" id="gameFrame"></iframe>
     </div>
 
-    <!-- Draggable Signal Panel (Bigger & Fully Round) -->
+    <!-- Draggable Signal Panel -->
     <div class="box" id="dragBox">
         
+        <!-- Red Butterfly Cover -->
+        <div class="butterfly-cover">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path class="wing-l" d="M50 50 Q15 5 5 35 Q0 55 50 50 Z" fill="#ff0000" stroke="#8b0000" stroke-width="2"/>
+                <path class="wing-r" d="M50 50 Q85 5 95 35 Q100 55 50 50 Z" fill="#ff0000" stroke="#8b0000" stroke-width="2"/>
+                <path class="wing-l" d="M50 50 Q20 90 15 60 Q30 40 50 50 Z" fill="#cc0000" stroke="#8b0000" stroke-width="2"/>
+                <path class="wing-r" d="M50 50 Q80 90 85 60 Q70 40 50 50 Z" fill="#cc0000" stroke="#8b0000" stroke-width="2"/>
+                <ellipse cx="50" cy="50" rx="3" ry="15" fill="#4a0000"/>
+                <line x1="48" y1="40" x2="40" y2="25" stroke="#4a0000" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="52" y1="40" x2="60" y2="25" stroke="#4a0000" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+
         <div class="panel-header">
             <div class="premium-logo-area">
                 <div class="logo-ring"></div>
                 <img class="logo-image" src="https://i.postimg.cc/LqKYxR91/image.png" alt="VIP Logo">
             </div>
             <div class="server-badge">
-                <span id="serverStatusText">CONNECTING...</span>
+                <span id="serverStatusText">VIP.. </span>
                 <div class="vpn-dot" id="serverDot"></div>
             </div>
         </div>
@@ -500,7 +547,7 @@
 
         <div id="appPart" class="app-part hidden">
             <div class="period-top-box">
-                <span class="period-label">MARKET PERIOD (30s)</span>
+                <span class="period-label"> (30s)</span>
                 <span id="periodID">Wait...</span>
             </div>
             
@@ -519,7 +566,7 @@
         </div>
     </div>
 
-    <!-- Result Chat Panel (Draggable & Unchanged) -->
+    <!-- Result Chat Panel (Draggable & Increased Size) -->
     <div id="chatPanel" class="chat-panel">
         <div class="chat-header">
             <span class="live-dot"></span>
@@ -553,12 +600,11 @@
 
         /* =========================================================================
            VISUAL EFFECTS GENERATOR
-           Only Fireflies - Falling Balls completely removed
            ========================================================================= */
         function createVisualEffects() {
             const layer = document.getElementById('effectsLayer');
             
-            // Create Fireflies (Jonaki Poka) - kept
+            // Create Fireflies (Jonaki Poka)
             for(let i=0; i<50; i++) {
                 let f = document.createElement('div');
                 f.className = 'firefly';
@@ -568,8 +614,6 @@
                 f.style.animationDuration = (Math.random() * 4 + 4) + 's';
                 layer.appendChild(f);
             }
-
-            // Falling Balls - REMOVED COMPLETELY as requested
         }
         createVisualEffects();
 
@@ -641,7 +685,6 @@
             const chatPanel = document.getElementById('chatPanel');
             
             if (navigator.onLine) {
-                statusText.innerText = "SG/BD SERVER ONLINE";
                 statusText.style.color = "#ffffff";
                 dot.style.backgroundColor = "#00ff66";
                 dot.style.boxShadow = "0 0 8px #00ff66";
@@ -651,7 +694,7 @@
                     chatPanel.style.display = 'flex';
                 }
             } else {
-                statusText.innerText = "NO CONNECTION";
+                statusText.innerText = "SERVER OFFLINE";
                 statusText.style.color = "#ff3333";
                 dot.style.backgroundColor = "#ff0000";
                 dot.style.boxShadow = "0 0 8px #ff0000";
@@ -751,7 +794,7 @@
            ========================================================================= */
         function analyzeQuantumSignal(period) {
             let hash1 = 0; 
-            const seed1 = period + "DKWIN_SG_SERVER_SECURE_2026_30S_NUM_A";
+            const seed1 = period + "DKWIN_INDIA_SERVER_SECURE_2026_30S_NUM_A";
             
             for (let i = 0; i < seed1.length; i++) {
                 hash1 = ((hash1 << 5) - hash1) + seed1.charCodeAt(i);
@@ -793,7 +836,7 @@
             const outputWrapper = document.getElementById('predictionOutput');
 
             if (rem <= 6 || rem === 0) {
-                outputWrapper.innerHTML = '<span class="processing">ANALYZING DATA...</span>';
+                outputWrapper.innerHTML = '<span class="processing">SCANNING MARKET...</span>';
             } else {
                 if (!currentSignal || String(currentSignal.period) !== String(lastP)) {
                     const result = analyzeQuantumSignal(lastP || "0");

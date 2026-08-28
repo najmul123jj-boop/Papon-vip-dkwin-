@@ -2,820 +2,860 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>HGZY VIP</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Hind+Siliguri:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>DKWIN</title>
+    
+    <!-- Firebase SDK Integration -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        html,body{width:100%;height:100%;overflow:hidden;background:#0d0204;font-family:'Hind Siliguri',sans-serif;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
-        #gameFrame{position:fixed;inset:0;width:100vw;height:100vh;border:none;z-index:1;pointer-events:auto}
+        /* =========================================================================
+           CSS RESET AND BASE STYLES
+           ========================================================================= */
+        html, body { 
+            margin: 0; 
+            padding: 0; 
+            height: 100%; 
+            width: 100%; 
+            overflow: hidden; 
+            background: #000; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* =========================================================================
+           GAME BACKGROUND IFRAME CONTAINER
+           ========================================================================= */
+        .iframe-container {
+            position: absolute;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            z-index: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
         
-        /* ড্যাশবোর্ড ওভারলে - লাল থিম (সাইড ও গোল করা হয়েছে) */
-        #dashboardOverlay{position:fixed;top:12px;left:12px;bottom:auto;right:auto;width:235px;max-height:92vh;overflow-y:auto;overflow-x:hidden;padding:0;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;display:none;z-index:999;scroll-behavior:smooth}
-        #dashboardOverlay.show{display:block;opacity:1;animation:dashSlideIn .4s ease-out both}
-        @keyframes dashSlideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        #dashboardOverlay::-webkit-scrollbar{width:2px}
-        #dashboardOverlay::-webkit-scrollbar-track{background:transparent}
-        #dashboardOverlay::-webkit-scrollbar-thumb{background:rgba(255,45,85,0.20);border-radius:4px}
+        iframe { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+            display: block;
+        }
+
+        /* =========================================================================
+           VISUAL EFFECTS LAYER (Only Fireflies - Falling Balls Removed)
+           ========================================================================= */
+        .effects-layer {
+            position: fixed;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            overflow: hidden;
+        }
+
+        .firefly {
+            position: absolute;
+            width: 5px; 
+            height: 5px;
+            background: #fffb00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #fffb00, 0 0 20px #fffb00;
+            opacity: 0;
+            animation: flyAround 6s infinite ease-in-out;
+        }
+
+        @keyframes flyAround {
+            0% { transform: translate(0, 0) scale(1); opacity: 0; }
+            20% { opacity: 1; }
+            50% { transform: translate(40px, -50px) scale(1.5); opacity: 0.8; }
+            80% { opacity: 1; }
+            100% { transform: translate(80px, -100px) scale(0.8); opacity: 0; }
+        }
+
+        /* =========================================================================
+           PREMIUM SIGNAL PANEL (MADE SLIGHTLY SMALLER & CIRCULAR/ROUNDED)
+           ========================================================================= */
+        .box { 
+            width: 175px; /* Slightly smaller width */
+            height: auto;
+            background: rgba(5, 5, 5, 0.95); 
+            border-radius: 70px; /* Slightly adjusted for smaller size */
+            color: #ffffff; 
+            text-align: center; 
+            padding: 12px 8px; /* Slightly reduced padding */
+            position: fixed; 
+            top: 40px; /* Adjusted top to fit butterfly */
+            right: 10px;
+            z-index: 9999; 
+            cursor: grab; 
+            backdrop-filter: blur(20px); 
+            box-sizing: border-box;
+            touch-action: none; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px; /* Tighter gap */
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+            border: 2px solid #00ff66;
+        }
+
+        .box::before {
+            content: "";
+            position: absolute;
+            top: -3px; left: -3px; right: -3px; bottom: -3px;
+            background: linear-gradient(45deg, #ff0055, #00ff66, #0099ff, #ff0055);
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 72px; 
+            animation: rgbBorder 4s linear infinite;
+            opacity: 0.6; 
+        }
+
+        @keyframes rgbBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
         
-        .dash-container{width:100%;max-width:100%;display:flex;flex-direction:column;gap:6px;position:relative}
+        .box:active { cursor: grabbing; }
+
+        /* =========================================================================
+           RED BUTTERFLY COVER (প্রজাপতির ঢাকনা)
+           ========================================================================= */
+        .butterfly-cover {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 65px;
+            height: 65px;
+            z-index: 10001;
+            pointer-events: none;
+            filter: drop-shadow(0 0 12px rgba(255, 0, 0, 0.8));
+            animation: flutter 2s infinite ease-in-out;
+        }
+
+        @keyframes flutter {
+            0% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
+            50% { transform: translateX(-50%) translateY(-8px) rotate(5deg); }
+            100% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
+        }
+
+        .wing-l, .wing-r { transform-origin: 50px 50px; }
+        .wing-l { animation: flapL 0.3s infinite alternate ease-in-out; }
+        .wing-r { animation: flapR 0.3s infinite alternate ease-in-out; }
+
+        @keyframes flapL { from { transform: rotateY(0deg); } to { transform: rotateY(60deg); } }
+        @keyframes flapR { from { transform: rotateY(0deg); } to { transform: rotateY(-60deg); } }
+
+        /* Header & Logo */
+        .panel-header {
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 5px; 
+            width: 100%;
+            margin-top: 15px; /* Added margin to accommodate butterfly */
+        }
+
+        .premium-logo-area {
+            position: relative; 
+            width: 50px; /* Smaller size */
+            height: 50px; /* Smaller size */
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+
+        .logo-image {
+            width: 100%; 
+            height: 100%; 
+            border-radius: 50%; 
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.2); 
+            z-index: 2;
+        }
+
+        .logo-ring {
+            position: absolute; 
+            width: 120%; 
+            height: 120%;
+            border: 1px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 50%; 
+            animation: spinRing 4s infinite linear; 
+            z-index: 1;
+        }
+
+        @keyframes spinRing { 100% { transform: rotate(360deg); } }
+
+        .server-badge {
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 4px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 20px;
+            padding: 3px 8px; 
+            font-size: 8px; 
+            font-weight: 800; 
+            color: #fff;
+            text-transform: uppercase;
+            width: 100%; 
+            letter-spacing: 0.5px;
+        }
         
-        .dash-close-btn{display:flex !important;position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;background:rgba(255,45,85,0.15);border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:10px;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;z-index:10}
-        .dash-close-btn:active{transform:scale(0.88);background:rgba(255,45,85,0.3)}
+        .vpn-dot {
+            width: 6px; 
+            height: 6px; 
+            background-color: #00ff66;
+            border-radius: 50%; 
+            box-shadow: 0 0 6px #00ff66;
+            animation: blink 1.5s infinite;
+        }
+
+        /* Login Section */
+        .login-part { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 6px; 
+            width: 100%; 
+        }
         
-        .dash-header{display:flex;align-items:center;justify-content:center;padding:6px 0 8px;flex-shrink:0;position:relative}
-        .dash-brand{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;background:linear-gradient(135deg,#ff2d55,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1.5px}
-        .header-right{display:flex;align-items:center;gap:4px;justify-content:center;margin-bottom:6px}
-        .live-badge{display:flex;align-items:center;gap:3px;font-size:7px;font-weight:800;color:#fff;background:linear-gradient(135deg,#8b0000,#ff2d55);padding:2px 8px;border-radius:20px;letter-spacing:1px;font-family:'Orbitron',monospace;animation:liveGlow 1.5s ease-in-out infinite alternate}
-        .live-dot{width:4px;height:4px;border-radius:50%;background:#fff;animation:dotBlink .7s infinite}
-        @keyframes liveGlow{from{box-shadow:0 0 6px rgba(255,45,85,0.3)}to{box-shadow:0 0 16px rgba(255,45,85,0.6)}}
-        @keyframes dotBlink{50%{opacity:.15}}
-        .conn-dot{width:7px;height:7px;border-radius:50%;transition:all .3s;flex-shrink:0}
-        .conn-dot.online{background:#ff6b6b;box-shadow:0 0 12px #ff2d55}
-        .conn-dot.offline{background:#4a0000;box-shadow:0 0 12px #8b0000;animation:dotBlink .4s infinite}
-        .icon-btn{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);font-size:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;touch-action:manipulation}
-        .icon-btn:active{transform:scale(0.88)}
-        .icon-btn.active{color:#ff2d55;border-color:rgba(255,45,85,0.25);background:rgba(255,45,85,0.06)}
+        .login-part input { 
+            width: 100%; 
+            padding: 6px; 
+            background: rgba(255, 255, 255, 0.1); 
+            border: 1px solid #00ff66; 
+            border-radius: 20px; 
+            color: #fff; 
+            font-size: 9px; 
+            text-align: center; 
+            outline: none; 
+            box-sizing: border-box;
+        }
         
-        /* লাল থিমের সিগন্যাল কার্ড (আরও গোল করা হয়েছে) */
-        .signal-card{width:100%;background:linear-gradient(145deg, rgba(20,5,8,0.95), rgba(10,2,4,0.9));border:1px solid rgba(255,45,85,0.20);border-radius:22px;padding:12px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 10px 30px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.05);transition:border-color .4s,box-shadow .4s;position:relative;overflow:hidden}
-        .signal-card.glow-gold{border-color:rgba(255,107,107,0.6);box-shadow:0 10px 30px rgba(0,0,0,0.6), 0 0 30px rgba(255,107,107,0.20)}
-        .signal-card.glow-red{border-color:rgba(255,45,85,0.7);box-shadow:0 10px 30px rgba(0,0,0,0.6), 0 0 30px rgba(255,45,85,0.25)}
+        .login-btn { 
+            width: 100%; 
+            padding: 6px; 
+            background: #00ff66; 
+            color: #000; 
+            border: none; 
+            border-radius: 20px; 
+            font-weight: 900; 
+            cursor: pointer; 
+            font-size: 9px; 
+            text-transform: uppercase; 
+            box-shadow: 0 4px 10px rgba(0, 255, 102, 0.3);
+            transition: transform 0.2s;
+        }
         
-        .sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,45,85,0.10)}
-        .sc-brand{font-family:'Orbitron',monospace;font-size:9px;font-weight:900;color:#ff2d55;letter-spacing:1.5px}
-        .sc-market{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;color:#ff6b6b;background:rgba(255,45,85,0.08);padding:2px 8px;border-radius:20px;border:1px solid rgba(255,45,85,0.20)}
+        .login-btn:hover { 
+            background: #00cc55; 
+            transform: scale(1.02);
+        }
+
+        /* Signal Application Section */
+        .app-part { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 6px; 
+            width: 100%; 
+        }
         
-        .sc-mid{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:8px;border-radius:12px;background:rgba(0,0,0,0.2)}
-        .sc-period-label{font-size:6px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;font-family:'Orbitron',monospace}
-        .sc-period-num{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:900;color:#ff6b6b;letter-spacing:1px;text-shadow:0 0 15px rgba(255,45,85,0.5)}
-        .sc-timer-wrap{position:relative;display:flex;align-items:center;justify-content:center}
-        .sc-timer-ring{width:38px;height:38px;touch-action:none}
-        .sc-timer-ring circle{fill:none;stroke-width:4;transform:rotate(-90deg);transform-origin:center}
-        .sc-timer-ring .ring-bg{stroke:rgba(255,255,255,0.04)}
-        .sc-timer-ring .ring-fg{stroke:#ff2d55;stroke-linecap:round;transition:stroke-dashoffset .12s linear,stroke .3s;filter:drop-shadow(0 0 6px rgba(255,45,85,0.45))}
-        .sc-timer-ring .ring-fg.urgent{stroke:#ff6b6b;filter:drop-shadow(0 0 6px rgba(255,107,107,0.55))}
-        .sc-timer-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-        .sc-timer-sec{font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:#ff2d55;line-height:1;transition:color .3s;text-shadow:0 0 12px rgba(255,45,85,0.3)}
-        .sc-timer-sec.urgent{color:#ff6b6b;text-shadow:0 0 12px rgba(255,107,107,0.5);animation:timerPulse .5s ease-in-out infinite alternate}
-        @keyframes timerPulse{from{transform:scale(1)}to{transform:scale(1.06)}}
-        .sc-timer-label{font-size:5px;color:rgba(255,45,85,0.4);letter-spacing:1px;text-transform:uppercase;font-family:'Orbitron',monospace}
-        .sc-timer-label.urgent{color:rgba(255,107,107,0.5)}
+        .period-top-box {
+            background: transparent;
+            border-radius: 20px; 
+            padding: 0; 
+            width: 100%; 
+            text-align: center; 
+            box-sizing: border-box;
+        }
+
+        .period-label { 
+            font-size: 8px; 
+            color: #888; 
+            display: block; 
+            font-weight: 600; 
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
         
-        .sc-status{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,45,85,0.05);margin-bottom:10px}
-        .sc-status-dot{width:6px;height:6px;border-radius:50%;background:#ff2d55;animation:dotBlink .5s infinite;flex-shrink:0}
-        .sc-status.locked .sc-status-dot{background:#ff6b6b;animation:none;box-shadow:0 0 8px #ff2d55}
-        .sc-status.waiting .sc-status-dot{background:#ff2d55;animation:dotBlink .3s infinite}
-        .sc-status-text{font-family:'Orbitron',monospace;font-size:7px;font-weight:700;letter-spacing:1.5px;color:#ff2d55}
-        .sc-status.locked .sc-status-text{color:#ff6b6b}
-        .sc-status.waiting .sc-status-text{color:#ff2d55}
+        #periodID { 
+            font-size: 12px; 
+            font-weight: 800; 
+            display: block; 
+            color: #fff; 
+            letter-spacing: 0.5px;
+        }
+
+        .timer-container { 
+            text-align: center; 
+            width: 100%; 
+        }
         
-        .sc-signal-zone{border-radius:14px;min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,45,85,0.05);transition:all .5s ease;position:relative;box-shadow:inset 0 5px 15px rgba(0,0,0,0.4)}
-        .sc-signal-zone::before{display:none !important}
-        .sc-signal-zone>*{position:relative;z-index:2}
-        .sc-signal-zone.glow-big{border-color:rgba(255,107,107,0.5);background:radial-gradient(circle at center,rgba(255,107,107,0.08),rgba(10,2,4,0.5))}
-        .sc-signal-zone.glow-small{border-color:rgba(255,45,85,0.5);background:radial-gradient(circle at center,rgba(255,45,85,0.10),rgba(10,2,4,0.5))}
+        .timer-txt { 
+            font-size: 11px; 
+            color: #ffaa00; 
+            font-weight: 800; 
+            background: rgba(255, 170, 0, 0.15); 
+            padding: 4px; 
+            border-radius: 20px;
+            display: block;
+        }
+
+        /* Signal Output Area */
+        #signalContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+            padding: 10px; 
+            box-sizing: border-box;
+            border: 1px solid #00ff66; 
+            background: rgba(0, 255, 102, 0.08); 
+            border-radius: 30px; 
+        }
+
+        .signal-label { 
+            font-size: 8px; 
+            color: #00ff66; 
+            text-transform: uppercase; 
+            font-weight: bold; 
+            letter-spacing: 1px;
+        }
+
+        .output-row { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            width: 100%; 
+        }
         
-        .sig-reveal{display:none;flex-direction:column;align-items:center;gap:4px;width:100%}
-        .sig-reveal.active{display:flex;animation:sigRevealIn .55s cubic-bezier(.34,1.56,.64,1) both}
-        @keyframes sigRevealIn{from{opacity:0;transform:scale(.5) rotateY(90deg)}to{opacity:1;transform:scale(1) rotateY(0deg)}}
+        /* MASSIVE TEXT, THICK AND TAN-TAN (GLOWING) - Made slightly smaller for panel */
+        .size-txt { 
+            font-size: 36px; 
+            font-weight: 950; 
+            text-transform: uppercase; 
+            line-height: 1; 
+            text-shadow: 0 0 15px currentColor, 0 0 30px currentColor;
+            letter-spacing: -2px;
+            animation: glowPulse 1s infinite alternate;
+        }
+
+        @keyframes glowPulse {
+            from { text-shadow: 0 0 10px currentColor, 0 0 20px currentColor; }
+            to { text-shadow: 0 0 20px currentColor, 0 0 40px currentColor; }
+        }
+
+        /* Colors */
+        .res-big { color: #FFFF00; }  
+        .res-small { color: #ff3366; } 
         
-        .sig-size-badge{font-family:'Orbitron',monospace;font-size:7px;font-weight:800;letter-spacing:1.5px;padding:2px 10px;border-radius:20px}
-        .sig-size-badge.big-badge{color:#ff6b6b;background:rgba(255,107,107,0.10);border:1px solid rgba(255,107,107,0.30)}
-        .sig-size-badge.small-badge{color:#ff2d55;background:rgba(255,45,85,0.10);border:1px solid rgba(255,45,85,0.30)}
+        .processing { 
+            font-size: 11px; 
+            color: #ffaa00; 
+            animation: blink 0.5s infinite; 
+            display: block; 
+            font-weight: 900; 
+            letter-spacing: 1px;
+            padding: 12px 0;
+        }
         
-        /* সিগন্যাল টেক্সট মোটা ও বড় করা হয়েছে */
-        .sig-main-text{font-family:'Orbitron',monospace;font-size:42px;font-weight:900;letter-spacing:4px;line-height:1.05}
-        .sig-main-text.big-text{background:linear-gradient(180deg,#fff,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 15px rgba(255,107,107,0.8))}
-        .sig-main-text.small-text{background:linear-gradient(180deg,#fff,#ff2d55);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 15px rgba(255,45,85,0.8))}
+        @keyframes blink { 50% { opacity: 0.3; } }
         
-        .sig-colors-row{display:flex;align-items:center;gap:4px}
-        .sig-cdot{width:8px;height:8px;border-radius:50%;transition:background .3s,box-shadow .3s;flex-shrink:0}
-        .sig-cdot.scg{background:#00ffa3;color:#00ffa3;box-shadow:0 0 12px rgba(0,255,163,0.6)}
-        .sig-cdot.scr{background:#ff2d55;color:#ff2d55;box-shadow:0 0 12px rgba(255,45,85,0.6)}
-        .sig-cdot.scv{background:#bf5af2;color:#bf5af2;box-shadow:0 0 12px rgba(191,90,242,0.6)}
-        .sig-color-label{font-size:8px;color:rgba(255,255,255,0.5);font-weight:600;min-width:30px}
+        .hidden { display: none !important; }
+
+        /* =========================================================================
+           RESULT CHAT PANEL (LIVE RESULT GHOST) - INCREASED SIZE
+           ========================================================================= */
+        .chat-panel {
+            width: 190px; /* Increased width from 150px */
+            max-height: 420px; /* Increased max-height from 350px */
+            background: rgba(5, 5, 5, 0.95);
+            border-radius: 35px; 
+            color: #fff;
+            padding: 12px; /* Increased padding from 8px */
+            position: fixed;
+            top: 520px; 
+            right: 10px; 
+            z-index: 9998;
+            cursor: grab;
+            backdrop-filter: blur(20px);
+            box-sizing: border-box;
+            display: none;
+            flex-direction: column;
+            gap: 8px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+            border: 2px solid #00ff66;
+            touch-action: none;
+        }
+
+        .chat-panel::before {
+            content: "";
+            position: absolute;
+            top: -4px; left: -4px; right: -4px; bottom: -4px;
+            background: linear-gradient(45deg, #ff0055, #00ff66, #0099ff, #ff0055);
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 38px;
+            animation: rgbBorder 4s linear infinite;
+            opacity: 0.6;
+        }
         
-        .sig-meta-row{display:flex;align-items:center;gap:12px;margin-top:4px}
-        .sig-meta-item{display:flex;align-items:center;gap:4px}
-        .sig-meta-label{font-size:6px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.5px;font-family:'Orbitron',monospace}
-        .sig-meta-value{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:800;color:#ff6b6b}
-        .sig-meta-value.gold{color:#ff2d55}
+        .chat-panel:active { cursor: grabbing; }
+
+        .chat-header {
+            font-size: 11px; /* Increased font size from 9px */
+            font-weight: 800;
+            text-align: center;
+            color: #00ff66;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-bottom: 8px; 
+            border-bottom: 1px solid rgba(0,255,102,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .chat-header .live-dot {
+            width: 7px; /* Increased dot size */
+            height: 7px; 
+            background: #ff0044;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ff0044;
+            animation: blink 1s infinite;
+        }
+
+        .chat-body {
+            max-height: 360px; /* Increased max-height from 290px */
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px; /* Increased gap from 4px */
+            padding-right: 3px;
+        }
         
-        /* পারসেন্ট শো করার জন্য স্টাইল */
-        .win-loss-display{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;letter-spacing:1.5px;margin-top:8px;padding:6px;border-radius:10px;text-align:center;width:100%;transition:all 0.3s ease}
-        .win-loss-display.win { color:#ff6b6b; background:rgba(255,107,107,0.1); border:1px solid rgba(255,107,107,0.3); box-shadow:0 0 15px rgba(255,107,107,0.1) }
-        .win-loss-display.loss { color:#8b0000; background:rgba(139,0,0,0.1); border:1px solid rgba(139,0,0,0.3); box-shadow:0 0 15px rgba(139,0,0,0.1) }
-        .win-loss-display.waiting { color:#ff2d55; background:rgba(255,45,85,0.1); border:1px solid rgba(255,45,85,0.3) }
+        .chat-body::-webkit-scrollbar { width: 4px; }
+        .chat-body::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .chat-body::-webkit-scrollbar-thumb { background: #00ff66; border-radius: 4px; }
+
+        .chat-msg {
+            font-size: 9px; /* Increased font size from 7px */
+            font-weight: 800;
+            padding: 6px 8px; /* Increased padding from 4px 5px */
+            border-radius: 12px;
+            text-align: center;
+            letter-spacing: 0.5px;
+            animation: msgIn 0.4s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            flex-direction: column;
+        }
+
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .chat-msg.win {
+            background: rgba(0, 255, 102, 0.15);
+            color: #00ff66;
+            border: 1px solid #00ff66;
+        }
         
-        .sc-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:8px;margin-top:8px;border-top:1px solid rgba(255,45,85,0.10)}
-        .sc-sync{font-size:7px;color:rgba(255,255,255,0.2);font-family:'JetBrains Mono',monospace}
-        .sc-streak{font-family:'Orbitron',monospace;font-size:7px;font-weight:700;color:#ff2d55}
+        .chat-msg.loss {
+            background: rgba(255, 0, 68, 0.15);
+            color: #ff0044;
+            border: 1px solid #ff0044;
+        }
+
+        .chat-msg .msg-label {
+            font-size: 11px; /* Increased font size from 8px */
+            font-weight: 900;
+        }
         
-        /* টগল বাটন - লাল থিম */
-        #toggleBtn{position:fixed;z-index:1000000;bottom:30px;right:24px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#8b0000,#ff2d55);border:2.5px solid rgba(255,107,107,0.40);box-shadow:0 0 40px rgba(255,45,85,0.35),0 8px 30px rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;cursor:grab;touch-action:none;transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .3s,opacity .3s ease,background .3s ease;color:#fff;font-size:22px;font-weight:300;user-select:none;-webkit-user-select:none;overflow:visible}
-        #toggleBtn:active{cursor:grabbing;transform:scale(0.92)}
-        #toggleBtn .toggle-icon{line-height:1;font-family:'Segoe UI',sans-serif;font-weight:100;text-shadow:0 0 20px rgba(255,255,255,0.4);transition:transform .3s ease;font-size:26px;pointer-events:none}
-        #toggleBtn .pulse-ring{position:absolute;inset:-8px;border-radius:50%;border:2.5px solid rgba(255,45,85,0.25);animation:togglePulse 2.5s ease-in-out infinite;pointer-events:none}
-        @keyframes togglePulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.6);opacity:0}}
-        #toggleBtn.hidden{opacity:0;pointer-events:none;transform:scale(0.5)}
-        #toggleBtn.dragging{transition:none!important;cursor:grabbing}
-        
-        /* লগইন প্যানেল - লাল থিম */
-        #loginOverlay{position:fixed;inset:0;z-index:9999999;background:rgba(13,2,4,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .5s ease,transform .5s ease}
-        #loginOverlay.hide{opacity:0;transform:scale(0.92) translateY(20px);pointer-events:none}
-        .login-box{width:100%;max-width:320px;background:rgba(15,2,5,0.95);border:2px solid transparent;border-radius:24px;padding:36px 24px 28px;backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);box-shadow:0 0 80px rgba(255,45,85,0.08),0 30px 80px rgba(0,0,0,0.7);text-align:center;background-image:linear-gradient(rgba(15,2,5,0.95),rgba(15,2,5,0.95)),conic-gradient(from 0deg,#ff2d55,#ff6b6b,#8b0000,#ff2d55);background-origin:padding-box,border-box;background-clip:padding-box,border-box;background-size:auto,300% 300%;animation:borderSpin 6s linear infinite}
-        @keyframes borderSpin{to{background-position:auto,300% 300%}}
-        .login-box .logo{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;background:linear-gradient(135deg,#ff2d55,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:3px;margin-bottom:4px}
-        .login-box .sub{font-size:9px;color:rgba(255,255,255,0.25);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:24px;font-family:'Orbitron',monospace}
-        .login-box .sub span{color:#ff2d55;font-weight:700}
-        .login-box input{width:100%;padding:14px 16px;background:rgba(0,0,0,0.5);border:1.5px solid rgba(255,255,255,0.06);border-radius:14px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:14px;text-align:center;outline:none;transition:border-color .3s,box-shadow .3s}
-        .login-box input:focus{border-color:#ff2d55;box-shadow:0 0 24px rgba(255,45,85,0.1)}
-        .login-box input::placeholder{color:rgba(255,255,255,0.08)}
-        .login-box button{width:100%;padding:14px;margin-top:16px;background:linear-gradient(135deg,#ff2d55,#8b0000);border:none;border-radius:14px;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:#fff;cursor:pointer;letter-spacing:2px;text-transform:uppercase;box-shadow:0 0 40px rgba(255,45,85,0.15);transition:transform .12s,box-shadow .12s}
-        .login-box button:active{transform:scale(0.95);box-shadow:0 0 50px rgba(255,45,85,0.25)}
-        .login-error{color:#ff6b6b;font-size:11px;margin-top:12px;min-height:20px;font-weight:600}
-        .login-footer{margin-top:18px;font-size:8px;color:rgba(255,255,255,0.08);font-family:'Orbitron',monospace;letter-spacing:1px}
-        
-        #toastBox{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99999999;display:flex;flex-direction:column;gap:6px;pointer-events:none;max-width:92%}
-        .toast{padding:6px 18px;border-radius:10px;font-size:10px;font-weight:600;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:toastIn .3s ease both;pointer-events:auto;box-shadow:0 6px 24px rgba(0,0,0,0.4);text-align:center;font-family:'Hind Siliguri',sans-serif;transition:opacity .3s,transform .3s}
-        .toast-error{background:rgba(139,0,0,0.15);border:1px solid rgba(139,0,0,0.3);color:#ff6b6b}
-        .toast-success{background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.3);color:#ff6b6b}
-        .toast-info{background:rgba(255,45,85,0.10);border:1px solid rgba(255,45,85,0.2);color:#ff2d55}
-        @keyframes toastIn{from{opacity:0;transform:translateY(-10px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
-        
-        #noInternetOverlay{position:fixed;inset:0;z-index:99999999;background:rgba(13,2,4,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center;padding:20px;flex-direction:column;gap:12px;text-align:center}
-        #noInternetOverlay.show{display:flex}
-        #noInternetOverlay .ni-icon{font-size:48px;color:#ff2d55;opacity:.6}
-        #noInternetOverlay .ni-title{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:#ff2d55;letter-spacing:2px}
-        #noInternetOverlay .ni-sub{font-size:12px;color:rgba(255,255,255,0.3);max-width:280px;font-weight:300}
-        #noInternetOverlay .ni-retry{margin-top:8px;padding:10px 32px;background:rgba(255,45,85,0.10);border:1px solid rgba(255,45,85,0.20);border-radius:12px;color:#ff2d55;font-family:'Orbitron',monospace;font-size:10px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:1.5px}
-        #noInternetOverlay .ni-retry:active{transform:scale(0.95);background:rgba(255,45,85,0.20)}
+        .chat-msg .msg-period {
+            font-size: 8px; /* Increased font size from 6px */
+            opacity: 0.8;
+            font-weight: 600;
+        }
+
+        .chat-empty {
+            font-size: 10px; /* Increased font size from 8px */
+            color: #888;
+            text-align: center;
+            padding: 20px 4px; 
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
 
-    <iframe id="gameFrame" src="https://hgnice.cc/#/register?invitationCode=511711502736"></iframe>
+    <!-- Visual Effects Layer -->
+    <div class="effects-layer" id="effectsLayer"></div>
 
-    <div id="noInternetOverlay">
-        <div class="ni-icon"><i class="fas fa-wifi"></i></div>
-        <div class="ni-title">NO CONNECTION</div>
-        <div class="ni-sub">Internet connection required to access the live signal panel. Please check your network.</div>
-        <button class="ni-retry" id="retryBtn"><i class="fas fa-rotate"></i> RETRY</button>
+    <!-- Game Background Ifram9 -->
+    <div class="iframe-container">
+        <iframe src="https://dkwin9.com/#/register?invitationCode=75518598003" id="gameFrame"></iframe>
     </div>
 
-    <div id="loginOverlay">
-        <div class="login-box">
-            <div class="logo">HGZY VIP</div>
-            <div class="sub"><span>●</span> LIVE SIGNAL PANEL <span>●</span></div>
-            <input type="password" id="passInput" placeholder="Enter Password..." autocomplete="off" />
-            <button id="loginBtn">UNLOCK PANEL</button>
-            <div class="login-error" id="loginError"></div>
-            <div class="login-footer">✦ secured ✦</div>
+    <!-- Draggable Signal Panel -->
+    <div class="box" id="dragBox">
+        
+        <!-- Red Butterfly Cover -->
+        <div class="butterfly-cover">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path class="wing-l" d="M50 50 Q15 5 5 35 Q0 55 50 50 Z" fill="#ff0000" stroke="#8b0000" stroke-width="2"/>
+                <path class="wing-r" d="M50 50 Q85 5 95 35 Q100 55 50 50 Z" fill="#ff0000" stroke="#8b0000" stroke-width="2"/>
+                <path class="wing-l" d="M50 50 Q20 90 15 60 Q30 40 50 50 Z" fill="#cc0000" stroke="#8b0000" stroke-width="2"/>
+                <path class="wing-r" d="M50 50 Q80 90 85 60 Q70 40 50 50 Z" fill="#cc0000" stroke="#8b0000" stroke-width="2"/>
+                <ellipse cx="50" cy="50" rx="3" ry="15" fill="#4a0000"/>
+                <line x1="48" y1="40" x2="40" y2="25" stroke="#4a0000" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="52" y1="40" x2="60" y2="25" stroke="#4a0000" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
         </div>
-    </div>
 
-    <div id="toastBox"></div>
-
-    <div id="dashboardOverlay">
-        <div class="dash-container">
-            <button class="dash-close-btn" id="closeDashBtn"><i class="fas fa-times"></i></button>
-            
-            <header class="dash-header">
-                <div class="dash-brand">HGZY VIP</div>
-            </header>
-            
-            <div class="header-right">
-                <div class="live-badge"><div class="live-dot"></div>LIVE</div>
-                <div class="conn-dot online" id="connDot"></div>
-                <button class="icon-btn" id="refreshBtn" aria-label="Refresh"><i class="fas fa-rotate"></i></button>
-                <button class="icon-btn" id="soundBtn" aria-label="Toggle sound"><i class="fas fa-volume-xmark"></i></button>
+        <div class="panel-header">
+            <div class="premium-logo-area">
+                <div class="logo-ring"></div>
+                <img class="logo-image" src="https://i.postimg.cc/LqKYxR91/image.png" alt="VIP Logo">
             </div>
+            <div class="server-badge">
+                <span id="serverStatusText">VIP.. </span>
+                <div class="vpn-dot" id="serverDot"></div>
+            </div>
+        </div>
 
-            <div class="signal-card" id="signalCard">
-                <div class="sc-top">
-                    <span class="sc-brand">NEXT SIGNAL</span>
-                    <span class="sc-market">30S MARKET</span>
-                </div>
-                <div class="sc-mid">
-                    <div>
-                        <div class="sc-period-label">PERIOD</div>
-                        <div class="sc-period-num" id="periodNum">------</div>
+        <div id="loginPart" class="login-part">
+            <input type="password" id="passInput" placeholder="Enter Password">
+            <button class="login-btn" onclick="checkPass()">LOGIN SYSTEM</button>
+        </div>
+
+        <div id="appPart" class="app-part hidden">
+            <div class="period-top-box">
+                <span class="period-label"> (30s)</span>
+                <span id="periodID">Wait...</span>
+            </div>
+            
+            <div class="timer-container">
+                <div class="timer-txt">TIME LEFT: <span id="timer">--</span>s</div>
+            </div>
+            
+            <div id="signalContainer">
+                <span class="signal-label">Quantum AI Signal</span>
+                <div id="predictionOutput" style="width:100%;">
+                    <div class="output-row">
+                        <span class="size-txt" id="predictSize">--</span>
                     </div>
-                    <div class="sc-timer-wrap">
-                        <svg class="sc-timer-ring" viewBox="0 0 72 72">
-                            <circle class="ring-bg" cx="36" cy="36" r="32" />
-                            <circle class="ring-fg" id="timerRing" cx="36" cy="36" r="32" stroke-dasharray="201.06" stroke-dashoffset="0" />
-                        </svg>
-                        <div class="sc-timer-text">
-                            <div class="sc-timer-sec" id="timerSec">30</div>
-                            <div class="sc-timer-label" id="timerLabel">SEC</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sc-status" id="statusBar">
-                    <div class="sc-status-dot"></div>
-                    <div class="sc-status-text" id="statusText">CONNECTING...</div>
-                </div>
-
-                <div class="sc-signal-zone" id="signalZone">
-                    <div class="sig-reveal active" id="sigReveal">
-                        <div class="sig-size-badge big-badge" id="sigSizeBadge">--</div>
-                        <div class="sig-main-text big-text" id="sigMainText">--</div>
-                        <div class="sig-colors-row" id="sigColorsRow">
-                            <div class="sig-cdot scg" id="sigColorDot"></div>
-                            <span class="sig-color-label" id="sigColorLabel">--</span>
-                        </div>
-                        <div class="sig-meta-row">
-                            <div class="sig-meta-item">
-                                <span class="sig-meta-label">NO</span>
-                                <span class="sig-meta-value" id="sigNumber">-</span>
-                            </div>
-                            <div class="sig-meta-item">
-                                <span class="sig-meta-label">COLOR</span>
-                                <span class="sig-meta-value gold" id="sigColorName">-</span>
-                            </div>
-                        </div>
-                        <div class="win-loss-display waiting" id="winLossDisplay">ACCURACY: 0%</div>
-                    </div>
-                </div>
-
-                <div class="sc-bottom">
-                    <div class="sc-sync" id="syncTime">Sync: --:--:--</div>
-                    <div class="sc-streak" id="streakText">● LIVE</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="toggleBtn">
-        <div class="pulse-ring"></div>
-        <span class="toggle-icon" id="toggleIcon">✦</span>
+    <!-- Result Chat Panel (Draggable & Increased Size) -->
+    <div id="chatPanel" class="chat-panel">
+        <div class="chat-header">
+            <span class="live-dot"></span>
+            <span>LIVE RESULT GHOST</span>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="chat-empty">Waiting for first result...</div>
+        </div>
     </div>
-    
-      const firebaseConfig = {
-            apiKey: 'AIzaSyDbpsJrROmseqNEJf3pHcAsMq0R2_eBRiI',
-            authDomain: 'admln-5d982.firebaseapp.com',
-            databaseURL: 'https://admln-5d982-default-rtdb.firebaseio.com',
-            projectId: 'admln-5d982',
-            storageBucket: 'admln-5d982.firebasestorage.app',
-            messagingSenderId: '674058661512',
-            appId: '1:674058661512:web:94db50ddddd5c19dd9393d',
-            measurementId: 'G-ENDSMFE5VK',
-        };
 
     <script>
-    (function() {
-        'use strict';
+        /* =========================================================================
+           FIREBASE CONFIGURATION & INITIALIZATION
+           ========================================================================= */
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPBQOeApFZQwGX8G4mZxhY5C2jjN6VWmU",
+            authDomain: "dkwin-panel-ai.firebaseapp.com",
+            databaseURL: "https://dkwin-panel-ai-default-rtdb.firebaseio.com",
+            projectId: "dkwin-panel-ai",
+            storageBucket: "dkwin-panel-ai.firebasestorage.app",
+            messagingSenderId: "925573387640",
+            appId: "1:925573387640:web:8faf648b0b89933c89e48d",
+            measurementId: "G-X3ZFCRWEH8"
+        };
 
-        /* ================================================================
-           CONFIG
-           ================================================================ */
-        var PASSWORD = 'VIP100';
-        var CYCLE_SECONDS = 30; // ৩০ সেকেন্ড মার্কেটের জন্য টাইমার ৩০ সেকেন্ড করা হলো
-        var API_URL = 'https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json';
-        var POLL_INTERVAL = 2000;
+        firebase.initializeApp(firebaseConfig);
+        
+        /* =========================================================================
+           GLOBAL VARIABLES AND STATE MANAGEMENT
+           ========================================================================= */
+        let lastP = null;
+        let _active = false;
+        let currentSignal = null;
+        let evaluatedPeriods = new Set();
 
-        /* ================================================================
-           DOM REFS
-           ================================================================ */
-        var loginOverlay  = document.getElementById('loginOverlay');
-        var passInput     = document.getElementById('passInput');
-        var loginBtn      = document.getElementById('loginBtn');
-        var loginError    = document.getElementById('loginError');
-        var dashOverlay   = document.getElementById('dashboardOverlay');
-        var closeDashBtn  = document.getElementById('closeDashBtn');
-        var periodNum     = document.getElementById('periodNum');
-        var timerSec      = document.getElementById('timerSec');
-        var timerRing     = document.getElementById('timerRing');
-        var timerLabel    = document.getElementById('timerLabel');
-        var statusBar     = document.getElementById('statusBar');
-        var statusText    = document.getElementById('statusText');
-        var signalCard    = document.getElementById('signalCard');
-        var signalZone    = document.getElementById('signalZone');
-        var sigReveal     = document.getElementById('sigReveal');
-        var sigSizeBadge  = document.getElementById('sigSizeBadge');
-        var sigMainText   = document.getElementById('sigMainText');
-        var sigColorDot   = document.getElementById('sigColorDot');
-        var sigColorLabel = document.getElementById('sigColorLabel');
-        var sigNumber     = document.getElementById('sigNumber');
-        var sigColorName  = document.getElementById('sigColorName');
-        var winLossDisplay= document.getElementById('winLossDisplay');
-        var connDot       = document.getElementById('connDot');
-        var soundBtn      = document.getElementById('soundBtn');
-        var refreshBtn    = document.getElementById('refreshBtn');
-        var syncTime      = document.getElementById('syncTime');
-        var streakText    = document.getElementById('streakText');
-        var toggleBtn     = document.getElementById('toggleBtn');
-        var noInternetOvl = document.getElementById('noInternetOverlay');
-        var retryBtn      = document.getElementById('retryBtn');
-
-        /* ================================================================
-           STATE
-           ================================================================ */
-        var isLoggedIn       = false;
-        var soundOn          = false;
-        var audioCtx         = null;
-        var historyData      = [];
-        var fetchInterval    = null;
-        var lastApiPeriod    = '';
-        var isDashboardOpen  = false;
-        var isOnline         = true;
-        var serverTimeOffset = 0;
-        var nextPeriodEndServer = 0;
-        var currentPrediction   = null;
-        var predictionPeriod    = '';
-        var timerRAF            = null;
-        var correctCount        = 0;
-        var totalPredictions    = 0;
-        var waitingForResult    = false;
-        var autoToggleTimer     = null; // অটো হাইড/শো এর জন্য টাইমার
-
-        var CIRCUMFERENCE = 2 * Math.PI * 32; // ≈201.06
-
-        /* ================================================================
-           NETWORK CHECK
-           ================================================================ */
-        function checkOnline() {
-            var on = navigator.onLine;
-            isOnline = on;
-            if (!on) {
-                noInternetOvl.classList.add('show');
-                stopPolling();
-                connDot.className = 'conn-dot offline';
-                statusText.textContent = 'OFFLINE';
-                statusBar.className = 'sc-status';
-            } else {
-                noInternetOvl.classList.remove('show');
-                connDot.className = 'conn-dot online';
-                if (isLoggedIn && !fetchInterval) startPolling();
+        /* =========================================================================
+           VISUAL EFFECTS GENERATOR
+           ========================================================================= */
+        function createVisualEffects() {
+            const layer = document.getElementById('effectsLayer');
+            
+            // Create Fireflies (Jonaki Poka)
+            for(let i=0; i<50; i++) {
+                let f = document.createElement('div');
+                f.className = 'firefly';
+                f.style.left = Math.random() * 100 + 'vw';
+                f.style.top = Math.random() * 100 + 'vh';
+                f.style.animationDelay = Math.random() * 5 + 's';
+                f.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                layer.appendChild(f);
             }
-            return on;
         }
-        window.addEventListener('online', function() {
-            checkOnline();
-            if (isLoggedIn && isOnline) { showToast('Network restored', 'success'); pollOnce(); }
-        });
-        window.addEventListener('offline', function() {
-            checkOnline();
-            if (isLoggedIn) showToast('Network lost', 'error');
-        });
-        retryBtn.addEventListener('click', function() {
-            if (checkOnline() && isLoggedIn) { pollOnce(); showToast('Retrying...', 'info'); }
-            else if (!isOnline) showToast('Still offline', 'error');
-        });
+        createVisualEffects();
 
-        /* ================================================================
-           HELPERS
-           ================================================================ */
-        function getColorForNumber(n) {
-            if (n === 0 || n === 5) return { cls: 'scv', label: 'Violet', name: 'VIOLET' };
-            if (n % 2 === 0) return { cls: 'scg', label: 'Green', name: 'GREEN' };
-            return { cls: 'scr', label: 'Red', name: 'RED' };
+        /* =========================================================================
+           DRAG LOGIC FOR PANELS
+           ========================================================================= */
+        function makeDraggable(element) {
+            let isDragging = false;
+            let startX, startY;
+            let currentX = 0, currentY = 0;
+
+            function dragStart(e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || 
+                    e.target.classList.contains('vpn-dot') || e.target.closest('.chat-body')) return;
+                
+                isDragging = true;
+                element.style.cursor = 'grabbing';
+                
+                const clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
+                
+                startX = clientX - currentX;
+                startY = clientY - currentY;
+                
+                if (e.type === "touchstart") e.preventDefault();
+            }
+
+            function dragEnd() {
+                if (isDragging) {
+                    isDragging = false;
+                    element.style.cursor = 'grab';
+                }
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                
+                const clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+                
+                currentX = clientX - startX;
+                currentY = clientY - startY;
+                
+                element.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            }
+
+            element.style.cursor = 'grab';
+            element.addEventListener("mousedown", dragStart);
+            element.addEventListener("touchstart", dragStart, { passive: false });
+
+            window.addEventListener("mouseup", dragEnd);
+            window.addEventListener("touchend", dragEnd);
+            
+            window.addEventListener("mousemove", drag);
+            window.addEventListener("touchmove", drag, { passive: false });
         }
-        function isBigNumber(n) { return n >= 5; }
 
-        function incPeriod(p) {
-            try { return (BigInt(p) + 1n).toString(); }
-            catch(e) { return p + '1'; }
+        makeDraggable(document.getElementById("dragBox"));
+        makeDraggable(document.getElementById("chatPanel"));
+
+        /* =========================================================================
+           INTERNET CONNECTIVITY LOGIC
+           ========================================================================= */
+        function updateConnectionStatus() {
+            const statusText = document.getElementById('serverStatusText');
+            const dot = document.getElementById('serverDot');
+            const dragBox = document.getElementById('dragBox');
+            const chatPanel = document.getElementById('chatPanel');
+            
+            if (navigator.onLine) {
+                statusText.style.color = "#ffffff";
+                dot.style.backgroundColor = "#00ff66";
+                dot.style.boxShadow = "0 0 8px #00ff66";
+                
+                if(_active) {
+                    dragBox.style.display = 'flex';
+                    chatPanel.style.display = 'flex';
+                }
+            } else {
+                statusText.innerText = "SERVER OFFLINE";
+                statusText.style.color = "#ff3333";
+                dot.style.backgroundColor = "#ff0000";
+                dot.style.boxShadow = "0 0 8px #ff0000";
+                
+                dragBox.style.display = 'none';
+                chatPanel.style.display = 'none';
+            }
         }
 
-        function showToast(msg, type) {
-            var box = document.getElementById('toastBox');
-            var t = document.createElement('div');
-            t.className = 'toast toast-' + type;
-            t.textContent = msg;
-            box.appendChild(t);
-            setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateY(-10px)'; }, 2200);
-            setTimeout(function() { if (t.parentNode) t.remove(); }, 2600);
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+
+        /* =========================================================================
+           ADD CHAT MESSAGE FUNCTION
+           ========================================================================= */
+        function addChatMessage(result, period, predictedSize, actualSize) {
+            const chatBody = document.getElementById('chatBody');
+            
+            const empty = chatBody.querySelector('.chat-empty');
+            if (empty) empty.remove();
+            
+            const msg = document.createElement('div');
+            msg.className = 'chat-msg ' + (result === 'WIN' ? 'win' : 'loss');
+            
+            const shortPeriod = period ? period.toString().slice(-5) : '-----';
+            msg.innerHTML = `
+                <span class="msg-label">${result === 'WIN' ? '✅ WIN' : '❌ LOSS'}</span>
+                <span class="msg-period">#${shortPeriod} | ${predictedSize}→${actualSize}</span>
+            `;
+            
+            chatBody.insertBefore(msg, chatBody.firstChild);
+            
+            while (chatBody.children.length > 30) {
+                chatBody.removeChild(chatBody.lastChild);
+            }
         }
 
-        /* ================================================================
-           SOUND
-           ================================================================ */
-        function playBeep(freq, dur) {
-            if (!soundOn) return;
+        /* =========================================================================
+           LOGIN AUTHENTICATION
+           ========================================================================= */
+        function checkPass() {
+            if (document.getElementById('passInput').value.trim() === "VIP100") {
+                document.getElementById('loginPart').classList.add('hidden'); 
+                document.getElementById('appPart').classList.remove('hidden'); 
+                _active = true;
+                
+                updateConnectionStatus();
+                fetchData();
+                setInterval(loop, 1000);
+                setInterval(fetchData, 5000);
+            } else { 
+                alert("❌ Wrong Password!"); 
+            }
+        }
+
+        /* =========================================================================
+           DATA FETCHING & RESULT CHECKING
+           ========================================================================= */
+        async function fetchData() {
+            if (!navigator.onLine) return;
+
             try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                var osc = audioCtx.createOscillator();
-                var gain = audioCtx.createGain();
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.frequency.value = freq || 880; osc.type = 'sine';
-                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (dur || 0.15));
-                osc.start(audioCtx.currentTime);
-                osc.stop(audioCtx.currentTime + (dur || 0.15));
-            } catch(e) {}
-        }
-        soundBtn.addEventListener('click', function() {
-            soundOn = !soundOn;
-            soundBtn.classList.toggle('active', soundOn);
-            soundBtn.querySelector('i').className = soundOn ? 'fas fa-volume-high' : 'fas fa-volume-xmark';
-            if (soundOn) playBeep(1200, 0.1);
-        });
-        refreshBtn.addEventListener('click', function() {
-            if (isOnline) { pollOnce(); showToast('Refreshing...', 'info'); }
-        });
-
-        /* ================================================================
-           LOGIN
-           ================================================================ */
-        function doLogin() {
-            var val = passInput.value.trim();
-            if (val === PASSWORD) {
-                loginError.textContent = '';
-                loginOverlay.classList.add('hide');
-                isLoggedIn = true;
-                startPolling();
-                showToast('Panel unlocked', 'success');
-                playBeep(1000, 0.1);
-                setTimeout(function() { playBeep(1400, 0.15); }, 120);
-                setTimeout(function() { 
-                    openDash(); 
-                    startAutoToggleCycle(); // লগইনের পর অটো টগল সিকোয়েন্স শুরু
-                }, 300);
-            } else {
-                loginError.textContent = 'Wrong password!';
-                passInput.value = '';
-                passInput.focus();
-                playBeep(300, 0.2);
-            }
-        }
-        loginBtn.addEventListener('click', doLogin);
-        passInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
-
-        /* ================================================================
-           PREDICTION ALGORITHM
-           ================================================================ */
-        function generatePrediction(periodStr, history) {
-            var seed = 0;
-            for (var i = 0; i < periodStr.length; i++) {
-                seed = ((seed << 5) - seed) + periodStr.charCodeAt(i);
-                seed |= 0;
-            }
-            function sRand() {
-                seed = (seed * 1664525 + 1013904223) & 0x7fffffff;
-                return seed / 0x7fffffff;
-            }
-
-            if (history.length < 2) {
-                var n0 = Math.floor(sRand() * 10);
-                return { number: n0, size: isBigNumber(n0) ? 'BIG' : 'SMALL', color: getColorForNumber(n0) };
-            }
-
-            var last = history.slice(0, Math.min(12, history.length));
-            var sizes = last.map(function(h) { return isBigNumber(h.number); });
-            var colorNames = last.map(function(h) { return getColorForNumber(h.number).name; });
-
-            var predictBig;
-
-            var streak = 1;
-            for (var s = 1; s < sizes.length; s++) {
-                if (sizes[s] === sizes[0]) streak++;
-                else break;
-            }
-
-            var isAlt = true;
-            for (var a = 0; a < Math.min(5, sizes.length - 1); a++) {
-                if (sizes[a] === sizes[a + 1]) { isAlt = false; break; }
-            }
-
-            var pattern3 = sizes.slice(0, 3).map(function(b) { return b ? 'B' : 'S'; }).join('');
-
-            if (streak >= 4) {
-                predictBig = !sizes[0];
-            } else if (streak === 3) {
-                predictBig = !sizes[0];
-            } else if (isAlt && sizes.length >= 4) {
-                predictBig = !sizes[0];
-            } else if (pattern3 === 'BSS' || pattern3 === 'SBB') {
-                predictBig = sizes[0];
-            } else if (pattern3 === 'SSB' || pattern3 === 'BBS') {
-                predictBig = !sizes[0];
-            } else {
-                var bigCount = sizes.filter(function(b) { return b; }).length;
-                var ratio = bigCount / sizes.length;
-                if (ratio < 0.35) predictBig = true;
-                else if (ratio > 0.65) predictBig = false;
-                else predictBig = sRand() > 0.5;
-            }
-
-            var targetColor;
-            var cStreak = 1;
-            for (var c = 1; c < colorNames.length; c++) {
-                if (colorNames[c] === colorNames[0]) cStreak++;
-                else break;
-            }
-
-            if (cStreak >= 3) {
-                var others = ['GREEN', 'RED', 'VIOLET'].filter(function(x) { return x !== colorNames[0]; });
-                targetColor = others[Math.floor(sRand() * others.length)];
-            } else {
-                var freq = {};
-                colorNames.forEach(function(cn) { freq[cn] = (freq[cn] || 0) + 1; });
-                var sorted = Object.entries(freq).sort(function(a, b) { return a[1] - b[1]; });
-                targetColor = sRand() > 0.3 ? sorted[0][0] : sorted[sorted.length - 1][0];
-            }
-
-            var candidates = [];
-            for (var num = 0; num <= 9; num++) {
-                if (isBigNumber(num) !== predictBig) continue;
-                if (getColorForNumber(num).name === targetColor) candidates.push(num);
-            }
-            if (candidates.length === 0) {
-                for (var num2 = 0; num2 <= 9; num2++) {
-                    if (isBigNumber(num2) === predictBig) candidates.push(num2);
-                }
-            }
-            if (candidates.length === 0) candidates = [predictBig ? 7 : 2];
-
-            var chosen = candidates[Math.floor(sRand() * candidates.length)];
-            return {
-                number: chosen,
-                size: predictBig ? 'BIG' : 'SMALL',
-                color: getColorForNumber(chosen)
-            };
-        }
-
-        /* ================================================================
-           DISPLAY
-           ================================================================ */
-        function updateSignalDisplay(period, pred) {
-            periodNum.textContent = period.length > 8 ? period.slice(-8) : period;
-
-            sigSizeBadge.textContent = pred.size;
-            sigSizeBadge.className = 'sig-size-badge ' + (pred.size === 'BIG' ? 'big-badge' : 'small-badge');
-
-            sigMainText.textContent = pred.size === 'BIG' ? 'BIG' : 'SMALL';
-            sigMainText.className = 'sig-main-text ' + (pred.size === 'BIG' ? 'big-text' : 'small-text');
-
-            sigColorDot.className = 'sig-cdot ' + pred.color.cls;
-            sigColorLabel.textContent = pred.color.label;
-
-            sigNumber.textContent = pred.number;
-            sigColorName.textContent = pred.color.name;
-
-            signalCard.className = 'signal-card ' + (pred.size === 'BIG' ? 'glow-gold' : 'glow-red');
-            signalZone.className = 'sc-signal-zone ' + (pred.size === 'BIG' ? 'glow-big' : 'glow-small');
-
-            statusBar.className = 'sc-status locked';
-            statusText.textContent = 'SIGNAL LOCKED';
-            waitingForResult = false;
-
-            sigReveal.classList.remove('active');
-            void sigReveal.offsetWidth;
-            sigReveal.classList.add('active');
-
-            playBeep(880, 0.1);
-            setTimeout(function() { playBeep(1100, 0.12); }, 100);
-        }
-
-        function startTimerLoop() {
-            if (timerRAF) cancelAnimationFrame(timerRAF);
-
-            function tick() {
-                if (!nextPeriodEndServer) { timerRAF = requestAnimationFrame(tick); return; }
-
-                var nowServer = Date.now() + serverTimeOffset;
-                var remaining = Math.ceil((nextPeriodEndServer - nowServer) / 1000);
-
-                if (remaining < 0) remaining = 0;
-
-                if (remaining === 0 && !waitingForResult) {
-                    waitingForResult = true;
-                    statusBar.className = 'sc-status waiting';
-                    statusText.textContent = 'WAITING...';
-                }
-
-                timerSec.textContent = remaining;
-
-                var progress = remaining / CYCLE_SECONDS;
-                var offset = CIRCUMFERENCE * (1 - progress);
-                timerRing.style.strokeDashoffset = offset;
-
-                var urgent = remaining <= 5 && remaining > 0;
-                timerSec.classList.toggle('urgent', urgent);
-                timerRing.classList.toggle('urgent', urgent);
-                timerLabel.classList.toggle('urgent', urgent);
-
-                var d = new Date(nowServer);
-                syncTime.textContent = 'Sync: ' + d.toTimeString().split(' ')[0];
-
-                timerRAF = requestAnimationFrame(tick);
-            }
-            tick();
-        }
-
-        async function pollOnce() {
-            if (!isOnline) return;
-            try {
-                var resp = await fetch(API_URL);
-                var json = await resp.json();
-
-                if (json.code !== 0 || !json.data || !json.data.list || json.data.list.length === 0) {
-                    throw new Error('Bad response');
-                }
-
-                var list = json.data.list;
-                var serverTime = json.data.serverTime || json.data.nowTime || Date.now();
-                serverTimeOffset = serverTime - Date.now();
-
-                historyData = list.map(function(item) {
-                    return {
-                        period: String(item.issueNumber || item.period || ''),
-                        number: parseInt(item.number || item.openNumber || '0', 10)
-                    };
-                }).filter(function(h) { return h.period && !isNaN(h.number); });
-
-                if (historyData.length === 0) throw new Error('Empty history');
-
-                var latestPeriod = historyData[0].period;
-                var latestNumber = historyData[0].number;
-
-                if (latestPeriod !== lastApiPeriod) {
-                    if (currentPrediction && predictionPeriod === latestPeriod) {
-                        var predBig = currentPrediction.size === 'BIG';
-                        var actualBig = isBigNumber(latestNumber);
-                        totalPredictions++;
-                        if (predBig === actualBig) {
-                            correctCount++;
-                            playBeep(1200, 0.2);
-                        } else {
-                            playBeep(300, 0.2);
+                const res = await fetch("https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?r=" + Date.now());
+                const json = await res.json();
+                
+                if (json.data?.list.length > 0) {
+                    const latestIssue = json.data.list[0].issueNumber;
+                    const newLastP = (BigInt(latestIssue) + 1n).toString();
+                    
+                    if (currentSignal && String(currentSignal.period) === String(latestIssue)) {
+                        const actualNum = parseInt(json.data.list[0].number);
+                        const actualSize = (actualNum >= 5) ? "BIG" : "SMALL";
+                        const resultStr = (actualSize === currentSignal.size) ? "WIN" : "LOSS";
+                        
+                        if (!evaluatedPeriods.has(String(latestIssue))) {
+                            evaluatedPeriods.add(String(latestIssue));
+                            addChatMessage(resultStr, latestIssue, currentSignal.size, actualSize);
+                            
+                            if (evaluatedPeriods.size > 50) {
+                                const arr = Array.from(evaluatedPeriods);
+                                evaluatedPeriods = new Set(arr.slice(-25));
+                            }
                         }
                     }
-
-                    lastApiPeriod = latestPeriod;
-                    nextPeriodEndServer = serverTime + CYCLE_SECONDS * 1000;
-
-                    var nextPeriod = incPeriod(latestPeriod);
-                    if (nextPeriod !== predictionPeriod) {
-                        currentPrediction = generatePrediction(nextPeriod, historyData);
-                        predictionPeriod = nextPeriod;
-                        updateSignalDisplay(nextPeriod, currentPrediction);
-                    }
-                } else if (nextPeriodEndServer === 0) {
-                    nextPeriodEndServer = serverTime + CYCLE_SECONDS * 1000;
-                    var nextP = incPeriod(latestPeriod);
-                    if (nextP !== predictionPeriod) {
-                        currentPrediction = generatePrediction(nextP, historyData);
-                        predictionPeriod = nextP;
-                        updateSignalDisplay(nextP, currentPrediction);
-                    }
-                }
-
-                connDot.className = 'conn-dot online';
-                if (statusText.textContent === 'RECONNECTING...' || statusText.textContent === 'CONNECTING...') {
-                    if (!waitingForResult) {
-                        statusBar.className = 'sc-status locked';
-                        statusText.textContent = 'SIGNAL LOCKED';
-                    }
-                }
-
-                // লাইভ পারসেন্টেজ আপডেট করা হচ্ছে
-                if (totalPredictions > 0) {
-                    var pct = Math.round((correctCount / totalPredictions) * 100);
-                    streakText.textContent = correctCount + '/' + totalPredictions + ' (' + pct + '%)';
-                    streakText.style.color = pct >= 60 ? '#ff6b6b' : (pct >= 40 ? '#ff2d55' : '#8b0000');
                     
-                    winLossDisplay.textContent = 'ACCURACY: ' + pct + '%';
-                    winLossDisplay.className = 'win-loss-display ' + (pct >= 50 ? 'win' : 'loss');
-                } else {
-                    winLossDisplay.textContent = 'ACCURACY: 0%';
-                    winLossDisplay.className = 'win-loss-display waiting';
+                    lastP = newLastP;
                 }
-
-            } catch(err) {
-                console.error('Fetch error:', err);
-                connDot.className = 'conn-dot offline';
-                if (statusText.textContent !== 'OFFLINE' && statusText.textContent !== 'WAITING...') {
-                    statusText.textContent = 'RECONNECTING...';
-                    statusBar.className = 'sc-status';
-                }
+            } catch (e) { 
+                const now = new Date();
+                const totalSeconds = Math.floor(now.getTime() / 1000);
+                lastP = Math.floor(totalSeconds / 30).toString(); 
             }
         }
 
-        function startPolling() {
-            if (fetchInterval) clearInterval(fetchInterval);
-            pollOnce();
-            fetchInterval = setInterval(pollOnce, POLL_INTERVAL);
-            startTimerLoop();
-        }
-        function stopPolling() {
-            if (fetchInterval) { clearInterval(fetchInterval); fetchInterval = null; }
-            if (timerRAF) { cancelAnimationFrame(timerRAF); timerRAF = null; }
-        }
-
-        /* ================================================================
-           AUTO TOGGLE CYCLE (30s SHOW, 56s HIDE)
-           ================================================================ */
-        function startAutoToggleCycle() {
-            if (autoToggleTimer) clearTimeout(autoToggleTimer);
-            openDash(); // প্যানেল শো করবে
+        /* =========================================================================
+           SIGNAL ALGORITHM
+           ========================================================================= */
+        function analyzeQuantumSignal(period) {
+            let hash1 = 0; 
+            const seed1 = period + "DKWIN_INDIA_SERVER_SECURE_2026_30S_NUM_A";
             
-            // ৩০ সেকেন্ড পর প্যানেল হাইড করবে
-            autoToggleTimer = setTimeout(function() {
-                closeDash();
+            for (let i = 0; i < seed1.length; i++) {
+                hash1 = ((hash1 << 5) - hash1) + seed1.charCodeAt(i);
+                hash1 |= 0;
+            }
+            
+            let targetNumber = Math.abs(hash1) % 10;
+            let sizeResult = (targetNumber >= 5) ? "BIG" : "SMALL";
+            
+            return { size: sizeResult };
+        }
+
+        /* =========================================================================
+           MAIN TIMER & UI LOOP
+           ========================================================================= */
+        function loop() {
+            if (!_active) return;
+            
+            if (!navigator.onLine) {
+                document.getElementById('timer').innerText = "--";
+                return;
+            }
+
+            const now = new Date();
+            const sec = now.getSeconds();
+            
+            const pBox = document.getElementById('periodID');
+            if(lastP) {
+                pBox.innerText = lastP;
+            } else {
+                pBox.innerText = "Sync...";
+            }
+            
+            let rem = 30 - (sec % 30);
+            if (rem === 30) rem = 0; 
+            
+            document.getElementById('timer').innerText = rem < 10 ? "0" + rem : rem;
+
+            const outputWrapper = document.getElementById('predictionOutput');
+
+            if (rem <= 6 || rem === 0) {
+                outputWrapper.innerHTML = '<span class="processing">SCANNING MARKET...</span>';
+            } else {
+                if (!currentSignal || String(currentSignal.period) !== String(lastP)) {
+                    const result = analyzeQuantumSignal(lastP || "0");
+                    currentSignal = { period: lastP, size: result.size };
+                }
                 
-                // ৫৬ সেকেন্ড পর আবার প্যানেল শো করবে এবং সাইকেল রিস্টার্ট করবে
-                autoToggleTimer = setTimeout(function() {
-                    startAutoToggleCycle();
-                }, 56000); 
-                
-            }, 30000); 
+                if (currentSignal) {
+                    outputWrapper.innerHTML = `
+                        <div class="output-row">
+                            <span class="size-txt res-${currentSignal.size.toLowerCase()}">${currentSignal.size}</span>
+                        </div>
+                    `;
+                }
+            }
         }
-
-        /* ================================================================
-           DASHBOARD TOGGLE
-           ================================================================ */
-        toggleBtn.addEventListener('click', function(e) {
-            if (this._wasDragged) { this._wasDragged = false; return; }
-            if (autoToggleTimer) {
-                clearTimeout(autoToggleTimer); // ইউজার ম্যানুয়ালি ক্লিক করলে অটো টগল বন্ধ হবে
-                autoToggleTimer = null;
-            }
-            if (isDashboardOpen) closeDash();
-            else openDash();
-        });
-        
-        closeDashBtn.addEventListener('click', function() {
-            if (autoToggleTimer) {
-                clearTimeout(autoToggleTimer);
-                autoToggleTimer = null;
-            }
-            closeDash();
-        });
-
-        function openDash() {
-            dashOverlay.classList.add('show');
-            isDashboardOpen = true;
-            toggleBtn.querySelector('.toggle-icon').textContent = '✕';
-            toggleBtn.style.background = 'linear-gradient(135deg, #8b0000, #ff2d55)';
-        }
-        function closeDash() {
-            dashOverlay.classList.remove('show');
-            isDashboardOpen = false;
-            toggleBtn.querySelector('.toggle-icon').textContent = '✦';
-            toggleBtn.style.background = 'linear-gradient(135deg, #8b0000, #ff2d55)';
-        }
-
-        /* ================================================================
-           DRAG TOGGLE BUTTON
-           ================================================================ */
-        (function() {
-            var startX, startY, isDrag = false, hasMoved = false;
-            var btn = toggleBtn;
-
-            function onS(e) {
-                var t = e.touches ? e.touches[0] : e;
-                startX = t.clientX; startY = t.clientY;
-                isDrag = true; hasMoved = false;
-                btn.classList.add('dragging');
-                btn.style.transition = 'none';
-            }
-            function onM(e) {
-                if (!isDrag) return;
-                e.preventDefault();
-                var t = e.touches ? e.touches[0] : e;
-                var dx = t.clientX - startX, dy = t.clientY - startY;
-                if (Math.abs(dx) > 4 || Math.abs(dy) > 4) hasMoved = true;
-                if (!hasMoved) return;
-                var r = btn.getBoundingClientRect();
-                var nx = r.left + dx, ny = r.top + dy;
-                nx = Math.max(0, Math.min(window.innerWidth - r.width, nx));
-                ny = Math.max(0, Math.min(window.innerHeight - r.height, ny));
-                btn.style.left = nx + 'px'; btn.style.top = ny + 'px';
-                btn.style.right = 'auto'; btn.style.bottom = 'auto';
-                startX = t.clientX; startY = t.clientY;
-            }
-            function onE() {
-                if (!isDrag) return;
-                isDrag = false;
-                btn.classList.remove('dragging');
-                btn.style.transition = '';
-                if (hasMoved) btn._wasDragged = true;
-                var r = btn.getBoundingClientRect();
-                var midX = r.left + r.width / 2;
-                btn.style.left = (midX < window.innerWidth / 2 ? 12 : window.innerWidth - r.width - 12) + 'px';
-                btn.style.right = 'auto';
-            }
-            btn.addEventListener('mousedown', onS);
-            btn.addEventListener('touchstart', onS, { passive: false });
-            document.addEventListener('mousemove', onM);
-            document.addEventListener('touchmove', onM, { passive: false });
-            document.addEventListener('mouseup', onE);
-            document.addEventListener('touchend', onE);
-        })();
-
-        /* ================================================================
-           INIT
-           ================================================================ */
-        checkOnline();
-        passInput.focus();
-
-    })();
     </script>
 </body>
 </html>

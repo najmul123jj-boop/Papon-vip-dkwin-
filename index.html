@@ -2,1109 +2,586 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>HGZY VIP</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Hind+Siliguri:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js">
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>DKWIN</title>
+    
+    <!-- Firebase SDK Integration -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <style>
-        :root {
-            --bg: #000000;
-            --bg-card: rgba(10, 10, 10, 0.95);
-            --fg: #ffeedd;
-            --muted: rgba(255, 200, 150, 0.45);
-            --accent: #ff8c00;
-            --gold: #ffd700;
-            --red: #ff4d4d;
-            --green: #00ff7f;
-            --violet: #cc66ff;
-            --border: rgba(255, 140, 0, 0.25);
-            --radius: 0px;
-            --fd: 'Orbitron', monospace;
-            --fm: 'JetBrains Mono', monospace;
-            --fb: 'Hind+Siliguri', sans-serif;
-        }
-
-        *,
-        *::before,
-        *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-            background: #000;
-            font-family: var(--fb);
-            color: var(--fg);
-            user-select: none;
-            -webkit-user-select: none;
+        /* =========================================================================
+           CSS RESET AND BASE STYLES
+           ========================================================================= */
+        html, body { 
+            margin: 0; 
+            padding: 0; 
+            height: 100%; 
+            width: 100%; 
+            overflow: hidden; 
+            background: #000; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            user-select: none; 
             -webkit-tap-highlight-color: transparent;
         }
 
-        .falling-ball {
-            position: fixed;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            top: -20px;
+        /* =========================================================================
+           GAME BACKGROUND IFRAME CONTAINER
+           ========================================================================= */
+        .iframe-container {
+            position: absolute;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
             z-index: 1;
-            pointer-events: none;
-            animation: fallDown linear forwards;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        iframe { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+            display: block;
         }
 
-        @keyframes fallDown {
-            to {
-                transform: translateY(105vh);
-                opacity: 0.8;
-            }
-        }
-
-        .fp {
+        /* =========================================================================
+           VISUAL EFFECTS LAYER (Only Fireflies - Falling Balls Removed)
+           ========================================================================= */
+        .effects-layer {
             position: fixed;
-            top: 0;
-            left: 0;
-            transform: none;
-            width: 100vw;
-            height: 100vh;
-            max-height: 100vh;
-            z-index: 10002;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0.98), rgba(10, 10, 10, 0.95));
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: none;
-            border-radius: var(--radius);
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            overflow: hidden;
+        }
+
+        .firefly {
+            position: absolute;
+            width: 5px; 
+            height: 5px;
+            background: #fffb00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #fffb00, 0 0 20px #fffb00;
+            opacity: 0;
+            animation: flyAround 6s infinite ease-in-out;
+        }
+
+        @keyframes flyAround {
+            0% { transform: translate(0, 0) scale(1); opacity: 0; }
+            20% { opacity: 1; }
+            50% { transform: translate(40px, -50px) scale(1.5); opacity: 0.8; }
+            80% { opacity: 1; }
+            100% { transform: translate(80px, -100px) scale(0.8); opacity: 0; }
+        }
+
+        /* =========================================================================
+           PREMIUM SIGNAL PANEL (MADE SLIGHTLY SMALLER & CIRCULAR/ROUNDED)
+           ========================================================================= */
+        .box { 
+            width: 175px; /* Slightly smaller width */
+            height: auto;
+            background: rgba(5, 5, 5, 0.95); 
+            border-radius: 70px; /* Slightly adjusted for smaller size */
+            color: #ffffff; 
+            text-align: center; 
+            padding: 12px 8px; /* Slightly reduced padding */
+            position: fixed; 
+            top: 40px; /* Adjusted top to fit butterfly */
+            right: 10px;
+            z-index: 9999; 
+            cursor: grab; 
+            backdrop-filter: blur(20px); 
+            box-sizing: border-box;
+            touch-action: none; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px; /* Tighter gap */
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+            border: 2px solid #00ff66;
+        }
+
+        .box::before {
+            content: "";
+            position: absolute;
+            top: -3px; left: -3px; right: -3px; bottom: -3px;
+            background: linear-gradient(45deg, #ff0055, #00ff66, #0099ff, #ff0055);
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 72px; 
+            animation: rgbBorder 4s linear infinite;
+            opacity: 0.6; 
+        }
+
+        @keyframes rgbBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .box:active { cursor: grabbing; }
+
+        /* =========================================================================
+           RED BUTTERFLY COVER (প্রজাপতির ঢাকনা)
+           ========================================================================= */
+        .butterfly-cover {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 65px;
+            height: 65px;
+            z-index: 10001;
+            pointer-events: none;
+            filter: drop-shadow(0 0 12px rgba(255, 0, 0, 0.8));
+            animation: flutter 2s infinite ease-in-out;
+        }
+
+        @keyframes flutter {
+            0% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
+            50% { transform: translateX(-50%) translateY(-8px) rotate(5deg); }
+            100% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
+        }
+
+        .wing-l, .wing-r { transform-origin: 50px 50px; }
+        .wing-l { animation: flapL 0.3s infinite alternate ease-in-out; }
+        .wing-r { animation: flapR 0.3s infinite alternate ease-in-out; }
+
+        @keyframes flapL { from { transform: rotateY(0deg); } to { transform: rotateY(60deg); } }
+        @keyframes flapR { from { transform: rotateY(0deg); } to { transform: rotateY(-60deg); } }
+
+        /* Header & Logo */
+        .panel-header {
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 5px; 
+            width: 100%;
+            margin-top: 15px; /* Added margin to accommodate butterfly */
+        }
+
+        .premium-logo-area {
+            position: relative; 
+            width: 50px; /* Smaller size */
+            height: 50px; /* Smaller size */
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+
+        .logo-image {
+            width: 100%; 
+            height: 100%; 
+            border-radius: 50%; 
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.2); 
+            z-index: 2;
+        }
+
+        .logo-ring {
+            position: absolute; 
+            width: 120%; 
+            height: 120%;
+            border: 1px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 50%; 
+            animation: spinRing 4s infinite linear; 
+            z-index: 1;
+        }
+
+        @keyframes spinRing { 100% { transform: rotate(360deg); } }
+
+        .server-badge {
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 4px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 20px;
+            padding: 3px 8px; 
+            font-size: 8px; 
+            font-weight: 800; 
+            color: #fff;
+            text-transform: uppercase;
+            width: 100%; 
+            letter-spacing: 0.5px;
+        }
+        
+        .vpn-dot {
+            width: 6px; 
+            height: 6px; 
+            background-color: #00ff66;
+            border-radius: 50%; 
+            box-shadow: 0 0 6px #00ff66;
+            animation: blink 1.5s infinite;
+        }
+
+        /* Login Section */
+        .login-part { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 6px; 
+            width: 100%; 
+        }
+        
+        .login-part input { 
+            width: 100%; 
+            padding: 6px; 
+            background: rgba(255, 255, 255, 0.1); 
+            border: 1px solid #00ff66; 
+            border-radius: 20px; 
+            color: #fff; 
+            font-size: 9px; 
+            text-align: center; 
+            outline: none; 
+            box-sizing: border-box;
+        }
+        
+        .login-btn { 
+            width: 100%; 
+            padding: 6px; 
+            background: #00ff66; 
+            color: #000; 
+            border: none; 
+            border-radius: 20px; 
+            font-weight: 900; 
+            cursor: pointer; 
+            font-size: 9px; 
+            text-transform: uppercase; 
+            box-shadow: 0 4px 10px rgba(0, 255, 102, 0.3);
+            transition: transform 0.2s;
+        }
+        
+        .login-btn:hover { 
+            background: #00cc55; 
+            transform: scale(1.02);
+        }
+
+        /* Signal Application Section */
+        .app-part { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 6px; 
+            width: 100%; 
+        }
+        
+        .period-top-box {
+            background: transparent;
+            border-radius: 20px; 
+            padding: 0; 
+            width: 100%; 
+            text-align: center; 
+            box-sizing: border-box;
+        }
+
+        .period-label { 
+            font-size: 8px; 
+            color: #888; 
+            display: block; 
+            font-weight: 600; 
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        #periodID { 
+            font-size: 12px; 
+            font-weight: 800; 
+            display: block; 
+            color: #fff; 
+            letter-spacing: 0.5px;
+        }
+
+        .timer-container { 
+            text-align: center; 
+            width: 100%; 
+        }
+        
+        .timer-txt { 
+            font-size: 11px; 
+            color: #ffaa00; 
+            font-weight: 800; 
+            background: rgba(255, 170, 0, 0.15); 
+            padding: 4px; 
+            border-radius: 20px;
+            display: block;
+        }
+
+        /* Signal Output Area */
+        #signalContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+            padding: 10px; 
+            box-sizing: border-box;
+            border: 1px solid #00ff66; 
+            background: rgba(0, 255, 102, 0.08); 
+            border-radius: 30px; 
+        }
+
+        .signal-label { 
+            font-size: 8px; 
+            color: #00ff66; 
+            text-transform: uppercase; 
+            font-weight: bold; 
+            letter-spacing: 1px;
+        }
+
+        .output-row { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            width: 100%; 
+        }
+        
+        /* MASSIVE TEXT, THICK AND TAN-TAN (GLOWING) - Made slightly smaller for panel */
+        .size-txt { 
+            font-size: 36px; 
+            font-weight: 950; 
+            text-transform: uppercase; 
+            line-height: 1; 
+            text-shadow: 0 0 15px currentColor, 0 0 30px currentColor;
+            letter-spacing: -2px;
+            animation: glowPulse 1s infinite alternate;
+        }
+
+        @keyframes glowPulse {
+            from { text-shadow: 0 0 10px currentColor, 0 0 20px currentColor; }
+            to { text-shadow: 0 0 20px currentColor, 0 0 40px currentColor; }
+        }
+
+        /* Colors */
+        .res-big { color: #FFFF00; }  
+        .res-small { color: #ff3366; } 
+        
+        .processing { 
+            font-size: 11px; 
+            color: #ffaa00; 
+            animation: blink 0.5s infinite; 
+            display: block; 
+            font-weight: 900; 
+            letter-spacing: 1px;
+            padding: 12px 0;
+        }
+        
+        @keyframes blink { 50% { opacity: 0.3; } }
+        
+        .hidden { display: none !important; }
+
+        /* =========================================================================
+           RESULT CHAT PANEL (LIVE RESULT GHOST) - INCREASED SIZE
+           ========================================================================= */
+        .chat-panel {
+            width: 190px; /* Increased width from 150px */
+            max-height: 420px; /* Increased max-height from 350px */
+            background: rgba(5, 5, 5, 0.95);
+            border-radius: 35px; 
+            color: #fff;
+            padding: 12px; /* Increased padding from 8px */
+            position: fixed;
+            top: 520px; 
+            right: 10px; 
+            z-index: 9998;
+            cursor: grab;
+            backdrop-filter: blur(20px);
+            box-sizing: border-box;
             display: none;
             flex-direction: column;
+            gap: 8px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+            border: 2px solid #00ff66;
             touch-action: none;
-            overflow: hidden;
-            font-size: 12px;
-            color: #ffeedd;
-            will-change: transform, top, left;
-            transition: none;
         }
 
-        .fp.vis {
-            display: flex;
-        }
-        .fp.dragged {
-            transform: none !important;
-            animation: none !important;
-        }
-
-        .fp-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 18px 20px;
-            cursor: grab;
-            flex-shrink: 0;
-            background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(0, 0, 0, 0.99));
-            border-bottom: 1.5px solid rgba(255, 140, 0, 0.4);
-            position: relative;
-            touch-action: none;
-            box-shadow: 0 4px 20px rgba(255, 140, 0, 0.15);
-        }
-
-        .fp-head:active {
-            cursor: grabbing;
-        }
-
-        .fp-head::after {
-            content: '';
+        .chat-panel::before {
+            content: "";
             position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent), var(--gold), var(--accent), transparent);
-            animation: headGlow 2s ease-in-out infinite alternate;
+            top: -4px; left: -4px; right: -4px; bottom: -4px;
+            background: linear-gradient(45deg, #ff0055, #00ff66, #0099ff, #ff0055);
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 38px;
+            animation: rgbBorder 4s linear infinite;
+            opacity: 0.6;
         }
+        
+        .chat-panel:active { cursor: grabbing; }
 
-        @keyframes headGlow {
-            0% {
-                opacity: .4;
-            }
-            100% {
-                opacity: 1;
-            }
-        }
-
-        .fp-brand {
-            font-family: var(--fd);
-            font-size: 18px;
-            font-weight: 900;
-            letter-spacing: 2px;
+        .chat-header {
+            font-size: 11px; /* Increased font size from 9px */
+            font-weight: 800;
+            text-align: center;
+            color: #00ff66;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-bottom: 8px; 
+            border-bottom: 1px solid rgba(0,255,102,0.3);
             display: flex;
             align-items: center;
-            gap: 8px;
-            pointer-events: none;
-            background: linear-gradient(135deg, #ff8c00, #ffd700);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
-        }
-
-        .fp-brand .py-logo {
-            font-size: 22px;
-            color: var(--accent);
-            -webkit-text-fill-color: var(--accent);
-            filter: drop-shadow(0 0 6px rgba(255, 140, 0, 0.6));
-        }
-
-        .fp-brand .market-badge {
-            font-size: 10px;
-            background: linear-gradient(135deg, var(--accent), var(--red));
-            color: #fff;
-            padding: 3px 6px;
-            border-radius: 4px;
-            margin-left: 4px;
-            box-shadow: 0 2px 5px rgba(255, 77, 77, 0.3);
-            -webkit-text-fill-color: #fff;
-        }
-
-        .fp-head-r {
-            display: flex;
-            align-items: center;
+            justify-content: center;
             gap: 6px;
-            pointer-events: none;
         }
 
-        .fp-body {
-            flex: 1;
+        .chat-header .live-dot {
+            width: 7px; /* Increased dot size */
+            height: 7px; 
+            background: #ff0044;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ff0044;
+            animation: blink 1s infinite;
+        }
+
+        .chat-body {
+            max-height: 360px; /* Increased max-height from 290px */
             overflow-y: auto;
-            padding: 20px 20px;
-            position: relative;
-            background: transparent;
-        }
-        .fp-body::-webkit-scrollbar {
-            width: 4px;
-        }
-        .fp-body::-webkit-scrollbar-thumb {
-            background: rgba(255, 140, 0, 0.6);
-            border-radius: 4px;
-        }
-        .fp-body::-webkit-scrollbar-track {
-            background: #000;
-        }
-
-        .lottery-card {
-            background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(0, 0, 0, 0.99));
-            border: 1.5px solid rgba(255, 140, 0, 0.4);
-            border-radius: 28px;
-            padding: 25px 20px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 80px rgba(255, 140, 0, 0.15), inset 0 0 20px rgba(255, 140, 0, 0.05);
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .lottery-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(45deg, transparent, rgba(255, 140, 0, 0.1), transparent);
-            animation: shimmer 3s infinite;
-            pointer-events: none;
-        }
-
-        @keyframes shimmer {
-            0% {
-                transform: translateX(-100%);
-            }
-            100% {
-                transform: translateX(100%);
-            }
-        }
-
-        .lc-icon {
-            width: 70px;
-            height: 70px;
-            margin: 0 auto 15px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, rgba(255, 140, 0, 0.2), rgba(0, 0, 0, 0.5));
-            border: 2px solid rgba(255, 140, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            box-shadow: 0 0 50px rgba(255, 140, 0, 0.3);
-            animation: pulseGlow 2s infinite alternate;
-            position: relative;
-            z-index: 2;
-        }
-
-        @keyframes pulseGlow {
-            0% {
-                box-shadow: 0 0 30px rgba(255, 140, 0, 0.2);
-            }
-            100% {
-                box-shadow: 0 0 60px rgba(255, 140, 0, 0.5);
-            }
-        }
-
-        .lc-icon i {
-            position: absolute;
-            opacity: 0.15;
-            font-size: 40px;
-            background: linear-gradient(135deg, #ff8c00, #ffd700);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 15px rgba(255, 140, 0, 0.5));
-        }
-
-        .lc-icon-sec {
-            position: relative;
-            z-index: 3;
-            font-family: 'Orbitron', monospace;
-            font-size: 26px;
-            font-weight: 900;
-            color: #ffeedd;
-            text-shadow: 0 0 10px rgba(255, 140, 0, 0.8);
-            transition: color 0.3s ease;
-        }
-
-        .lc-title {
-            font-family: var(--fd);
-            font-size: 18px;
-            font-weight: 900;
-            letter-spacing: 4px;
-            background: linear-gradient(135deg, #ff8c00, #ffd700);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            position: relative;
-            z-index: 2;
-        }
-
-        .lc-period-top {
-            font-family: var(--fd);
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: rgba(255, 200, 150, 0.6);
-            margin: 10px 0;
-            position: relative;
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .lc-period-top .period-label {
-            font-size: 10px;
-            color: rgba(255, 200, 150, 0.5);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-        }
-
-        .lc-period-top span.period-num {
-            color: #00ff7f;
-            font-weight: 800;
-            text-shadow: 0 0 8px rgba(0, 255, 127, 0.4);
-            word-break: break-all;
-        }
-
-        .lc-period-bottom {
-            font-family: var(--fd);
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: rgba(255, 200, 150, 0.6);
-            margin: 10px 0;
-            position: relative;
-            z-index: 2;
-        }
-
-        .lc-period-bottom span {
-            color: #00ff7f;
-            font-weight: 800;
-            margin-left: 5px;
-            text-shadow: 0 0 8px rgba(0, 255, 127, 0.4);
-        }
-
-        .lc-signal-main {
-            background: rgba(255, 140, 0, 0.03);
-            border: 1.5px solid rgba(255, 140, 0, 0.3);
-            border-radius: 20px;
-            padding: 25px 15px;
-            margin: 15px 0;
-            position: relative;
-            z-index: 2;
-            box-shadow: inset 0 0 20px rgba(255, 140, 0, 0.05);
-            transition: border-color 0.4s, box-shadow 0.4s;
-        }
-
-        .lc-signal-main.win {
-            border-color: var(--green);
-            box-shadow: 0 0 40px rgba(0, 255, 127, 0.2), inset 0 0 30px rgba(0, 255, 127, 0.05);
-        }
-        .lc-signal-main.loss {
-            border-color: var(--red);
-            box-shadow: 0 0 40px rgba(255, 77, 77, 0.2), inset 0 0 30px rgba(255, 77, 77, 0.05);
-        }
-        .lc-signal-main.pending {
-            border-color: rgba(255, 215, 0, 0.4);
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.08);
-        }
-
-        .lc-signal-label {
-            font-family: var(--fd);
-            font-size: 12px;
-            color: rgba(255, 200, 150, 0.6);
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            display: block;
-            margin-bottom: 12px;
-        }
-
-        .lc-signal-value {
-            font-family: var(--fd);
-            font-weight: 900;
-            letter-spacing: 3px;
-            text-shadow: 0 0 25px currentColor, 0 2px 5px rgba(0, 0, 0, 0.6);
-            transition: all 0.3s ease;
-            line-height: 1;
-            min-height: 120px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            gap: 6px; /* Increased gap from 4px */
+            padding-right: 3px;
         }
+        
+        .chat-body::-webkit-scrollbar { width: 4px; }
+        .chat-body::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .chat-body::-webkit-scrollbar-thumb { background: #00ff66; border-radius: 4px; }
 
-        .sig-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        .sig-size {
-            font-size: 64px;
-            font-weight: 900;
-            letter-spacing: 4px;
-            text-shadow: 0 0 20px currentColor;
-            transition: color 0.3s;
-        }
-
-        /* RESULT BADGE - WIN / LOSS / PENDING */
-        .sig-result {
-            display: inline-block;
-            font-family: var(--fd);
-            font-size: 22px;
-            font-weight: 900;
-            letter-spacing: 3px;
-            padding: 6px 24px;
-            border-radius: 40px;
-            margin-top: 2px;
-            transition: all 0.4s ease;
-            text-shadow: 0 0 20px currentColor;
-            border: 1.5px solid transparent;
-        }
-
-        .sig-result.win {
-            color: var(--green);
-            border-color: var(--green);
-            background: rgba(0, 255, 127, 0.08);
-            box-shadow: 0 0 30px rgba(0, 255, 127, 0.15);
-        }
-        .sig-result.loss {
-            color: var(--red);
-            border-color: var(--red);
-            background: rgba(255, 77, 77, 0.08);
-            box-shadow: 0 0 30px rgba(255, 77, 77, 0.15);
-        }
-        .sig-result.pending {
-            color: var(--gold);
-            border-color: rgba(255, 215, 0, 0.4);
-            background: rgba(255, 215, 0, 0.05);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
-        }
-        .sig-result.analyzing {
-            color: var(--accent);
-            border-color: rgba(255, 140, 0, 0.3);
-            background: rgba(255, 140, 0, 0.05);
-        }
-
-        .signal-loader {
-            font-size: 48px;
-            color: var(--accent);
-            animation: spinLoader 1s linear infinite;
-            display: inline-block;
-        }
-
-        @keyframes spinLoader {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .lc-status-box {
-            margin-top: 15px;
-            background: rgba(0, 0, 0, 0.5);
+        .chat-msg {
+            font-size: 9px; /* Increased font size from 7px */
+            font-weight: 800;
+            padding: 6px 8px; /* Increased padding from 4px 5px */
             border-radius: 12px;
-            padding: 12px 16px;
-            border: 1px solid rgba(255, 140, 0, 0.15);
-            position: relative;
-            z-index: 2;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .lc-status-label {
-            font-size: 10px;
-            color: rgba(255, 200, 150, 0.7);
-            font-family: var(--fd);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-        .lc-status-val {
-            font-family: var(--fd);
-            font-weight: 800;
-            font-size: 13px;
-        }
-
-        /* Win Rate Badge */
-        .winrate-badge {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-family: var(--fd);
-            font-size: 11px;
-            letter-spacing: 0.5px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 4px 14px 4px 12px;
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-        .winrate-badge .wr-num {
-            font-weight: 900;
-            font-size: 15px;
-        }
-        .winrate-badge .wr-num.green {
-            color: var(--green);
-        }
-        .winrate-badge .wr-num.red {
-            color: var(--red);
-        }
-        .winrate-badge .wr-label {
-            color: rgba(255, 200, 150, 0.5);
-            font-size: 9px;
-        }
-        .winrate-badge .wr-divider {
-            color: rgba(255, 255, 255, 0.1);
-        }
-
-        .history-title {
-            font-size: 13px;
-            color: rgba(255, 200, 150, 0.6);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-family: var(--fd);
-            margin: 16px 0 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .history-title::before {
-            content: '';
-            width: 4px;
-            height: 4px;
-            background: var(--accent);
-            border-radius: 50%;
-            box-shadow: 0 0 5px var(--accent);
-        }
-
-        .h-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .h-item {
-            display: grid;
-            grid-template-columns: 54px 34px 1fr 44px 52px;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 10px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 140, 0, 0.12);
-            transition: transform .2s, box-shadow .2s, border-color .2s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .h-item:hover {
-            transform: scale(1.02);
-            border-color: var(--accent);
-            box-shadow: 0 4px 10px rgba(255, 140, 0, 0.1);
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .h-item.win-item {
-            border-color: rgba(0, 255, 127, 0.25);
-            background: rgba(0, 255, 127, 0.03);
-        }
-        .h-item.loss-item {
-            border-color: rgba(255, 77, 77, 0.25);
-            background: rgba(255, 77, 77, 0.03);
-        }
-
-        .h-per {
-            font-weight: 700;
-            color: rgba(255, 255, 255, 0.35);
-            font-size: 8px;
-            font-family: var(--fm);
             text-align: center;
             letter-spacing: 0.5px;
-        }
-
-        .h-num {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
+            animation: msgIn 0.4s ease;
             display: flex;
-            align-items: center;
             justify-content: center;
-            font-weight: 800;
-            font-size: 16px;
-            color: #fff;
-            font-family: var(--fm);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, .5);
-            flex-shrink: 0;
-        }
-
-        .h-num.ng {
-            background: linear-gradient(135deg, #00cc66, #00ff7f);
-            box-shadow: 0 2px 8px rgba(0, 255, 127, .3);
-        }
-        .h-num.nr {
-            background: linear-gradient(135deg, #cc2233, #ff4d4d);
-            box-shadow: 0 2px 8px rgba(255, 77, 77, .3);
-        }
-        .h-num.nv {
-            background: linear-gradient(135deg, #8833cc, #cc66ff);
-            box-shadow: 0 2px 8px rgba(204, 102, 255, .3);
-        }
-
-        .h-cdots {
-            display: flex;
+            align-items: center;
             gap: 4px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .hcd {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .hcd.cg {
-            background: #00cc66;
-            box-shadow: 0 0 4px rgba(0, 255, 127, .4);
-        }
-        .hcd.cr {
-            background: #ff4d4d;
-            box-shadow: 0 0 4px rgba(255, 77, 77, .4);
-        }
-        .hcd.cv {
-            background: #9333ea;
-            box-shadow: 0 0 4px rgba(204, 102, 255, .4);
+            flex-direction: column;
         }
 
-        .h-sz {
-            font-weight: 800;
-            font-size: 10px;
-            text-align: center;
-            letter-spacing: 1px;
-            font-family: var(--fd);
-            padding: 4px 6px;
-            border-radius: 6px;
-            background: #000;
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            min-width: 34px;
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        .h-sz.big {
-            color: #00ff7f;
-            text-shadow: 0 0 5px rgba(0, 255, 127, 0.5);
+        .chat-msg.win {
+            background: rgba(0, 255, 102, 0.15);
+            color: #00ff66;
+            border: 1px solid #00ff66;
         }
-        .h-sz.small {
-            color: #ff4d4d;
-            text-shadow: 0 0 5px rgba(255, 77, 77, 0.5);
-        }
-
-        /* WIN/LOSS badge in history */
-        .h-result {
-            font-family: var(--fd);
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-align: center;
-            padding: 3px 6px;
-            border-radius: 20px;
-            min-width: 36px;
-            border: 1px solid transparent;
-            transition: all 0.2s;
-        }
-        .h-result.win {
-            color: var(--green);
-            border-color: rgba(0, 255, 127, 0.3);
-            background: rgba(0, 255, 127, 0.06);
-        }
-        .h-result.loss {
-            color: var(--red);
-            border-color: rgba(255, 77, 77, 0.3);
-            background: rgba(255, 77, 77, 0.06);
-        }
-        .h-result.pending {
-            color: rgba(255, 215, 0, 0.5);
-            border-color: rgba(255, 215, 0, 0.15);
-            background: rgba(255, 215, 0, 0.03);
+        
+        .chat-msg.loss {
+            background: rgba(255, 0, 68, 0.15);
+            color: #ff0044;
+            border: 1px solid #ff0044;
         }
 
-        /* ----- PASSWORD OVERLAY ----- */
-        .pass-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 10001;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(30px);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity .4s ease;
-        }
-
-        .pass-overlay.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .pass-card {
-            width: 340px;
-            padding: 40px 30px;
-            background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(0, 0, 0, 0.99));
-            border-radius: 28px;
-            position: relative;
-            overflow: hidden;
-            text-align: center;
-            transform: scale(0.88) translateY(16px);
-            transition: transform .5s cubic-bezier(.34, 1.56, .64, 1);
-            box-shadow: 0 0 80px rgba(204, 102, 255, 0.2), inset 0 0 20px rgba(204, 102, 255, 0.05);
-            border: 1.5px solid rgba(204, 102, 255, 0.5);
-        }
-
-        .pass-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(45deg, transparent, rgba(204, 102, 255, 0.1), transparent);
-            animation: shimmer 3s infinite;
-            pointer-events: none;
-        }
-
-        .pass-overlay.show .pass-card {
-            transform: scale(1) translateY(0);
-        }
-
-        .lgn-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, rgba(204, 102, 255, 0.2), rgba(0, 0, 0, 0.5));
-            border: 2px solid rgba(204, 102, 255, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            box-shadow: 0 0 50px rgba(204, 102, 255, 0.3);
-            animation: pulseGlowViolet 2s infinite alternate;
-        }
-
-        @keyframes pulseGlowViolet {
-            0% {
-                box-shadow: 0 0 30px rgba(204, 102, 255, 0.2);
-            }
-            100% {
-                box-shadow: 0 0 60px rgba(204, 102, 255, 0.5);
-            }
-        }
-
-        .lgn-icon i {
-            background: linear-gradient(135deg, #cc66ff, #ff8c00);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 15px rgba(204, 102, 255, 0.5));
-        }
-
-        .lgn-title {
-            font-family: var(--fd);
-            font-size: 26px;
+        .chat-msg .msg-label {
+            font-size: 11px; /* Increased font size from 8px */
             font-weight: 900;
-            letter-spacing: 6px;
-            background: linear-gradient(135deg, #cc66ff, #ff8c00);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 5px;
         }
-
-        .lgn-sub {
-            font-size: 11px;
-            color: #cc66ff;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin-bottom: 25px;
-            font-family: var(--fd);
+        
+        .chat-msg .msg-period {
+            font-size: 8px; /* Increased font size from 6px */
+            opacity: 0.8;
             font-weight: 600;
         }
 
-        .lgn-input {
-            width: 100%;
-            padding: 16px 18px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid rgba(204, 102, 255, 0.2);
-            border-radius: 14px;
-            color: #fff;
-            font-family: var(--fm);
-            font-size: 14px;
-            outline: none;
+        .chat-empty {
+            font-size: 10px; /* Increased font size from 8px */
+            color: #888;
             text-align: center;
-            letter-spacing: 4px;
-            margin-bottom: 16px;
-            transition: all .3s;
-        }
-
-        .lgn-input:focus {
-            border-color: #cc66ff;
-            box-shadow: 0 0 15px rgba(204, 102, 255, 0.3);
-        }
-
-        .lgn-btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #cc66ff, #ff4d00);
-            border: none;
-            border-radius: 14px;
-            font-family: var(--fd);
-            font-size: 14px;
-            font-weight: 900;
-            color: #fff;
-            cursor: pointer;
-            letter-spacing: 5px;
-            text-transform: uppercase;
-            box-shadow: 0 10px 30px rgba(204, 102, 255, 0.3);
-            transition: all 0.2s;
-        }
-
-        .lgn-btn:active {
-            transform: scale(0.96);
-            box-shadow: 0 5px 15px rgba(204, 102, 255, 0.2);
-        }
-
-        .lgn-err {
-            color: #ff4d4d;
-            font-size: 11px;
-            margin-top: 14px;
-            min-height: 14px;
-            font-family: var(--fm);
-            letter-spacing: 1px;
-        }
-
-        /* Responsive tweaks */
-        @media (max-width: 480px) {
-            .fp-head {
-                padding: 14px 16px;
-            }
-            .fp-brand {
-                font-size: 15px;
-                letter-spacing: 1px;
-            }
-            .fp-brand .py-logo {
-                font-size: 18px;
-            }
-            .fp-body {
-                padding: 14px 14px;
-            }
-            .lottery-card {
-                padding: 18px 14px;
-                border-radius: 20px;
-            }
-            .lc-title {
-                font-size: 15px;
-                letter-spacing: 2px;
-                margin-bottom: 12px;
-            }
-            .sig-size {
-                font-size: 44px;
-            }
-            .sig-result {
-                font-size: 17px;
-                padding: 4px 16px;
-            }
-            .lc-signal-main {
-                padding: 18px 10px;
-                margin: 10px 0;
-            }
-            .lc-signal-value {
-                min-height: 90px;
-            }
-            .lc-status-box {
-                padding: 8px 12px;
-                flex-wrap: wrap;
-            }
-            .winrate-badge {
-                font-size: 9px;
-                padding: 3px 10px 3px 8px;
-            }
-            .winrate-badge .wr-num {
-                font-size: 12px;
-            }
-            .h-item {
-                grid-template-columns: 40px 30px 1fr 36px 44px;
-                padding: 6px 8px;
-                gap: 4px;
-            }
-            .h-per {
-                font-size: 7px;
-            }
-            .h-num {
-                width: 28px;
-                height: 28px;
-                font-size: 13px;
-            }
-            .hcd {
-                width: 9px;
-                height: 9px;
-            }
-            .h-sz {
-                font-size: 8px;
-                min-width: 28px;
-                padding: 3px 4px;
-            }
-            .h-result {
-                font-size: 8px;
-                min-width: 30px;
-                padding: 2px 4px;
-            }
-            .lc-period-top {
-                font-size: 12px;
-            }
-            .lc-period-bottom {
-                font-size: 12px;
-            }
-            .lc-icon {
-                width: 56px;
-                height: 56px;
-                font-size: 26px;
-                margin-bottom: 10px;
-            }
-            .lc-icon-sec {
-                font-size: 20px;
-            }
-            .lc-status-label {
-                font-size: 9px;
-            }
-            .lc-status-val {
-                font-size: 11px;
-            }
-        }
-
-        @media (max-width: 380px) {
-            .h-item {
-                grid-template-columns: 34px 26px 1fr 30px 38px;
-                padding: 5px 6px;
-                gap: 3px;
-            }
-            .h-num {
-                width: 24px;
-                height: 24px;
-                font-size: 11px;
-            }
-            .hcd {
-                width: 7px;
-                height: 7px;
-            }
-            .h-sz {
-                font-size: 7px;
-                min-width: 22px;
-                padding: 2px 3px;
-            }
-            .h-result {
-                font-size: 7px;
-                min-width: 26px;
-                padding: 2px 3px;
-            }
-            .sig-size {
-                font-size: 36px;
-            }
-            .sig-result {
-                font-size: 14px;
-                padding: 3px 12px;
-            }
-            .fp-brand {
-                font-size: 13px;
-            }
+            padding: 20px 4px; 
+            font-style: italic;
         }
     </style>
 </head>
 <body>
 
-    <!-- PASSWORD OVERLAY -->
-    <div class="pass-overlay show" id="passOverlay">
-        <div class="pass-card">
-            <div class="lgn-icon">
-                <i class="fab fa-python"></i>
-            </div>
-            <div class="lgn-title">PYTHON VIP</div>
-            <div class="lgn-sub">HGZY WinGo 30s Market</div>
-            <input type="password" class="lgn-input" id="passIn" placeholder="••••••••" autocomplete="off" />
-            <button class="lgn-btn" id="lgnBtn">
-                <i class="fas fa-unlock"></i> ACCESS
-            </button>
-            <div class="lgn-err" id="lgnErr"></div>
-        </div>
+    <!-- Visual Effects Layer -->
+    <div class="effects-layer" id="effectsLayer"></div>
+
+    <!-- Game Background Ifram9 -->
+    <div class="iframe-container">
+        <iframe src="https://hgnice.cc/#/register?invitationCode=511711502736" id="gameFrame"></iframe>
     </div>
 
-    <!-- SIGNAL PANEL -->
-    <div class="fp" id="fp">
-        <div class="fp-head" id="dragH">
-            <span class="fp-brand">
-                <i class="fab fa-python py-logo"></i>
-                PYTHON VIP
-                <span class="market-badge">30S</span>
-            </span>
-            <div class="fp-head-r"></div>
+    <!-- Draggable Signal Panel -->
+    <div class="box" id="dragBox">
+        
+        <!-- Red Butterfly Cover -->
+        <div class="butterfly-cover">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path class="wing-l" d="M50 50 Q15 5 5 35 Q0 55 50 50 Z" fill="#ff0000" stroke="#8b0000" stroke-width="2"/>
+                <path class="wing-r" d="M50 50 Q85 5 95 35 Q100 55 50 50 Z" fill="#ff0000" stroke="#8b0000" stroke-width="2"/>
+                <path class="wing-l" d="M50 50 Q20 90 15 60 Q30 40 50 50 Z" fill="#cc0000" stroke="#8b0000" stroke-width="2"/>
+                <path class="wing-r" d="M50 50 Q80 90 85 60 Q70 40 50 50 Z" fill="#cc0000" stroke="#8b0000" stroke-width="2"/>
+                <ellipse cx="50" cy="50" rx="3" ry="15" fill="#4a0000"/>
+                <line x1="48" y1="40" x2="40" y2="25" stroke="#4a0000" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="52" y1="40" x2="60" y2="25" stroke="#4a0000" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
         </div>
 
-        <div class="fp-body" id="fpBody">
-            <div class="lottery-card">
-                <div class="lc-icon">
-                    <i class="fas fa-rocket"></i>
-                    <span id="iconSec" class="lc-icon-sec">--</span>
-                </div>
+        <div class="panel-header">
+            <div class="premium-logo-area">
+                <div class="logo-ring"></div>
+                <img class="logo-image" src="https://i.postimg.cc/LqKYxR91/image.png" alt="VIP Logo">
+            </div>
+            <div class="server-badge">
+                <span id="serverStatusText">VIP.. </span>
+                <div class="vpn-dot" id="serverDot"></div>
+            </div>
+        </div>
 
-                <div class="lc-title">Lottery Prediction</div>
+        <div id="loginPart" class="login-part">
+            <input type="password" id="passInput" placeholder="Enter Password">
+            <button class="login-btn" onclick="checkPass()">LOGIN SYSTEM</button>
+        </div>
 
-                <div class="lc-period-top">
-                    <span class="period-label">Period:</span>
-                    <span id="perTop" class="period-num">....</span>
-                </div>
-
-                <div class="lc-signal-main" id="signalCard">
-                    <span class="lc-signal-label">Signal</span>
-                    <div class="lc-signal-value" id="sigVal">
-                        <i class="fas fa-mobile-screen-button signal-loader"></i>
-                    </div>
-                    <!-- WIN / LOSS / PENDING badge -->
-                    <div id="sigResultBadge" class="sig-result pending">⏳ PENDING</div>
-                </div>
-
-                <div class="lc-period-bottom">
-                    CHANCE: <span id="perChance">--%</span>
-                </div>
-
-                <div class="lc-status-box">
-                    <span class="lc-status-label">Status:</span>
-                    <span class="lc-status-val" id="stsTxt">STANDBY</span>
-
-                    <div class="winrate-badge" id="winRateBadge">
-                        <span class="wr-label">WIN</span>
-                        <span class="wr-num green" id="winCount">0</span>
-                        <span class="wr-divider">/</span>
-                        <span class="wr-num" id="totalCount" style="color:rgba(255,255,255,0.5);">0</span>
-                        <span class="wr-divider">|</span>
-                        <span class="wr-label">LOSS</span>
-                        <span class="wr-num red" id="lossCount">0</span>
-                        <span class="wr-divider">|</span>
-                        <span class="wr-label">RATE</span>
-                        <span class="wr-num" id="winRatePct" style="color:var(--gold);">0%</span>
+        <div id="appPart" class="app-part hidden">
+            <div class="period-top-box">
+                <span class="period-label"> (30s)</span>
+                <span id="periodID">Wait...</span>
+            </div>
+            
+            <div class="timer-container">
+                <div class="timer-txt">TIME LEFT: <span id="timer">--</span>s</div>
+            </div>
+            
+            <div id="signalContainer">
+                <span class="signal-label">Quantum AI Signal</span>
+                <div id="predictionOutput" style="width:100%;">
+                    <div class="output-row">
+                        <span class="size-txt" id="predictSize">--</span>
                     </div>
                 </div>
             </div>
-
-            <div class="history-title">Last 10 Signals</div>
-            <div class="h-list" id="hList"></div>
         </div>
     </div>
 
-    <div id="toastBox" style="position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 99999; display: flex; flex-direction: column; gap: 5px; pointer-events: none;"></div>
+    <!-- Result Chat Panel (Draggable & Increased Size) -->
+    <div id="chatPanel" class="chat-panel">
+        <div class="chat-header">
+            <span class="live-dot"></span>
+            <span>LIVE RESULT GHOST</span>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="chat-empty">Waiting for first result...</div>
+        </div>
+    </div>
 
     <script>
-        /**
-         * ==============================================================================
-         * PYTHON VIP - HGZY WINGO 30S MARKET SIGNAL PANEL
-         * Features: BIG/SMALL Signal + WIN/LOSS tracking + Win Rate
-         * ==============================================================================
-         */
-
-        class HGZYSignalPanel {
-
-            constructor() {
-                this.initializeFirebase();
-
-                this.isAuthenticated = false;
-                this.isActive = false;
-                this.currentPeriod = null;
-                this.historyData = [];
-                this.TOTAL_SEC = 30;
-                this.CIRC = 2 * Math.PI * 42;
-
-                // UI refs
-                this.passOverlay = document.getElementById('passOverlay');
-                this.passIn = document.getElementById('passIn');
-                this.lgnBtn = document.getElementById('lgnBtn');
-                this.lgnErr = document.getElementById('lgnErr');
-                this.fp = document.getElementById('fp');
-                this.dragH = document.getElementById('dragH');
-                this.signalCard = document.getElementById('signalCard');
-                this.sigResultBadge = document.getElementById('sigResultBadge');
-                this.winCountEl = document.getElementById('winCount');
-                this.lossCountEl = document.getElementById('lossCount');
-                this.totalCountEl = document.getElementById('totalCount');
-                this.winRatePctEl = document.getElementById('winRatePct');
-
-                this.isDraggingPanel = false;
-                this.dragStartX = 0;
-                this.dragStartY = 0;
-                this.dragOffX = 0;
-                this.dragOffY = 0;
-
-                // track last period to detect change
-                this.lastPeriodChecked = null;
-                // store the signal for the current period so we can compare when result arrives
-                this.currentSignal = null;
-                // flag: has the current period's result been evaluated?
-                this.currentPeriodEvaluated = false;
-            }
-
-            initializeFirebase() {
-                const firebaseConfig = {
+        /* =========================================================================
+           FIREBASE CONFIGURATION & INITIALIZATION
+           ========================================================================= */
+        const firebaseConfig = {
             apiKey: "AIzaSyBPBQOeApFZQwGX8G4mZxhY5C2jjN6VWmU",
             authDomain: "dkwin-panel-ai.firebaseapp.com",
             databaseURL: "https://dkwin-panel-ai-default-rtdb.firebaseio.com",
@@ -1113,533 +590,272 @@
             messagingSenderId: "925573387640",
             appId: "1:925573387640:web:8faf648b0b89933c89e48d",
             measurementId: "G-X3ZFCRWEH8"
-              };
-           firebase.initializeApp(firebaseConfig);
-           
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        
+        /* =========================================================================
+           GLOBAL VARIABLES AND STATE MANAGEMENT
+           ========================================================================= */
+        let lastP = null;
+        let _active = false;
+        let currentSignal = null;
+        let evaluatedPeriods = new Set();
+
+        /* =========================================================================
+           VISUAL EFFECTS GENERATOR
+           ========================================================================= */
+        function createVisualEffects() {
+            const layer = document.getElementById('effectsLayer');
+            
+            // Create Fireflies (Jonaki Poka)
+            for(let i=0; i<50; i++) {
+                let f = document.createElement('div');
+                f.className = 'firefly';
+                f.style.left = Math.random() * 100 + 'vw';
+                f.style.top = Math.random() * 100 + 'vh';
+                f.style.animationDelay = Math.random() * 5 + 's';
+                f.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                layer.appendChild(f);
+            }
+        }
+        createVisualEffects();
+
+        /* =========================================================================
+           DRAG LOGIC FOR PANELS
+           ========================================================================= */
+        function makeDraggable(element) {
+            let isDragging = false;
+            let startX, startY;
+            let currentX = 0, currentY = 0;
+
+            function dragStart(e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || 
+                    e.target.classList.contains('vpn-dot') || e.target.closest('.chat-body')) return;
+                
+                isDragging = true;
+                element.style.cursor = 'grabbing';
+                
+                const clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
+                
+                startX = clientX - currentX;
+                startY = clientY - currentY;
+                
+                if (e.type === "touchstart") e.preventDefault();
             }
 
-            async init() {
-                this.setupEventListeners();
-                this.setupNetworkListeners();
-                this.startFallingBallsAnimation();
-                this.showPasswordPanel();
-            }
-
-            setupEventListeners() {
-                this.lgnBtn.addEventListener('click', () => this.handleLogin());
-                this.passIn.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') this.handleLogin();
-                });
-
-                this.dragH.addEventListener('touchstart', (e) => {
-                    var t = e.touches[0];
-                    this.startDrag(t.clientX, t.clientY);
-                }, { passive: true });
-
-                this.dragH.addEventListener('touchmove', (e) => {
-                    var t = e.touches[0];
-                    this.moveDrag(t.clientX, t.clientY);
-                }, { passive: true });
-
-                this.dragH.addEventListener('touchend', () => this.endDrag());
-
-                this.dragH.addEventListener('mousedown', (e) => {
-                    this.startDrag(e.clientX, e.clientY);
-                    e.preventDefault();
-                });
-
-                document.addEventListener('mousemove', (e) => this.moveDrag(e.clientX, e.clientY));
-                document.addEventListener('mouseup', () => this.endDrag());
-
-                document.addEventListener('dblclick', (e) => e.preventDefault());
-            }
-
-            setupNetworkListeners() {
-                window.addEventListener('online', () => {
-                    this.showToast('Connection Restored. Reconnecting...', 'success');
-                    if (this.isAuthenticated) {
-                        this.fetchHistory();
-                    }
-                });
-
-                window.addEventListener('offline', () => {
-                    this.isActive = false;
-                    this.showToast('No Internet Connection! Panel Hidden.', 'error');
-                    if (this.isAuthenticated) {
-                        this.hideSignalPanel();
-                    }
-                });
-            }
-
-            startFallingBallsAnimation() {
-                setInterval(() => {
-                    var ball = document.createElement('div');
-                    ball.className = 'falling-ball';
-                    var colors = ['#00ff7f', '#ff4d4d', '#cc66ff', '#ffd700'];
-                    var c = colors[Math.floor(Math.random() * colors.length)];
-                    ball.style.background = c;
-                    ball.style.left = Math.random() * 100 + 'vw';
-                    ball.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                    ball.style.boxShadow = '0 0 8px ' + c;
-                    document.body.appendChild(ball);
-                    setTimeout(() => ball.remove(), 5000);
-                }, 300);
-            }
-
-            showPasswordPanel() {
-                this.passOverlay.classList.add('show');
-                this.passIn.value = '';
-                this.lgnErr.textContent = '';
-                setTimeout(() => this.passIn.focus(), 350);
-            }
-
-            showSignalPanel() {
-                this.passOverlay.classList.remove('show');
-                this.fp.classList.add('vis');
-                this.fp.style.display = 'flex';
-                this.fp.style.left = '0';
-                this.fp.style.top = '0';
-                this.fp.style.transform = 'none';
-                this.fp.dataset.hasPosition = '1';
-            }
-
-            hideSignalPanel() {
-                this.fp.classList.remove('vis');
-                this.fp.style.display = 'none';
-                this.showPasswordPanel();
-            }
-
-            showToast(msg, type) {
-                var box = document.getElementById('toastBox');
-                var el = document.createElement('div');
-                var bg = type === 'error' ?
-                    'rgba(255, 77, 77, .15); border: 1px solid rgba(255, 77, 77, .3); color: #ff4d4d' :
-                    'rgba(255, 140, 0, .15); border: 1px solid rgba(255, 140, 0, .3); color: #ff8c00';
-                el.style.cssText =
-                    `padding: 8px 16px; border-radius: 10px; font-size: 10px; font-weight: 600; backdrop-filter: blur(14px); background: ${bg}; box-shadow: 0 4px 16px rgba(0, 0, 0, .4); margin-bottom: 5px; font-family: 'JetBrains Mono', sans-serif;`;
-                el.textContent = msg;
-                box.appendChild(el);
-                setTimeout(() => { el.style.opacity = '0';
-                    el.style.transition = 'opacity .3s'; }, 2500);
-                setTimeout(() => el.remove(), 2800);
-            }
-
-            handleLogin() {
-                if (!navigator.onLine) {
-                    this.lgnErr.textContent = 'No Internet Connection!';
-                    this.showToast('Cannot connect. No Internet Data.', 'error');
-                    return;
-                }
-
-                if (this.passIn.value.trim() === 'VIP100') {
-                    this.isAuthenticated = true;
-                    this.passOverlay.classList.remove('show');
-                    this.showToast('Access Granted. Connecting to 30s Server...', 'success');
-                    this.checkConnectionAndShowPanel();
-                } else {
-                    this.lgnErr.textContent = 'Wrong Password!';
-                    this.showToast('Access Denied', 'error');
+            function dragEnd() {
+                if (isDragging) {
+                    isDragging = false;
+                    element.style.cursor = 'grab';
                 }
             }
 
-            async checkConnectionAndShowPanel() {
-                if (!navigator.onLine) {
-                    this.showToast('No Internet Connection. Panel Locked.', 'error');
-                    return;
-                }
-
-                this.showSignalPanel();
-
-                setInterval(() => this.fetchHistory(), 3000);
-                setInterval(() => this.mainLoop(), 200);
-
-                await this.fetchHistory();
+            function drag(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                
+                const clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+                
+                currentX = clientX - startX;
+                currentY = clientY - startY;
+                
+                element.style.transform = `translate(${currentX}px, ${currentY}px)`;
             }
 
-            async fetchHistory() {
-                if (!navigator.onLine) {
-                    this.isActive = false;
-                    this.hideSignalPanel();
-                    return;
-                }
+            element.style.cursor = 'grab';
+            element.addEventListener("mousedown", dragStart);
+            element.addEventListener("touchstart", dragStart, { passive: false });
 
-                try {
-                    var res = await fetch("https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?r=" + Date
-                    .now());
-                    if (!res.ok) throw new Error("Network error");
-                    var json = await res.json();
-
-                    if (json.data && json.data.list && json.data.list.length > 0) {
-                        var newPeriod = (BigInt(json.data.list[0].issueNumber) + 1n).toString();
-
-                        // Detect period change
-                        var periodChanged = (this.currentPeriod !== null && this.currentPeriod !== newPeriod);
-
-                        // If period changed, evaluate the previous period's result
-                        if (periodChanged && this.currentSignal && this.historyData.length > 0) {
-                            // The most recent history item is the one that just finished
-                            var latest = this.historyData[0];
-                            if (latest) {
-                                var sigSize = this.currentSignal.size;
-                                var actualSize = latest.size;
-                                var isWin = (sigSize === actualSize);
-                                // Store the result in the history item
-                                latest.signalSize = sigSize;
-                                latest.isWin = isWin;
-                                latest.evaluated = true;
-                                // also store in a separate flag for the current period evaluation
-                                this.currentPeriodEvaluated = true;
-                                this.currentPeriodWin = isWin;
-                                this.currentPeriodActual = actualSize;
-                                this.currentPeriodSignal = sigSize;
-                            }
-                        }
-
-                        this.currentPeriod = newPeriod;
-
-                        // Build history with signal comparison
-                        this.historyData = json.data.list.slice(0, 10).map((item) => {
-                            var num = typeof item.number === 'number' ? item.number : parseInt(item.number) || 0;
-                            var size = this.getSize(num);
-                            var colors = this.getNumColors(num);
-                            // Compute signal for this period
-                            var sig = this.analyzeSignal(item.issueNumber);
-                            var sigSize = sig ? sig.size : null;
-                            var isWin = (sigSize === size);
-                            return {
-                                period: item.issueNumber,
-                                num: num,
-                                size: size,
-                                colors: colors,
-                                signalSize: sigSize,
-                                isWin: isWin,
-                                evaluated: true
-                            };
-                        });
-
-                        // Re-evaluate the current period's signal if we have one
-                        if (this.currentSignal && this.historyData.length > 0) {
-                            var latest = this.historyData[0];
-                            // If the latest period matches the one we were tracking
-                            if (latest && latest.signalSize === null) {
-                                // This shouldn't happen often, but just in case
-                                var sigSize2 = this.currentSignal.size;
-                                var actualSize2 = latest.size;
-                                var isWin2 = (sigSize2 === actualSize2);
-                                latest.signalSize = sigSize2;
-                                latest.isWin = isWin2;
-                                latest.evaluated = true;
-                                this.currentPeriodEvaluated = true;
-                                this.currentPeriodWin = isWin2;
-                                this.currentPeriodActual = actualSize2;
-                                this.currentPeriodSignal = sigSize2;
-                            }
-                        }
-
-                        this.renderHistory();
-                        this.updateWinRate();
-                        this.isActive = true;
-                    }
-
-                } catch (e) {
-                    this.isActive = false;
-                    this.showToast('Server Error! Reconnecting...', 'error');
-                }
-            }
-
-            getNumColors(n) {
-                if (n === 0 || n === 5) return ['red', 'violet'];
-                if (n === 1 || n === 3 || n === 7 || n === 9) return ['green'];
-                return ['red'];
-            }
-
-            getSize(n) { return n >= 5 ? 'BIG' : 'SMALL'; }
-
-            renderHistory() {
-                var list = document.getElementById('hList');
-                list.innerHTML = '';
-
-                this.historyData.forEach((item) => {
-                    var el = document.createElement('div');
-                    el.className = 'h-item';
-                    if (item.evaluated && item.isWin !== undefined) {
-                        el.classList.add(item.isWin ? 'win-item' : 'loss-item');
-                    }
-
-                    var pShort = item.period.length > 6 ? item.period.slice(-6) : item.period;
-                    var nClass = item.colors.includes('violet') ? 'nv' : (item.colors.includes('green') ? 'ng' : 'nr');
-                    var dotsHtml = '';
-                    item.colors.forEach((c) => {
-                        var dc = c === 'green' ? 'cg' : (c === 'violet' ? 'cv' : 'cr');
-                        dotsHtml += '<div class="hcd ' + dc + '"></div>';
-                    });
-
-                    var szClass = item.size === 'BIG' ? 'big' : 'small';
-
-                    // Result badge
-                    var resultHtml = '';
-                    if (item.evaluated && item.isWin !== undefined) {
-                        resultHtml = item.isWin ?
-                            '<span class="h-result win">✅ WIN</span>' :
-                            '<span class="h-result loss">❌ LOSS</span>';
-                    } else {
-                        resultHtml = '<span class="h-result pending">⏳</span>';
-                    }
-
-                    el.innerHTML =
-                        '<span class="h-per">' + pShort + '</span>' +
-                        '<div class="h-num ' + nClass + '">' + item.num + '</div>' +
-                        '<div class="h-cdots">' + dotsHtml + '</div>' +
-                        '<span class="h-sz ' + szClass + '">' + item.size + '</span>' +
-                        resultHtml;
-
-                    list.appendChild(el);
-                });
-            }
-
-            updateWinRate() {
-                var total = 0,
-                    wins = 0,
-                    losses = 0;
-                this.historyData.forEach((item) => {
-                    if (item.evaluated && item.isWin !== undefined) {
-                        total++;
-                        if (item.isWin) wins++;
-                        else losses++;
-                    }
-                });
-                this.winCountEl.textContent = wins;
-                this.lossCountEl.textContent = losses;
-                this.totalCountEl.textContent = total;
-                var rate = total > 0 ? Math.round((wins / total) * 100) : 0;
-                this.winRatePctEl.textContent = rate + '%';
-                this.winRatePctEl.style.color = rate >= 50 ? 'var(--green)' : 'var(--red)';
-            }
-
-            /**
-             * Core Prediction Algorithm - 30s Market BIG/SMALL
-             */
-            analyzeSignal(period) {
-                if (!period) return null;
-                var h1 = 0,
-                    s1 = period + "_PYTHON_VIP_SG_30S_QUANTUM_2025_BIG_SMALL";
-                for (var i = 0; i < s1.length; i++) {
-                    h1 = ((h1 << 5) - h1) + s1.charCodeAt(i);
-                    h1 |= 0;
-                }
-                var num = Math.abs(h1) % 10;
-                var chance = 90 + (Math.abs(h1 >> 4) % 10);
-                return {
-                    num: num,
-                    size: this.getSize(num),
-                    colors: this.getNumColors(num),
-                    chance: chance
-                };
-            }
-
-            /**
-             * Main Loop - 30s Market Signal Display Engine with WIN/LOSS tracking
-             */
-            mainLoop() {
-                var now = new Date();
-                var ms = now.getTime();
-                var periodStart = Math.floor(ms / 30000) * 30000;
-                var remaining = this.TOTAL_SEC - Math.floor((ms - periodStart) / 1000);
-                if (remaining < 0) remaining = 0;
-
-                var stsTxt = document.getElementById('stsTxt');
-                var sigVal = document.getElementById('sigVal');
-                var perChance = document.getElementById('perChance');
-                var iconSecEl = document.getElementById('iconSec');
-                var perTop = document.getElementById('perTop');
-
-                // Reset signal card classes
-                this.signalCard.classList.remove('win', 'loss', 'pending');
-
-                if (!this.isActive || !this.currentPeriod || !navigator.onLine) {
-                    stsTxt.textContent = 'RECONNECTING...';
-                    stsTxt.style.color = '#ff4d4d';
-                    sigVal.innerHTML =
-                        '<div style="text-align:center;"><i class="fas fa-mobile-screen-button signal-loader"></i><div style="font-size: 14px; letter-spacing: 3px; margin-top: 10px; color: #ff4d4d; font-family: var(--fd);">LOADING...</div></div>';
-                    sigVal.style.color = '#ff4d4d';
-                    perChance.textContent = '--%';
-                    if (iconSecEl) { iconSecEl.textContent = '--';
-                        iconSecEl.style.color = '#ff4d4d'; }
-                    if (perTop) { perTop.textContent = '....'; }
-                    this.sigResultBadge.className = 'sig-result pending';
-                    this.sigResultBadge.textContent = '⏳ PENDING';
-                    return;
-                }
-
-                if (perTop) { perTop.textContent = this.currentPeriod; }
-
-                // --- 30s Market Timing Logic ---
-                // 26-30s: ANALYZING
-                // 6-25s: LOCKED (signal shown)
-                // 0-5s: WAITING RESULT
-
-                if (remaining > 25 && remaining <= 30) {
-                    // ANALYZING
-                    stsTxt.textContent = 'ANALYZING...';
-                    stsTxt.style.color = '#ff8c00';
-                    sigVal.innerHTML =
-                        '<div style="font-size: 24px; letter-spacing: 3px; color: #ff8c00; font-family: var(--fd);">ANALYZING...</div>';
-                    sigVal.style.color = '#ff8c00';
-                    perChance.textContent = '--%';
-                    if (iconSecEl) { iconSecEl.textContent = remaining;
-                        iconSecEl.style.color = '#ff8c00'; }
-
-                    this.signalCard.className = 'lc-signal-main pending';
-                    this.sigResultBadge.className = 'sig-result analyzing';
-                    this.sigResultBadge.textContent = '⏳ ANALYZING';
-
-                    // Reset current period evaluation flag when a new period starts
-                    this.currentPeriodEvaluated = false;
-                    this.currentPeriodWin = null;
-
-                } else if (remaining > 5 && remaining <= 25) {
-                    // LOCKED - show signal
-                    var analysis = this.analyzeSignal(this.currentPeriod);
-                    if (analysis) {
-                        // Store the current signal for later comparison
-                        this.currentSignal = analysis;
-
-                        stsTxt.textContent = 'LOCKED';
-                        stsTxt.style.color = '#00ff7f';
-
-                        var sizeColor = analysis.size === 'BIG' ? '#ffd700' : '#ff4d4d';
-                        sigVal.innerHTML = `
-                            <div class="sig-content">
-                                <div class="sig-size" style="color: ${sizeColor};">
-                                    ${analysis.size}
-                                </div>
-                            </div>
-                        `;
-                        sigVal.style.color = '#ffeedd';
-                        perChance.textContent = analysis.chance + '%';
-
-                        // Show PENDING since result isn't known yet
-                        this.signalCard.className = 'lc-signal-main pending';
-                        this.sigResultBadge.className = 'sig-result pending';
-                        this.sigResultBadge.textContent = '⏳ PENDING';
-
-                        // If we have a previous period evaluation, show it
-                        if (this.currentPeriodEvaluated && this.currentPeriodWin !== null) {
-                            // But only if the period has changed - we show this in the history
-                            // The current period's result is not yet known
-                        }
-
-                        if (iconSecEl) { iconSecEl.textContent = remaining;
-                            iconSecEl.style.color = '#00ff7f'; }
-                    }
-
-                } else if (remaining <= 5) {
-                    // WAITING RESULT
-                    stsTxt.textContent = 'WAITING RESULT';
-                    stsTxt.style.color = '#ffd700';
-
-                    sigVal.innerHTML = '<i class="fas fa-hourglass-half" style="font-size: 48px; color: #ffd700;"></i>';
-                    sigVal.style.color = '#ffd700';
-
-                    // Try to evaluate if the result is already available in history
-                    if (this.historyData.length > 0) {
-                        var latest = this.historyData[0];
-                        if (latest && latest.evaluated && latest.isWin !== undefined) {
-                            // The result is already in history, show it
-                            if (latest.isWin) {
-                                this.signalCard.className = 'lc-signal-main win';
-                                this.sigResultBadge.className = 'sig-result win';
-                                this.sigResultBadge.textContent = '✅ WIN';
-                                // Also update the signal display with the actual signal
-                                if (latest.signalSize) {
-                                    var szCol = latest.signalSize === 'BIG' ? '#ffd700' : '#ff4d4d';
-                                    sigVal.innerHTML = `
-                                        <div class="sig-content">
-                                            <div class="sig-size" style="color: ${szCol};">
-                                                ${latest.signalSize}
-                                            </div>
-                                            <div style="font-size:14px;color:rgba(255,255,255,0.3);font-family:var(--fm);">
-                                                → ${latest.size}
-                                            </div>
-                                        </div>
-                                    `;
-                                    sigVal.style.color = '#ffeedd';
-                                }
-                                this.currentPeriodEvaluated = true;
-                                this.currentPeriodWin = true;
-                            } else {
-                                this.signalCard.className = 'lc-signal-main loss';
-                                this.sigResultBadge.className = 'sig-result loss';
-                                this.sigResultBadge.textContent = '❌ LOSS';
-                                if (latest.signalSize) {
-                                    var szCol2 = latest.signalSize === 'BIG' ? '#ffd700' : '#ff4d4d';
-                                    sigVal.innerHTML = `
-                                        <div class="sig-content">
-                                            <div class="sig-size" style="color: ${szCol2};">
-                                                ${latest.signalSize}
-                                            </div>
-                                            <div style="font-size:14px;color:rgba(255,255,255,0.3);font-family:var(--fm);">
-                                                → ${latest.size}
-                                            </div>
-                                        </div>
-                                    `;
-                                    sigVal.style.color = '#ffeedd';
-                                }
-                                this.currentPeriodEvaluated = true;
-                                this.currentPeriodWin = false;
-                            }
-                        } else {
-                            // No result yet, keep waiting
-                            this.signalCard.className = 'lc-signal-main pending';
-                            this.sigResultBadge.className = 'sig-result pending';
-                            this.sigResultBadge.textContent = '⏳ WAITING...';
-                        }
-                    }
-
-                    if (iconSecEl) { iconSecEl.textContent = remaining;
-                        iconSecEl.style.color = '#ffd700'; }
-
-                    // if remaining is 0, force a fetch
-                    if (remaining === 0) {
-                        setTimeout(() => this.fetchHistory(), 500);
-                    }
-                }
-
-                // Update the win rate periodically
-                this.updateWinRate();
-            }
-
-            // ---- Drag ----
-            startDrag(clientX, clientY) {
-                var rect = this.fp.getBoundingClientRect();
-                this.isDraggingPanel = true;
-                this.dragStartX = clientX;
-                this.dragStartY = clientY;
-                this.dragOffX = rect.left;
-                this.dragOffY = rect.top;
-                this.fp.classList.add('dragged');
-                this.fp.style.transform = 'none';
-                this.fp.style.left = rect.left + 'px';
-                this.fp.style.top = rect.top + 'px';
-            }
-
-            moveDrag(clientX, clientY) {
-                if (!this.isDraggingPanel) return;
-                var newX = this.dragOffX + (clientX - this.dragStartX);
-                var newY = this.dragOffY + (clientY - this.dragStartY);
-                var w = this.fp.offsetWidth,
-                    h = this.fp.offsetHeight;
-                newX = Math.max(0, Math.min(newX, window.innerWidth - w));
-                newY = Math.max(0, Math.min(newY, window.innerHeight - h));
-                this.fp.style.left = newX + 'px';
-                this.fp.style.top = newY + 'px';
-            }
-
-            endDrag() { this.isDraggingPanel = false; }
+            window.addEventListener("mouseup", dragEnd);
+            window.addEventListener("touchend", dragEnd);
+            
+            window.addEventListener("mousemove", drag);
+            window.addEventListener("touchmove", drag, { passive: false });
         }
 
-        const app = new HGZYSignalPanel();
-        app.init();
+        makeDraggable(document.getElementById("dragBox"));
+        makeDraggable(document.getElementById("chatPanel"));
+
+        /* =========================================================================
+           INTERNET CONNECTIVITY LOGIC
+           ========================================================================= */
+        function updateConnectionStatus() {
+            const statusText = document.getElementById('serverStatusText');
+            const dot = document.getElementById('serverDot');
+            const dragBox = document.getElementById('dragBox');
+            const chatPanel = document.getElementById('chatPanel');
+            
+            if (navigator.onLine) {
+                statusText.style.color = "#ffffff";
+                dot.style.backgroundColor = "#00ff66";
+                dot.style.boxShadow = "0 0 8px #00ff66";
+                
+                if(_active) {
+                    dragBox.style.display = 'flex';
+                    chatPanel.style.display = 'flex';
+                }
+            } else {
+                statusText.innerText = "SERVER OFFLINE";
+                statusText.style.color = "#ff3333";
+                dot.style.backgroundColor = "#ff0000";
+                dot.style.boxShadow = "0 0 8px #ff0000";
+                
+                dragBox.style.display = 'none';
+                chatPanel.style.display = 'none';
+            }
+        }
+
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+
+        /* =========================================================================
+           ADD CHAT MESSAGE FUNCTION
+           ========================================================================= */
+        function addChatMessage(result, period, predictedSize, actualSize) {
+            const chatBody = document.getElementById('chatBody');
+            
+            const empty = chatBody.querySelector('.chat-empty');
+            if (empty) empty.remove();
+            
+            const msg = document.createElement('div');
+            msg.className = 'chat-msg ' + (result === 'WIN' ? 'win' : 'loss');
+            
+            const shortPeriod = period ? period.toString().slice(-5) : '-----';
+            msg.innerHTML = `
+                <span class="msg-label">${result === 'WIN' ? '✅ WIN' : '❌ LOSS'}</span>
+                <span class="msg-period">#${shortPeriod} | ${predictedSize}→${actualSize}</span>
+            `;
+            
+            chatBody.insertBefore(msg, chatBody.firstChild);
+            
+            while (chatBody.children.length > 30) {
+                chatBody.removeChild(chatBody.lastChild);
+            }
+        }
+
+        /* =========================================================================
+           LOGIN AUTHENTICATION
+           ========================================================================= */
+        function checkPass() {
+            if (document.getElementById('passInput').value.trim() === "VIP91009") {
+                document.getElementById('loginPart').classList.add('hidden'); 
+                document.getElementById('appPart').classList.remove('hidden'); 
+                _active = true;
+                
+                updateConnectionStatus();
+                fetchData();
+                setInterval(loop, 1000);
+                setInterval(fetchData, 5000);
+            } else { 
+                alert("❌ Wrong Password!"); 
+            }
+        }
+
+        /* =========================================================================
+           DATA FETCHING & RESULT CHECKING
+           ========================================================================= */
+        async function fetchData() {
+            if (!navigator.onLine) return;
+
+            try {
+                const res = await fetch("https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?r=" + Date.now());
+                const json = await res.json();
+                
+                if (json.data?.list.length > 0) {
+                    const latestIssue = json.data.list[0].issueNumber;
+                    const newLastP = (BigInt(latestIssue) + 1n).toString();
+                    
+                    if (currentSignal && String(currentSignal.period) === String(latestIssue)) {
+                        const actualNum = parseInt(json.data.list[0].number);
+                        const actualSize = (actualNum >= 5) ? "BIG" : "SMALL";
+                        const resultStr = (actualSize === currentSignal.size) ? "WIN" : "LOSS";
+                        
+                        if (!evaluatedPeriods.has(String(latestIssue))) {
+                            evaluatedPeriods.add(String(latestIssue));
+                            addChatMessage(resultStr, latestIssue, currentSignal.size, actualSize);
+                            
+                            if (evaluatedPeriods.size > 50) {
+                                const arr = Array.from(evaluatedPeriods);
+                                evaluatedPeriods = new Set(arr.slice(-25));
+                            }
+                        }
+                    }
+                    
+                    lastP = newLastP;
+                }
+            } catch (e) { 
+                const now = new Date();
+                const totalSeconds = Math.floor(now.getTime() / 1000);
+                lastP = Math.floor(totalSeconds / 30).toString(); 
+            }
+        }
+
+        /* =========================================================================
+           SIGNAL ALGORITHM
+           ========================================================================= */
+        function analyzeQuantumSignal(period) {
+            let hash1 = 0; 
+            const seed1 = period + "DKWIN_INDIA_SERVER_SECURE_2026_30S_NUM_A";
+            
+            for (let i = 0; i < seed1.length; i++) {
+                hash1 = ((hash1 << 5) - hash1) + seed1.charCodeAt(i);
+                hash1 |= 0;
+            }
+            
+            let targetNumber = Math.abs(hash1) % 10;
+            let sizeResult = (targetNumber >= 5) ? "BIG" : "SMALL";
+            
+            return { size: sizeResult };
+        }
+
+        /* =========================================================================
+           MAIN TIMER & UI LOOP
+           ========================================================================= */
+        function loop() {
+            if (!_active) return;
+            
+            if (!navigator.onLine) {
+                document.getElementById('timer').innerText = "--";
+                return;
+            }
+
+            const now = new Date();
+            const sec = now.getSeconds();
+            
+            const pBox = document.getElementById('periodID');
+            if(lastP) {
+                pBox.innerText = lastP;
+            } else {
+                pBox.innerText = "Sync...";
+            }
+            
+            let rem = 30 - (sec % 30);
+            if (rem === 30) rem = 0; 
+            
+            document.getElementById('timer').innerText = rem < 10 ? "0" + rem : rem;
+
+            const outputWrapper = document.getElementById('predictionOutput');
+
+            if (rem <= 6 || rem === 0) {
+                outputWrapper.innerHTML = '<span class="processing">SCANNING MARKET...</span>';
+            } else {
+                if (!currentSignal || String(currentSignal.period) !== String(lastP)) {
+                    const result = analyzeQuantumSignal(lastP || "0");
+                    currentSignal = { period: lastP, size: result.size };
+                }
+                
+                if (currentSignal) {
+                    outputWrapper.innerHTML = `
+                        <div class="output-row">
+                            <span class="size-txt res-${currentSignal.size.toLowerCase()}">${currentSignal.size}</span>
+                        </div>
+                    `;
+                }
+            }
+        }
     </script>
 </body>
 </html>

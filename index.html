@@ -3,859 +3,390 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <title>DKWIN</title>
-    
-    <!-- Firebase SDK Integration -->
+    <title>DKWIN SINGAPORE QUANTUM VIP - COMPACT SYSTEM</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-
     <style>
-        /* =========================================================================
-           CSS RESET AND BASE STYLES
-           ========================================================================= */
-        html, body { 
-            margin: 0; 
-            padding: 0; 
-            height: 100%; 
-            width: 100%; 
-            overflow: hidden; 
-            background: #000; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            user-select: none; 
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* =========================================================================
-           GAME BACKGROUND IFRAME CONTAINER
-           ========================================================================= */
+        html, body { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+        
+        /* গেম স্ক্রিনের নিচের বেটিং ঘরসহ সম্পূর্ণ অংশ ক্লিয়ার দেখার জন্য ফুল ভিউ কন্টেইনার */
         .iframe-container {
             position: absolute;
-            top: 0; 
-            left: 0; 
-            width: 100%; 
+            top: 0;
+            left: 0;
+            width: 100%;
             height: 100%;
             z-index: 1;
-            overflow-y: auto;
+            overflow-y: auto; /* নিচ পর্যন্ত স্ক্রোল করে বেট ঘর দেখার সুবিধা */
             -webkit-overflow-scrolling: touch;
         }
         
+        /* গেমের ভেতরের লেখা ও নিচের অপশন একদম স্পষ্ট (Clear) করার জন্য আপগ্রেডেড আইফ্রেম লজিক */
         iframe { 
             width: 100%; 
-            height: 100%; 
+            height: 100%; /* একদম স্ক্রিন বরাবর পারফেক্ট হাইট যাতে নিচের বেট প্যানেল ব্লক না হয় */
             border: none; 
             display: block;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+        
+        /* সম্পূর্ণ প্যানেলের আল্ট্রা-প্রিমিয়াম আরজিবি নিয়ন অ্যানিমেশন */
+        @keyframes ultraRgbGlow {
+            0% { border-color: #00ffcc; box-shadow: 0 0 12px #00ffcc, inset 0 0 6px rgba(0, 255, 204, 0.3); }
+            33% { border-color: #ff007f; box-shadow: 0 0 12px #ff007f, inset 0 0 6px rgba(255, 0, 127, 0.3); }
+            66% { border-color: #ffd700; box-shadow: 0 0 12px #ffd700, inset 0 0 6px rgba(255, 215, 0, 0.3); }
+            100% { border-color: #00ffcc; box-shadow: 0 0 12px #00ffcc, inset 0 0 6px rgba(0, 255, 204, 0.3); }
         }
 
-        /* =========================================================================
-           VISUAL EFFECTS LAYER (Only Fireflies - Falling Balls Removed)
-           ========================================================================= */
-        .effects-layer {
-            position: fixed;
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%;
-            pointer-events: none;
-            z-index: 50;
-            overflow: hidden;
-        }
-
-        .firefly {
-            position: absolute;
-            width: 5px; 
-            height: 5px;
-            background: #fffb00;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #fffb00, 0 0 20px #fffb00;
-            opacity: 0;
-            animation: flyAround 6s infinite ease-in-out;
-        }
-
-        @keyframes flyAround {
-            0% { transform: translate(0, 0) scale(1); opacity: 0; }
-            20% { opacity: 1; }
-            50% { transform: translate(40px, -50px) scale(1.5); opacity: 0.8; }
-            80% { opacity: 1; }
-            100% { transform: translate(80px, -100px) scale(0.8); opacity: 0; }
-        }
-
-        /* =========================================================================
-           PREMIUM SIGNAL PANEL (MADE SLIGHTLY SMALLER & CIRCULAR/ROUNDED)
-           ========================================================================= */
+        /* প্যানেল ওভারলে ডিজাইন - কমপ্যাক্ট সাইজ */
         .box { 
-            width: 175px; /* Slightly smaller width */
+            width: 155px; 
             height: auto;
-            background: rgba(5, 5, 5, 0.95); 
-            border-radius: 70px; /* Slightly adjusted for smaller size */
-            color: #ffffff; 
-            text-align: center; 
-            padding: 12px 8px; /* Slightly reduced padding */
-            position: fixed; 
-            top: 40px; /* Adjusted top to fit butterfly */
-            right: 10px;
-            z-index: 9999; 
-            cursor: grab; 
-            backdrop-filter: blur(20px); 
+            background: linear-gradient(135deg, rgba(10, 5, 20, 0.98), rgba(4, 2, 8, 0.99));
+            border: 2px solid #00ffcc; 
+            border-radius: 16px; 
+            color: #fff; text-align: center; padding: 10px 8px; 
+            position: fixed; top: 120px; right: 10px;
+            z-index: 9999; cursor: grab; backdrop-filter: blur(25px); 
             box-sizing: border-box;
+            animation: ultraRgbGlow 5s infinite linear;
             touch-action: none; 
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px; /* Tighter gap */
-            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
-            border: 2px solid #00ff66;
-        }
-
-        .box::before {
-            content: "";
-            position: absolute;
-            top: -3px; left: -3px; right: -3px; bottom: -3px;
-            background: linear-gradient(45deg, #ff0055, #00ff66, #0099ff, #ff0055);
-            background-size: 400%;
-            z-index: -1;
-            border-radius: 72px; 
-            animation: rgbBorder 4s linear infinite;
-            opacity: 0.6; 
-        }
-
-        @keyframes rgbBorder {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            gap: 6px;
         }
         
         .box:active { cursor: grabbing; }
 
-        /* =========================================================================
-           RED BUTTERFLY COVER (প্রজাপতির ঢাকনা)
-           ========================================================================= */
-        .butterfly-cover {
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 65px;
-            height: 65px;
-            z-index: 10001;
-            pointer-events: none;
-            filter: drop-shadow(0 0 12px rgba(255, 0, 0, 0.8));
-            animation: flutter 2s infinite ease-in-out;
-        }
-
-        @keyframes flutter {
-            0% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
-            50% { transform: translateX(-50%) translateY(-8px) rotate(5deg); }
-            100% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
-        }
-
-        .wing-l, .wing-r { transform-origin: 50px 50px; }
-        .wing-l { animation: flapL 0.3s infinite alternate ease-in-out; }
-        .wing-r { animation: flapR 0.3s infinite alternate ease-in-out; }
-
-        @keyframes flapL { from { transform: rotateY(0deg); } to { transform: rotateY(60deg); } }
-        @keyframes flapR { from { transform: rotateY(0deg); } to { transform: rotateY(-60deg); } }
-
-        /* Header & Logo */
+        /* প্রিমিয়াম হেডার স্টাইল */
         .panel-header {
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 5px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
             width: 100%;
-            margin-top: 15px; /* Added margin to accommodate butterfly */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            padding-bottom: 5px;
         }
 
+        /* আল্ট্রা-মডার্ন লোগো অ্যানিমেশন */
         .premium-logo-area {
-            position: relative; 
-            width: 50px; /* Smaller size */
-            height: 50px; /* Smaller size */
-            display: flex; 
-            align-items: center; 
+            position: relative;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
             justify-content: center;
         }
 
-        .logo-image {
-            width: 100%; 
-            height: 100%; 
-            border-radius: 50%; 
-            object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, 0.2); 
-            z-index: 2;
-        }
-
         .logo-ring {
-            position: absolute; 
-            width: 120%; 
-            height: 120%;
-            border: 1px dashed rgba(255, 255, 255, 0.5);
-            border-radius: 50%; 
-            animation: spinRing 4s infinite linear; 
-            z-index: 1;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 1.5px dashed #00ffcc;
+            border-radius: 50%;
+            animation: spinRing 4s infinite linear;
         }
 
-        @keyframes spinRing { 100% { transform: rotate(360deg); } }
+        @keyframes spinRing {
+            100% { transform: rotate(360deg); }
+        }
 
+        /* VIP সার্ভার ব্যাজ */
         .server-badge {
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 4px;
-            background: rgba(0,0,0,0.6);
-            border-radius: 20px;
-            padding: 3px 8px; 
-            font-size: 8px; 
-            font-weight: 800; 
-            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            background: rgba(255, 215, 0, 0.07);
+            border: 1px solid #ffd700;
+            border-radius: 4px;
+            padding: 1px 4px;
+            font-size: 8px;
+            font-weight: 900;
+            color: #ffd700;
             text-transform: uppercase;
-            width: 100%; 
+            width: 100%;
+            box-sizing: border-box;
             letter-spacing: 0.5px;
         }
         
         .vpn-dot {
-            width: 6px; 
-            height: 6px; 
-            background-color: #00ff66;
-            border-radius: 50%; 
-            box-shadow: 0 0 6px #00ff66;
-            animation: blink 1.5s infinite;
+            width: 5px;
+            height: 5px;
+            background-color: #39ff14;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 5px #39ff14;
         }
 
-        /* Login Section */
-        .login-part { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 6px; 
+        /* লগইন ডিজাইন */
+        #loginPart { 
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
             width: 100%; 
         }
-        
-        .login-part input { 
-            width: 100%; 
-            padding: 6px; 
-            background: rgba(255, 255, 255, 0.1); 
-            border: 1px solid #00ff66; 
-            border-radius: 20px; 
-            color: #fff; 
-            font-size: 9px; 
-            text-align: center; 
-            outline: none; 
-            box-sizing: border-box;
+        #loginPart input { 
+            width: 100%; padding: 5px; background: #05050a; border: 1.2px solid #ff007f; 
+            border-radius: 6px; color: #fff; font-size: 11px; text-align: center; 
+            outline: none; box-sizing: border-box;
         }
-        
         .login-btn { 
-            width: 100%; 
-            padding: 6px; 
-            background: #00ff66; 
-            color: #000; 
-            border: none; 
-            border-radius: 20px; 
-            font-weight: 900; 
-            cursor: pointer; 
-            font-size: 9px; 
-            text-transform: uppercase; 
-            box-shadow: 0 4px 10px rgba(0, 255, 102, 0.3);
-            transition: transform 0.2s;
-        }
-        
-        .login-btn:hover { 
-            background: #00cc55; 
-            transform: scale(1.02);
+            width: 100%; padding: 6px; background: linear-gradient(45deg, #00ffcc, #ff007f); color: #fff; 
+            border: none; border-radius: 6px; font-weight: 900; cursor: pointer; 
+            font-size: 10px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
 
-        /* Signal Application Section */
-        .app-part { 
+        /* সিগন্যাল প্যানেল ভেতরের পার্ট */
+        #appPart { 
             display: flex; 
-            flex-direction: column; 
+            flex-direction: column;
             align-items: center; 
-            gap: 6px; 
+            gap: 5px;
             width: 100%; 
         }
         
         .period-top-box {
-            background: transparent;
-            border-radius: 20px; 
-            padding: 0; 
-            width: 100%; 
-            text-align: center; 
+            background: rgba(255, 255, 255, 0.02); 
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px; 
+            padding: 3px; 
+            width: 100%;
+            text-align: center;
             box-sizing: border-box;
         }
-
-        .period-label { 
-            font-size: 8px; 
-            color: #888; 
-            display: block; 
-            font-weight: 600; 
-            margin-bottom: 2px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        .period-label { font-size: 8px; color: #bbb; text-transform: uppercase; display: block; font-weight: 600; letter-spacing: 0.3px; }
         
         #periodID { 
             font-size: 12px; 
-            font-weight: 800; 
+            font-weight: 950; 
             display: block; 
-            color: #fff; 
-            letter-spacing: 0.5px;
-        }
-
-        .timer-container { 
-            text-align: center; 
-            width: 100%; 
+            margin-top: 1px; 
+            word-break: break-all;
         }
         
-        .timer-txt { 
-            font-size: 11px; 
-            color: #ffaa00; 
-            font-weight: 800; 
-            background: rgba(255, 170, 0, 0.15); 
-            padding: 4px; 
-            border-radius: 20px;
-            display: block;
-        }
+        /* নিয়ন পিরিয়ড টেক্সট */
+        .p-cyan { color: #00ffcc; text-shadow: 0 0 4px #00ffcc; }
+        .p-pink { color: #ff007f; text-shadow: 0 0 4px #ff007f; }
+        .p-gold { color: #ffd700; text-shadow: 0 0 4px #ffd700; }
+        .p-green { color: #39ff14; text-shadow: 0 0 4px #39ff14; }
 
-        /* Signal Output Area */
+        /* টাইমার */
+        .timer-container { text-align: center; width: 100%; }
+        .timer-txt { font-size: 14px; color: #ffff00; font-weight: 900; text-shadow: 0 0 5px #ffff00; }
+        
+        /* সিগন্যাল ডিসপ্লে */
         #signalContainer {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             width: 100%;
-            padding: 10px; 
-            box-sizing: border-box;
-            border: 1px solid #00ff66; 
-            background: rgba(0, 255, 102, 0.08); 
-            border-radius: 30px; 
+            padding-bottom: 2px;
         }
 
-        .signal-label { 
-            font-size: 8px; 
-            color: #00ff66; 
-            text-transform: uppercase; 
-            font-weight: bold; 
-            letter-spacing: 1px;
-        }
-
-        .output-row { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            width: 100%; 
-        }
-        
-        /* MASSIVE TEXT, THICK AND TAN-TAN (GLOWING) - Made slightly smaller for panel */
-        .size-txt { 
-            font-size: 36px; 
+        .signal-txt { 
+            font-size: 26px; 
             font-weight: 950; 
             text-transform: uppercase; 
-            line-height: 1; 
-            text-shadow: 0 0 15px currentColor, 0 0 30px currentColor;
-            letter-spacing: -2px;
-            animation: glowPulse 1s infinite alternate;
+            line-height: 1.1; 
         }
 
-        @keyframes glowPulse {
-            from { text-shadow: 0 0 10px currentColor, 0 0 20px currentColor; }
-            to { text-shadow: 0 0 20px currentColor, 0 0 40px currentColor; }
-        }
-
-        /* Colors */
-        .res-big { color: #FFFF00; }  
-        .res-small { color: #ff3366; } 
-        
-        .processing { 
-            font-size: 11px; 
-            color: #ffaa00; 
-            animation: blink 0.5s infinite; 
-            display: block; 
-            font-weight: 900; 
-            letter-spacing: 1px;
-            padding: 12px 0;
-        }
+        .res-big { color: #00ffcc; text-shadow: 0 0 12px #00ffcc; }
+        .res-small { color: #ff007f; text-shadow: 0 0 12px #ff007f; }
+        .processing { font-size: 11px; color: #ffea00; animation: blink 0.4s infinite; text-shadow: 0 0 4px #ffea00; display: block; font-weight: 900; }
         
         @keyframes blink { 50% { opacity: 0.3; } }
-        
         .hidden { display: none !important; }
-
-        /* =========================================================================
-           RESULT CHAT PANEL (LIVE RESULT GHOST) - INCREASED SIZE
-           ========================================================================= */
-        .chat-panel {
-            width: 190px; /* Increased width from 150px */
-            max-height: 420px; /* Increased max-height from 350px */
-            background: rgba(5, 5, 5, 0.95);
-            border-radius: 35px; 
-            color: #fff;
-            padding: 12px; /* Increased padding from 8px */
-            position: fixed;
-            top: 520px; 
-            right: 10px; 
-            z-index: 9998;
-            cursor: grab;
-            backdrop-filter: blur(20px);
-            box-sizing: border-box;
-            display: none;
-            flex-direction: column;
-            gap: 8px; 
-            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
-            border: 2px solid #00ff66;
-            touch-action: none;
-        }
-
-        .chat-panel::before {
-            content: "";
-            position: absolute;
-            top: -4px; left: -4px; right: -4px; bottom: -4px;
-            background: linear-gradient(45deg, #ff0055, #00ff66, #0099ff, #ff0055);
-            background-size: 400%;
-            z-index: -1;
-            border-radius: 38px;
-            animation: rgbBorder 4s linear infinite;
-            opacity: 0.6;
-        }
-        
-        .chat-panel:active { cursor: grabbing; }
-
-        .chat-header {
-            font-size: 11px; /* Increased font size from 9px */
-            font-weight: 800;
-            text-align: center;
-            color: #00ff66;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding-bottom: 8px; 
-            border-bottom: 1px solid rgba(0,255,102,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .chat-header .live-dot {
-            width: 7px; /* Increased dot size */
-            height: 7px; 
-            background: #ff0044;
-            border-radius: 50%;
-            box-shadow: 0 0 8px #ff0044;
-            animation: blink 1s infinite;
-        }
-
-        .chat-body {
-            max-height: 360px; /* Increased max-height from 290px */
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 6px; /* Increased gap from 4px */
-            padding-right: 3px;
-        }
-        
-        .chat-body::-webkit-scrollbar { width: 4px; }
-        .chat-body::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
-        .chat-body::-webkit-scrollbar-thumb { background: #00ff66; border-radius: 4px; }
-
-        .chat-msg {
-            font-size: 9px; /* Increased font size from 7px */
-            font-weight: 800;
-            padding: 6px 8px; /* Increased padding from 4px 5px */
-            border-radius: 12px;
-            text-align: center;
-            letter-spacing: 0.5px;
-            animation: msgIn 0.4s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 4px;
-            flex-direction: column;
-        }
-
-        @keyframes msgIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .chat-msg.win {
-            background: rgba(0, 255, 102, 0.15);
-            color: #00ff66;
-            border: 1px solid #00ff66;
-        }
-        
-        .chat-msg.loss {
-            background: rgba(255, 0, 68, 0.15);
-            color: #ff0044;
-            border: 1px solid #ff0044;
-        }
-
-        .chat-msg .msg-label {
-            font-size: 11px; /* Increased font size from 8px */
-            font-weight: 900;
-        }
-        
-        .chat-msg .msg-period {
-            font-size: 8px; /* Increased font size from 6px */
-            opacity: 0.8;
-            font-weight: 600;
-        }
-
-        .chat-empty {
-            font-size: 10px; /* Increased font size from 8px */
-            color: #888;
-            text-align: center;
-            padding: 20px 4px; 
-            font-style: italic;
-        }
     </style>
 </head>
 <body>
 
-    <!-- Visual Effects Layer -->
-    <div class="effects-layer" id="effectsLayer"></div>
-
-    <!-- Game Background Ifram9 -->
+    <!-- আইফ্রেম স্ক্রিন কন্টেইনার (নিচের বেটিং অংশ সম্পূর্ণ শো করার লজিক) -->
     <div class="iframe-container">
-        <iframe src="https://hgnice.cc/#/register?invitationCode=511711502736" id="gameFrame"></iframe>
+        <iframe src="https://dkwin9.com/#/register?invitationCode=75518598003"></iframe>
     </div>
 
-    <!-- Draggable Signal Panel -->
+    <!-- মূল আপগ্রেডেড মিনি প্যানেল বক্স -->
     <div class="box" id="dragBox">
         
-        <!-- Red Butterfly Cover -->
-        <div class="butterfly-cover">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <path class="wing-l" d="M50 50 Q15 5 5 35 Q0 55 50 50 Z" fill="#ff0000" stroke="#8b0000" stroke-width="2"/>
-                <path class="wing-r" d="M50 50 Q85 5 95 35 Q100 55 50 50 Z" fill="#ff0000" stroke="#8b0000" stroke-width="2"/>
-                <path class="wing-l" d="M50 50 Q20 90 15 60 Q30 40 50 50 Z" fill="#cc0000" stroke="#8b0000" stroke-width="2"/>
-                <path class="wing-r" d="M50 50 Q80 90 85 60 Q70 40 50 50 Z" fill="#cc0000" stroke="#8b0000" stroke-width="2"/>
-                <ellipse cx="50" cy="50" rx="3" ry="15" fill="#4a0000"/>
-                <line x1="48" y1="40" x2="40" y2="25" stroke="#4a0000" stroke-width="1.5" stroke-linecap="round"/>
-                <line x1="52" y1="40" x2="60" y2="25" stroke="#4a0000" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-        </div>
-
+        <!-- টপ হেডার এরিয়া -->
         <div class="panel-header">
+            <!-- হাই-টেক অ্যানিমেটেড সার্কেল লোগো -->
             <div class="premium-logo-area">
                 <div class="logo-ring"></div>
-                <img class="logo-image" src="https://i.postimg.cc/LqKYxR91/image.png" alt="VIP Logo">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#00ffcc"/>
+                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#ff007f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             </div>
+            <!-- সার্ভার ব্যাজ -->
             <div class="server-badge">
-                <span id="serverStatusText">VIP.. </span>
-                <div class="vpn-dot" id="serverDot"></div>
+                <span>SG QUANTUM</span>
+                <div class="vpn-dot"></div>
             </div>
         </div>
 
-        <div id="loginPart" class="login-part">
-            <input type="password" id="passInput" placeholder="Enter Password">
-            <button class="login-btn" onclick="checkPass()">LOGIN SYSTEM</button>
+        <!-- লগইন পার্ট -->
+        <div id="loginPart">
+            <input type="password" id="passInput" placeholder="Password">
+            <button class="login-btn" onclick="checkPass()">Login</button>
         </div>
 
-        <div id="appPart" class="app-part hidden">
+        <!-- হ্যাক সিগন্যাল প্যানেল -->
+        <div id="appPart" class="hidden">
             <div class="period-top-box">
-                <span class="period-label"> (30s)</span>
-                <span id="periodID">Wait...</span>
+                <span class="period-label">Live Period</span>
+                <span id="periodID">....</span>
             </div>
             
             <div class="timer-container">
-                <div class="timer-txt">TIME LEFT: <span id="timer">--</span>s</div>
+                <div class="timer-txt"><span id="timer">--</span>s</div>
             </div>
             
             <div id="signalContainer">
-                <span class="signal-label">Quantum AI Signal</span>
-                <div id="predictionOutput" style="width:100%;">
-                    <div class="output-row">
-                        <span class="size-txt" id="predictSize">--</span>
-                    </div>
-                </div>
+                <div class="signal-txt" id="prediction">WAIT</div>
             </div>
-        </div>
-    </div>
-
-    <!-- Result Chat Panel (Draggable & Increased Size) -->
-    <div id="chatPanel" class="chat-panel">
-        <div class="chat-header">
-            <span class="live-dot"></span>
-            <span>LIVE RESULT GHOST</span>
-        </div>
-        <div class="chat-body" id="chatBody">
-            <div class="chat-empty">Waiting for first result...</div>
         </div>
     </div>
 
     <script>
-        /* =========================================================================
-           FIREBASE CONFIGURATION & INITIALIZATION
-           ========================================================================= */
+        // Firebase Configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyBPBQOeApFZQwGX8G4mZxhY5C2jjN6VWmU",
-            authDomain: "dkwin-panel-ai.firebaseapp.com",
-            databaseURL: "https://dkwin-panel-ai-default-rtdb.firebaseio.com",
-            projectId: "dkwin-panel-ai",
-            storageBucket: "dkwin-panel-ai.firebasestorage.app",
-            messagingSenderId: "925573387640",
-            appId: "1:925573387640:web:8faf648b0b89933c89e48d",
-            measurementId: "G-X3ZFCRWEH8"
-        };
-
+                    apiKey: "AIzaSyBPBQOeApFZQwGX8G4mZxhY5C2jjN6VWmU",
+                    authDomain: "dkwin-panel-ai.firebaseapp.com",
+                    databaseURL: "https://dkwin-panel-ai-default-rtdb.firebaseio.com",
+                    projectId: "dkwin-panel-ai",
+                    storageBucket: "dkwin-panel-ai.firebasestorage.app",
+                    messagingSenderId: "925573387640",
+                    appId: "1:925573387640:web:8faf648b0b89933c89e48d",
+                    measurementId: "G-X3ZFCRWEH8"
+                };
         firebase.initializeApp(firebaseConfig);
         
-        /* =========================================================================
-           GLOBAL VARIABLES AND STATE MANAGEMENT
-           ========================================================================= */
-        let lastP = null;
-        let _active = false;
-        let currentSignal = null;
-        let evaluatedPeriods = new Set();
+        let lastP = null, _active = false;
 
-        /* =========================================================================
-           VISUAL EFFECTS GENERATOR
-           ========================================================================= */
-        function createVisualEffects() {
-            const layer = document.getElementById('effectsLayer');
-            
-            // Create Fireflies (Jonaki Poka)
-            for(let i=0; i<50; i++) {
-                let f = document.createElement('div');
-                f.className = 'firefly';
-                f.style.left = Math.random() * 100 + 'vw';
-                f.style.top = Math.random() * 100 + 'vh';
-                f.style.animationDelay = Math.random() * 5 + 's';
-                f.style.animationDuration = (Math.random() * 4 + 4) + 's';
-                layer.appendChild(f);
-            }
-        }
-        createVisualEffects();
-
-        /* =========================================================================
-           DRAG LOGIC FOR PANELS
-           ========================================================================= */
-        function makeDraggable(element) {
-            let isDragging = false;
-            let startX, startY;
-            let currentX = 0, currentY = 0;
-
-            function dragStart(e) {
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || 
-                    e.target.classList.contains('vpn-dot') || e.target.closest('.chat-body')) return;
-                
-                isDragging = true;
-                element.style.cursor = 'grabbing';
-                
-                const clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
-                const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
-                
-                startX = clientX - currentX;
-                startY = clientY - currentY;
-                
-                if (e.type === "touchstart") e.preventDefault();
-            }
-
-            function dragEnd() {
-                if (isDragging) {
-                    isDragging = false;
-                    element.style.cursor = 'grab';
-                }
-            }
-
-            function drag(e) {
-                if (!isDragging) return;
-                e.preventDefault();
-                
-                const clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
-                const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
-                
-                currentX = clientX - startX;
-                currentY = clientY - startY;
-                
-                element.style.transform = `translate(${currentX}px, ${currentY}px)`;
-            }
-
-            element.style.cursor = 'grab';
-            element.addEventListener("mousedown", dragStart);
-            element.addEventListener("touchstart", dragStart, { passive: false });
-
-            window.addEventListener("mouseup", dragEnd);
-            window.addEventListener("touchend", dragEnd);
-            
-            window.addEventListener("mousemove", drag);
-            window.addEventListener("touchmove", drag, { passive: false });
-        }
-
-        makeDraggable(document.getElementById("dragBox"));
-        makeDraggable(document.getElementById("chatPanel"));
-
-        /* =========================================================================
-           INTERNET CONNECTIVITY LOGIC
-           ========================================================================= */
-        function updateConnectionStatus() {
-            const statusText = document.getElementById('serverStatusText');
-            const dot = document.getElementById('serverDot');
-            const dragBox = document.getElementById('dragBox');
-            const chatPanel = document.getElementById('chatPanel');
-            
-            if (navigator.onLine) {
-                statusText.style.color = "#ffffff";
-                dot.style.backgroundColor = "#00ff66";
-                dot.style.boxShadow = "0 0 8px #00ff66";
-                
-                if(_active) {
-                    dragBox.style.display = 'flex';
-                    chatPanel.style.display = 'flex';
-                }
-            } else {
-                statusText.innerText = "SERVER OFFLINE";
-                statusText.style.color = "#ff3333";
-                dot.style.backgroundColor = "#ff0000";
-                dot.style.boxShadow = "0 0 8px #ff0000";
-                
-                dragBox.style.display = 'none';
-                chatPanel.style.display = 'none';
-            }
-        }
-
-        window.addEventListener('online', updateConnectionStatus);
-        window.addEventListener('offline', updateConnectionStatus);
-
-        /* =========================================================================
-           ADD CHAT MESSAGE FUNCTION
-           ========================================================================= */
-        function addChatMessage(result, period, predictedSize, actualSize) {
-            const chatBody = document.getElementById('chatBody');
-            
-            const empty = chatBody.querySelector('.chat-empty');
-            if (empty) empty.remove();
-            
-            const msg = document.createElement('div');
-            msg.className = 'chat-msg ' + (result === 'WIN' ? 'win' : 'loss');
-            
-            const shortPeriod = period ? period.toString().slice(-5) : '-----';
-            msg.innerHTML = `
-                <span class="msg-label">${result === 'WIN' ? '✅ WIN' : '❌ LOSS'}</span>
-                <span class="msg-period">#${shortPeriod} | ${predictedSize}→${actualSize}</span>
-            `;
-            
-            chatBody.insertBefore(msg, chatBody.firstChild);
-            
-            while (chatBody.children.length > 30) {
-                chatBody.removeChild(chatBody.lastChild);
-            }
-        }
-
-        /* =========================================================================
-           LOGIN AUTHENTICATION
-           ========================================================================= */
         function checkPass() {
-            if (document.getElementById('passInput').value.trim() === "VIP91009") {
+            if (document.getElementById('passInput').value.trim() === "VIP100KO9") {
                 document.getElementById('loginPart').classList.add('hidden'); 
                 document.getElementById('appPart').classList.remove('hidden'); 
                 _active = true;
-                
-                updateConnectionStatus();
-                fetchData();
                 setInterval(loop, 1000);
-                setInterval(fetchData, 5000);
+                setInterval(fetchData, 2000);
             } else { 
                 alert("❌ Wrong Password!"); 
             }
         }
 
-        /* =========================================================================
-           DATA FETCHING & RESULT CHECKING
-           ========================================================================= */
-        async function fetchData() {
-            if (!navigator.onLine) return;
+        function renderRgbPeriod(periodStr) {
+            if (!periodStr || periodStr === "....") return "....";
+            const classes = ["p-cyan", "p-pink", "p-gold", "p-green"];
+            let htmlResult = "";
+            for (let i = 0; i < periodStr.length; i++) {
+                let cls = classes[i % classes.length];
+                if (i >= periodStr.length - 4) {
+                    htmlResult += `<span class="${cls}">${periodStr[i]}</span>`;
+                } else {
+                    htmlResult += `<span>${periodStr[i]}</span>`;
+                }
+            }
+            return htmlResult;
+        }
 
+        async function fetchData() {
             try {
-                const res = await fetch("https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?r=" + Date.now());
+                const res = await fetch("https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?r=" + Date.now());
                 const json = await res.json();
-                
                 if (json.data?.list.length > 0) {
-                    const latestIssue = json.data.list[0].issueNumber;
-                    const newLastP = (BigInt(latestIssue) + 1n).toString();
-                    
-                    if (currentSignal && String(currentSignal.period) === String(latestIssue)) {
-                        const actualNum = parseInt(json.data.list[0].number);
-                        const actualSize = (actualNum >= 5) ? "BIG" : "SMALL";
-                        const resultStr = (actualSize === currentSignal.size) ? "WIN" : "LOSS";
-                        
-                        if (!evaluatedPeriods.has(String(latestIssue))) {
-                            evaluatedPeriods.add(String(latestIssue));
-                            addChatMessage(resultStr, latestIssue, currentSignal.size, actualSize);
-                            
-                            if (evaluatedPeriods.size > 50) {
-                                const arr = Array.from(evaluatedPeriods);
-                                evaluatedPeriods = new Set(arr.slice(-25));
-                            }
-                        }
-                    }
-                    
-                    lastP = newLastP;
+                    lastP = (BigInt(json.data.list[0].issueNumber) + 1n).toString();
                 }
             } catch (e) { 
                 const now = new Date();
                 const totalSeconds = Math.floor(now.getTime() / 1000);
-                lastP = Math.floor(totalSeconds / 30).toString(); 
+                lastP = Math.floor(totalSeconds / 60).toString(); 
             }
         }
 
-        /* =========================================================================
-           SIGNAL ALGORITHM
-           ========================================================================= */
         function analyzeQuantumSignal(period) {
             let hash1 = 0; 
-            const seed1 = period + "DKWIN_INDIA_SERVER_SECURE_2026_30S_NUM_A";
+            const seed1 = period + "DKWIN_SG_SERVER_SECURE_2026_1M_NUM_A";
             
             for (let i = 0; i < seed1.length; i++) {
                 hash1 = ((hash1 << 5) - hash1) + seed1.charCodeAt(i);
                 hash1 |= 0;
             }
             
-            let targetNumber = Math.abs(hash1) % 10;
-            let sizeResult = (targetNumber >= 5) ? "BIG" : "SMALL";
-            
+            let num1 = Math.abs(hash1) % 10;
+            let sizeResult = (num1 >= 5) ? "BIG" : "SMALL";
             return { size: sizeResult };
         }
 
-        /* =========================================================================
-           MAIN TIMER & UI LOOP
-           ========================================================================= */
         function loop() {
             if (!_active) return;
-            
-            if (!navigator.onLine) {
-                document.getElementById('timer').innerText = "--";
-                return;
-            }
-
             const now = new Date();
             const sec = now.getSeconds();
             
             const pBox = document.getElementById('periodID');
             if(lastP) {
-                pBox.innerText = lastP;
+                pBox.innerHTML = renderRgbPeriod(lastP);
             } else {
-                pBox.innerText = "Sync...";
+                pBox.innerText = "....";
             }
             
-            let rem = 30 - (sec % 30);
-            if (rem === 30) rem = 0; 
+            let rem = 60 - sec;
+            if (rem === 60) rem = 0; 
             
             document.getElementById('timer').innerText = rem < 10 ? "0" + rem : rem;
 
-            const outputWrapper = document.getElementById('predictionOutput');
-
-            if (rem <= 6 || rem === 0) {
-                outputWrapper.innerHTML = '<span class="processing">SCANNING MARKET...</span>';
+            const sigBox = document.getElementById('prediction');
+            
+            if (rem <= 5 || rem === 0) {
+                sigBox.innerHTML = '<span class="processing">GENERATING...</span>';
             } else {
-                if (!currentSignal || String(currentSignal.period) !== String(lastP)) {
-                    const result = analyzeQuantumSignal(lastP || "0");
-                    currentSignal = { period: lastP, size: result.size };
-                }
-                
-                if (currentSignal) {
-                    outputWrapper.innerHTML = `
-                        <div class="output-row">
-                            <span class="size-txt res-${currentSignal.size.toLowerCase()}">${currentSignal.size}</span>
-                        </div>
-                    `;
-                }
+                const result = analyzeQuantumSignal(lastP || "0");
+                sigBox.innerHTML = `<span class="res-${result.size.toLowerCase()}">${result.size}</span>`;
             }
         }
+
+        // স্মুথ ড্রাগিং সিস্টেম
+        const box = document.getElementById("dragBox");
+        let active = false, currentX = 0, currentY = 0, initialX = 0, initialY = 0;
+
+        function dragStart(e) {
+            if(e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('svg') || e.target.classList.contains('vpn-dot') || e.target.closest('#periodID') || e.target.classList.contains('logo-ring')) return;
+            
+            const clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
+            
+            initialX = clientX - currentX;
+            initialY = clientY - currentY;
+            active = true;
+        }
+
+        function dragEnd() { active = false; }
+
+        function drag(e) {
+            if (active) {
+                e.preventDefault();
+                const clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+                
+                currentX = clientX - initialX;
+                currentY = clientY - initialY;
+                
+                box.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            }
+        }
+
+        window.addEventListener("mousedown", dragStart);
+        window.addEventListener("mouseup", dragEnd);
+        window.addEventListener("mousemove", drag);
+        window.addEventListener("touchstart", dragStart, { passive: false });
+        window.addEventListener("touchend", dragEnd);
+        window.addEventListener("touchmove", drag, { passive: false });
     </script>
 </body>
 </html>

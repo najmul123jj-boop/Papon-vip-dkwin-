@@ -2,391 +2,809 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <title>DKWIN SINGAPORE QUANTUM VIP - COMPACT SYSTEM</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>HGZY VIP PREDICTOR - 30S</title>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js">
+    </script>
+
     <style>
-        html, body { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
-        
-        /* গেম স্ক্রিনের নিচের বেটিং ঘরসহ সম্পূর্ণ অংশ ক্লিয়ার দেখার জন্য ফুল ভিউ কন্টেইনার */
-        .iframe-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            overflow-y: auto; /* নিচ পর্যন্ত স্ক্রোল করে বেট ঘর দেখার সুবিধা */
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        /* গেমের ভেতরের লেখা ও নিচের অপশন একদম স্পষ্ট (Clear) করার জন্য আপগ্রেডেড আইফ্রেম লজিক */
-        iframe { 
-            width: 100%; 
-            height: 100%; /* একদম স্ক্রিন বরাবর পারফেক্ট হাইট যাতে নিচের বেট প্যানেল ব্লক না হয় */
-            border: none; 
-            display: block;
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
-        }
-        
-        /* সম্পূর্ণ প্যানেলের আল্ট্রা-প্রিমিয়াম আরজিবি নিয়ন অ্যানিমেশন */
-        @keyframes ultraRgbGlow {
-            0% { border-color: #00ffcc; box-shadow: 0 0 12px #00ffcc, inset 0 0 6px rgba(0, 255, 204, 0.3); }
-            33% { border-color: #ff007f; box-shadow: 0 0 12px #ff007f, inset 0 0 6px rgba(255, 0, 127, 0.3); }
-            66% { border-color: #ffd700; box-shadow: 0 0 12px #ffd700, inset 0 0 6px rgba(255, 215, 0, 0.3); }
-            100% { border-color: #00ffcc; box-shadow: 0 0 12px #00ffcc, inset 0 0 6px rgba(0, 255, 204, 0.3); }
-        }
-
-        /* প্যানেল ওভারলে ডিজাইন - কমপ্যাক্ট সাইজ */
-        .box { 
-            width: 155px; 
-            height: auto;
-            background: linear-gradient(135deg, rgba(10, 5, 20, 0.98), rgba(4, 2, 8, 0.99));
-            border: 2px solid #00ffcc; 
-            border-radius: 16px; 
-            color: #fff; text-align: center; padding: 10px 8px; 
-            position: fixed; top: 120px; right: 10px;
-            z-index: 9999; cursor: grab; backdrop-filter: blur(25px); 
+        * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
-            animation: ultraRgbGlow 5s infinite linear;
-            touch-action: none; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .box:active { cursor: grabbing; }
-
-        /* প্রিমিয়াম হেডার স্টাইল */
-        .panel-header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            width: 100%;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            padding-bottom: 5px;
+            font-family: 'Arial', sans-serif;
+            user-select: none;
+            touch-action: pan-x pan-y;
         }
 
-        /* আল্ট্রা-মডার্ন লোগো অ্যানিমেশন */
-        .premium-logo-area {
-            position: relative;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        body {
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
         }
 
-        .logo-ring {
-            position: absolute;
+        iframe {
             width: 100%;
             height: 100%;
-            border: 1.5px dashed #00ffcc;
-            border-radius: 50%;
-            animation: spinRing 4s infinite linear;
+            border: none;
+            pointer-events: auto;
         }
 
-        @keyframes spinRing {
-            100% { transform: rotate(360deg); }
+        /* ===== FLOATING PANEL ===== */
+        .float-panel {
+            position: fixed;
+            z-index: 9999;
+            background: rgba(10, 10, 10, 0.92);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-radius: 22px;
+            padding: 16px 14px 18px;
+            text-align: center;
+            border: 2px solid rgba(0, 255, 0, 0.25);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 255, 0, 0.08);
+            transition: border-color 0.3s, box-shadow 0.3s;
+            min-width: 150px;
+            max-width: 200px;
+            touch-action: none;
+            cursor: grab;
+        }
+        .float-panel:active {
+            cursor: grabbing;
+        }
+        .float-panel.offline {
+            border-color: rgba(255, 62, 62, 0.4);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 62, 62, 0.08);
         }
 
-        /* VIP সার্ভার ব্যাজ */
-        .server-badge {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 3px;
-            background: rgba(255, 215, 0, 0.07);
-            border: 1px solid #ffd700;
-            border-radius: 4px;
-            padding: 1px 4px;
-            font-size: 8px;
-            font-weight: 900;
-            color: #ffd700;
+        /* --- Signal Panel --- */
+        #signalPanel {
+            top: 20px;
+            left: 12px;
+            width: 185px;
+            border-color: rgba(0, 255, 0, 0.3);
+        }
+        #signalPanel .panel-header {
+            font-size: 11px;
+            color: #00ff00;
+            font-weight: 700;
             text-transform: uppercase;
-            width: 100%;
-            box-sizing: border-box;
+            letter-spacing: 1.5px;
+            border-bottom: 1.5px solid rgba(0, 255, 0, 0.12);
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #signalPanel .panel-header .badge {
+            background: rgba(0, 255, 0, 0.1);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: 800;
+            color: #00ff00;
+            border: 1px solid rgba(0, 255, 0, 0.15);
+        }
+        #signalPanel .panel-header.offline {
+            color: #ff3e3e;
+            border-bottom-color: rgba(255, 62, 62, 0.12);
+        }
+        #signalPanel .panel-header.offline .badge {
+            color: #ff3e3e;
+            border-color: rgba(255, 62, 62, 0.2);
+            background: rgba(255, 62, 62, 0.08);
+        }
+
+        /* Clock */
+        #clockDisplay {
+            font-size: 17px;
+            color: #00ff88;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            padding: 2px 0 8px;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.08);
+            margin-bottom: 4px;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 18px rgba(0, 255, 136, 0.15);
+        }
+        #clockDisplay .clock-icon {
+            margin-right: 6px;
+            font-size: 15px;
+        }
+
+        /* Timer */
+        #timer {
+            font-size: 18px;
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-variant-numeric: tabular-nums;
+            display: block;
+            margin: 2px 0 3px;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
+        }
+
+        /* Signal (BIG / SMALL) */
+        #signalResult {
+            font-size: 30px;
+            font-weight: 900;
+            margin: 0;
+            text-shadow: 0 0 24px currentColor;
+            letter-spacing: 3px;
+            line-height: 1.2;
+            transition: all 0.3s ease;
+            min-height: 38px;
+            display: block;
+        }
+        #signalResult.BIG {
+            color: #FFD700 !important;
+            text-shadow: 0 0 35px #FFD700, 0 0 70px rgba(255, 215, 0, 0.3) !important;
+        }
+        #signalResult.SMALL {
+            color: #ff3e3e !important;
+            text-shadow: 0 0 35px #ff3e3e, 0 0 70px rgba(255, 62, 62, 0.3) !important;
+        }
+        #signalResult.NOTING {
+            color: #ffaa00 !important;
+            text-shadow: 0 0 30px #ffaa00, 0 0 60px rgba(255, 170, 0, 0.2) !important;
+            animation: pulse 0.8s ease-in-out infinite alternate;
+        }
+        #signalResult.-- {
+            color: #555 !important;
+            text-shadow: none !important;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.6;
+                transform: scale(0.97);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.03);
+            }
+        }
+
+        /* ---- Number + Color (below signal) ---- */
+        #numberColorRow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+            min-height: 28px;
+            font-weight: 700;
+            font-size: 16px;
             letter-spacing: 0.5px;
         }
-        
-        .vpn-dot {
-            width: 5px;
-            height: 5px;
-            background-color: #39ff14;
-            border-radius: 50%;
-            display: inline-block;
-            box-shadow: 0 0 5px #39ff14;
+        #numberDisplay {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 0 10px;
+            border-radius: 8px;
+            line-height: 26px;
+            min-width: 26px;
+            font-size: 18px;
+        }
+        #numberDisplay.-- {
+            color: #555;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        #colorDisplay {
+            padding: 0 10px;
+            border-radius: 8px;
+            line-height: 26px;
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            min-width: 50px;
+        }
+        #colorDisplay.GREEN {
+            color: #00ff41;
+            text-shadow: 0 0 20px rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.08);
+        }
+        #colorDisplay.VALLEY {
+            color: #bb66ff;
+            text-shadow: 0 0 20px rgba(187, 102, 255, 0.25);
+            background: rgba(187, 102, 255, 0.08);
+        }
+        #colorDisplay.RED {
+            color: #ff3e3e;
+            text-shadow: 0 0 20px rgba(255, 62, 62, 0.25);
+            background: rgba(255, 62, 62, 0.08);
+        }
+        #colorDisplay.-- {
+            color: #555;
+            background: rgba(255, 255, 255, 0.03);
+            text-shadow: none;
+        }
+        #numberColorRow.-- .-- {
+            color: #555 !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            text-shadow: none !important;
         }
 
-        /* লগইন ডিজাইন */
-        #loginPart { 
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            width: 100%; 
-        }
-        #loginPart input { 
-            width: 100%; padding: 5px; background: #05050a; border: 1.2px solid #ff007f; 
-            border-radius: 6px; color: #fff; font-size: 11px; text-align: center; 
-            outline: none; box-sizing: border-box;
-        }
-        .login-btn { 
-            width: 100%; padding: 6px; background: linear-gradient(45deg, #00ffcc, #ff007f); color: #fff; 
-            border: none; border-radius: 6px; font-weight: 900; cursor: pointer; 
-            font-size: 10px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        /* Divider line between signal and number/color */
+        .sig-divider {
+            width: 60%;
+            height: 1.5px;
+            margin: 4px auto 4px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+            border-radius: 2px;
         }
 
-        /* সিগন্যাল প্যানেল ভেতরের পার্ট */
-        #appPart { 
-            display: flex; 
-            flex-direction: column;
-            align-items: center; 
-            gap: 5px;
-            width: 100%; 
+        /* --- LOGIN UI --- */
+        #passUI {
+            display: block;
         }
-        
-        .period-top-box {
-            background: rgba(255, 255, 255, 0.02); 
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 6px; 
-            padding: 3px; 
+        #passInput {
             width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: #1a1a1a;
+            border: 1.5px solid #333;
+            color: #00ff00;
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            transition: border 0.2s, box-shadow 0.2s;
             text-align: center;
-            box-sizing: border-box;
         }
-        .period-label { font-size: 8px; color: #bbb; text-transform: uppercase; display: block; font-weight: 600; letter-spacing: 0.3px; }
-        
-        #periodID { 
-            font-size: 12px; 
-            font-weight: 950; 
-            display: block; 
-            margin-top: 1px; 
-            word-break: break-all;
+        #passInput:focus {
+            border-color: #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.05);
         }
-        
-        /* নিয়ন পিরিয়ড টেক্সট */
-        .p-cyan { color: #00ffcc; text-shadow: 0 0 4px #00ffcc; }
-        .p-pink { color: #ff007f; text-shadow: 0 0 4px #ff007f; }
-        .p-gold { color: #ffd700; text-shadow: 0 0 4px #ffd700; }
-        .p-green { color: #39ff14; text-shadow: 0 0 4px #39ff14; }
-
-        /* টাইমার */
-        .timer-container { text-align: center; width: 100%; }
-        .timer-txt { font-size: 14px; color: #ffff00; font-weight: 900; text-shadow: 0 0 5px #ffff00; }
-        
-        /* সিগন্যাল ডিসপ্লে */
-        #signalContainer {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
+        .btn {
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            color: #000;
+            border: none;
+            padding: 8px 0;
             width: 100%;
-            padding-bottom: 2px;
+            font-weight: 800;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        .btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
         }
 
-        .signal-txt { 
-            font-size: 26px; 
-            font-weight: 950; 
-            text-transform: uppercase; 
-            line-height: 1.1; 
+        #offlineMsg {
+            display: none;
+            color: #ff3e3e;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 10px 0 6px;
+            letter-spacing: 0.5px;
+            line-height: 1.4;
+        }
+        #offlineMsg .icon {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 4px;
         }
 
-        .res-big { color: #00ffcc; text-shadow: 0 0 12px #00ffcc; }
-        .res-small { color: #ff007f; text-shadow: 0 0 12px #ff007f; }
-        .processing { font-size: 11px; color: #ffea00; animation: blink 0.4s infinite; text-shadow: 0 0 4px #ffea00; display: block; font-weight: 900; }
-        
-        @keyframes blink { 50% { opacity: 0.3; } }
-        .hidden { display: none !important; }
+        #mainUI {
+            display: none;
+        }
+
+        /* hidden compat */
+        .loader,
+        #statsBar,
+        #historyList,
+        #periodDisplay,
+        #resultDisplayOld {
+            display: none !important;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 520px) {
+            #signalPanel {
+                width: 155px;
+                padding: 12px 10px 14px;
+                top: 12px;
+                left: 6px;
+            }
+            #clockDisplay {
+                font-size: 14px;
+                padding: 1px 0 6px;
+            }
+            #timer {
+                font-size: 16px;
+            }
+            #signalResult {
+                font-size: 26px;
+                min-height: 32px;
+            }
+            #numberColorRow {
+                font-size: 14px;
+                gap: 6px;
+                min-height: 24px;
+            }
+            #numberDisplay {
+                font-size: 15px;
+                line-height: 22px;
+                min-width: 22px;
+                padding: 0 8px;
+            }
+            #colorDisplay {
+                font-size: 13px;
+                line-height: 22px;
+                min-width: 40px;
+                padding: 0 8px;
+            }
+            #signalPanel .panel-header {
+                font-size: 10px;
+            }
+            #signalPanel .panel-header .badge {
+                font-size: 8px;
+                padding: 1px 8px;
+            }
+            #passInput {
+                font-size: 11px;
+                padding: 6px 10px;
+            }
+            .btn {
+                font-size: 11px;
+                padding: 6px 0;
+            }
+            .sig-divider {
+                width: 50%;
+                margin: 3px auto 3px;
+            }
+        }
+        @media (max-width: 380px) {
+            #signalPanel {
+                width: 135px;
+                padding: 10px 8px 12px;
+                top: 8px;
+                left: 4px;
+            }
+            #clockDisplay {
+                font-size: 12px;
+            }
+            #timer {
+                font-size: 14px;
+            }
+            #signalResult {
+                font-size: 22px;
+                min-height: 28px;
+            }
+            #numberColorRow {
+                font-size: 12px;
+                gap: 4px;
+                min-height: 20px;
+            }
+            #numberDisplay {
+                font-size: 13px;
+                line-height: 20px;
+                min-width: 18px;
+                padding: 0 6px;
+            }
+            #colorDisplay {
+                font-size: 11px;
+                line-height: 20px;
+                min-width: 34px;
+                padding: 0 6px;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- আইফ্রেম স্ক্রিন কন্টেইনার (নিচের বেটিং অংশ সম্পূর্ণ শো করার লজিক) -->
-    <div class="iframe-container">
-        <iframe src="https://dkwin9.com/#/register?invitationCode=75518598003"></iframe>
-    </div>
+    <!-- IFRAME (game site) -->
+    <iframe src="https://hgnice.cc/#/register?invitationCode=511711502736"></iframe>
 
-    <!-- মূল আপগ্রেডেড মিনি প্যানেল বক্স -->
-    <div class="box" id="dragBox">
-        
-        <!-- টপ হেডার এরিয়া -->
-        <div class="panel-header">
-            <!-- হাই-টেক অ্যানিমেটেড সার্কেল লোগো -->
-            <div class="premium-logo-area">
-                <div class="logo-ring"></div>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#00ffcc"/>
-                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#ff007f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <!-- সার্ভার ব্যাজ -->
-            <div class="server-badge">
-                <span>SG QUANTUM</span>
-                <div class="vpn-dot"></div>
-            </div>
+    <!-- ===== SIGNAL PANEL ===== -->
+    <div id="signalPanel" class="float-panel">
+
+        <!-- HEADER -->
+        <div class="panel-header" id="panelHeader">
+            <span>⚡ 30S AI</span>
+            <span class="badge" id="periodBadge">#<span id="periodNum">0</span></span>
         </div>
 
-        <!-- লগইন পার্ট -->
-        <div id="loginPart">
-            <input type="password" id="passInput" placeholder="Password">
-            <button class="login-btn" onclick="checkPass()">Login</button>
+        <!-- OFFLINE MSG -->
+        <div id="offlineMsg">
+            <span class="icon">📡</span>
+            No Internet
         </div>
 
-        <!-- হ্যাক সিগন্যাল প্যানেল -->
-        <div id="appPart" class="hidden">
-            <div class="period-top-box">
-                <span class="period-label">Live Period</span>
-                <span id="periodID">....</span>
+        <!-- LOGIN UI -->
+        <div id="passUI">
+            <input type="password" id="passInput" placeholder="🔑 KEY" />
+            <button class="btn" onclick="activatePanel()">LOGIN</button>
+        </div>
+
+        <!-- MAIN UI -->
+        <div id="mainUI">
+            <div id="clockDisplay"><span class="clock-icon">🕐</span><span id="clockTime">00:00:00</span></div>
+            <span id="timer">00:30</span>
+
+            <!-- main signal: BIG / SMALL -->
+            <span id="signalResult" class="--">--</span>
+
+            <!-- divider -->
+            <div class="sig-divider"></div>
+
+            <!-- number + color row -->
+            <div id="numberColorRow" class="--">
+                <span id="numberDisplay" class="--">--</span>
+                <span id="colorDisplay" class="--">--</span>
             </div>
-            
-            <div class="timer-container">
-                <div class="timer-txt"><span id="timer">--</span>s</div>
-            </div>
-            
-            <div id="signalContainer">
-                <div class="signal-txt" id="prediction">WAIT</div>
-            </div>
+
+            <!-- hidden compat -->
+            <div id="resultDisplayOld"></div>
+            <div class="loader" id="loader">⏳</div>
+            <div id="statsBar"><span>🏆 <span class="win-stat" id="winCount">0</span></span><span>💀 <span class="loss-stat" id="lossCount">0</span></span></div>
+            <div id="historyList"><div class="history-empty">⏳ waiting...</div></div>
+            <span id="periodDisplay" style="display:none;">P <span class="num" id="periodNumSmall">0</span></span>
         </div>
     </div>
 
     <script>
-        // Firebase Configuration
+        // ===== FIREBASE CONFIG =====
         const firebaseConfig = {
-                    apiKey: "AIzaSyBPBQOeApFZQwGX8G4mZxhY5C2jjN6VWmU",
-                    authDomain: "dkwin-panel-ai.firebaseapp.com",
-                    databaseURL: "https://dkwin-panel-ai-default-rtdb.firebaseio.com",
-                    projectId: "dkwin-panel-ai",
-                    storageBucket: "dkwin-panel-ai.firebasestorage.app",
-                    messagingSenderId: "925573387640",
-                    appId: "1:925573387640:web:8faf648b0b89933c89e48d",
-                    measurementId: "G-X3ZFCRWEH8"
-                };
+            apiKey: "AIzaSyBPBQOeApFZQwGX8G4mZxhY5C2jjN6VWmU",
+            authDomain: "dkwin-panel-ai.firebaseapp.com",
+            databaseURL: "https://dkwin-panel-ai-default-rtdb.firebaseio.com",
+            projectId: "dkwin-panel-ai",
+            storageBucket: "dkwin-panel-ai.firebasestorage.app",
+            messagingSenderId: "925573387640",
+            appId: "1:925573387640:web:8faf648b0b89933c89e48d",
+            measurementId: "G-X3ZFCRWEH8"
+        };
         firebase.initializeApp(firebaseConfig);
-        
-        let lastP = null, _active = false;
+        const database = firebase.database();
 
-        function checkPass() {
-            if (document.getElementById('passInput').value.trim() === "VIP100KO9") {
-                document.getElementById('loginPart').classList.add('hidden'); 
-                document.getElementById('appPart').classList.remove('hidden'); 
-                _active = true;
-                setInterval(loop, 1000);
-                setInterval(fetchData, 2000);
-            } else { 
-                alert("❌ Wrong Password!"); 
-            }
-        }
+        // ===== STATE =====
+        let isLoggedIn = false;
+        let isOnline = navigator.onLine;
+        let predictionInterval = null;
+        let clockInterval = null;
+        let periodCounter = 0;
+        let currentSignalData = { number: null, color: null, signal: null };
 
-        function renderRgbPeriod(periodStr) {
-            if (!periodStr || periodStr === "....") return "....";
-            const classes = ["p-cyan", "p-pink", "p-gold", "p-green"];
-            let htmlResult = "";
-            for (let i = 0; i < periodStr.length; i++) {
-                let cls = classes[i % classes.length];
-                if (i >= periodStr.length - 4) {
-                    htmlResult += `<span class="${cls}">${periodStr[i]}</span>`;
-                } else {
-                    htmlResult += `<span>${periodStr[i]}</span>`;
-                }
-            }
-            return htmlResult;
-        }
+        // ===== DOM REFS =====
+        const signalPanel = document.getElementById('signalPanel');
+        const panelHeader = document.getElementById('panelHeader');
+        const passUI = document.getElementById('passUI');
+        const mainUI = document.getElementById('mainUI');
+        const offlineMsg = document.getElementById('offlineMsg');
+        const passInput = document.getElementById('passInput');
+        const timerDiv = document.getElementById('timer');
+        const sigRes = document.getElementById('signalResult');
+        const clockTime = document.getElementById('clockTime');
+        const periodNum = document.getElementById('periodNum');
+        const periodBadge = document.getElementById('periodBadge');
+        const numberDisplay = document.getElementById('numberDisplay');
+        const colorDisplay = document.getElementById('colorDisplay');
+        const numberColorRow = document.getElementById('numberColorRow');
 
-        async function fetchData() {
-            try {
-                const res = await fetch("https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?r=" + Date.now());
-                const json = await res.json();
-                if (json.data?.list.length > 0) {
-                    lastP = (BigInt(json.data.list[0].issueNumber) + 1n).toString();
-                }
-            } catch (e) { 
-                const now = new Date();
-                const totalSeconds = Math.floor(now.getTime() / 1000);
-                lastP = Math.floor(totalSeconds / 60).toString(); 
-            }
-        }
-
-        function analyzeQuantumSignal(period) {
-            let hash1 = 0; 
-            const seed1 = period + "DKWIN_SG_SERVER_SECURE_2026_1M_NUM_A";
-            
-            for (let i = 0; i < seed1.length; i++) {
-                hash1 = ((hash1 << 5) - hash1) + seed1.charCodeAt(i);
-                hash1 |= 0;
-            }
-            
-            let num1 = Math.abs(hash1) % 10;
-            let sizeResult = (num1 >= 5) ? "BIG" : "SMALL";
-            return { size: sizeResult };
-        }
-
-        function loop() {
-            if (!_active) return;
+        // ===== CLOCK =====
+        function updateClock() {
             const now = new Date();
-            const sec = now.getSeconds();
-            
-            const pBox = document.getElementById('periodID');
-            if(lastP) {
-                pBox.innerHTML = renderRgbPeriod(lastP);
-            } else {
-                pBox.innerText = "....";
-            }
-            
-            let rem = 60 - sec;
-            if (rem === 60) rem = 0; 
-            
-            document.getElementById('timer').innerText = rem < 10 ? "0" + rem : rem;
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            clockTime.textContent = h + ':' + m + ':' + s;
+        }
 
-            const sigBox = document.getElementById('prediction');
-            
-            if (rem <= 5 || rem === 0) {
-                sigBox.innerHTML = '<span class="processing">GENERATING...</span>';
+        function startClock() {
+            if (clockInterval) clearInterval(clockInterval);
+            updateClock();
+            clockInterval = setInterval(updateClock, 1000);
+        }
+
+        // ===== UI STATE HELPERS =====
+        function showOfflineUI() {
+            signalPanel.classList.add('offline');
+            panelHeader.classList.add('offline');
+            panelHeader.innerHTML = '<span>⚡ OFFLINE</span><span class="badge">#--</span>';
+            offlineMsg.style.display = 'block';
+            passUI.style.display = 'none';
+            mainUI.style.display = 'none';
+            if (predictionInterval) { clearInterval(predictionInterval);
+                predictionInterval = null; }
+        }
+
+        function showLoginUI() {
+            signalPanel.classList.remove('offline');
+            panelHeader.classList.remove('offline');
+            panelHeader.innerHTML = '<span>⚡ 30S AI</span><span class="badge">#<span id="periodNum">0</span></span>';
+            offlineMsg.style.display = 'none';
+            passUI.style.display = 'block';
+            mainUI.style.display = 'none';
+            if (predictionInterval) { clearInterval(predictionInterval);
+                predictionInterval = null; }
+            if (periodNum) periodNum.textContent = periodCounter;
+            // reset number/color display
+            numberDisplay.textContent = '--';
+            numberDisplay.className = '--';
+            colorDisplay.textContent = '--';
+            colorDisplay.className = '--';
+            numberColorRow.className = '--';
+            sigRes.textContent = '--';
+            sigRes.className = '--';
+        }
+
+        function showSignalUI() {
+            signalPanel.classList.remove('offline');
+            panelHeader.classList.remove('offline');
+            panelHeader.innerHTML = '<span>⚡ 30S AI</span><span class="badge">#<span id="periodNum">' + periodCounter +
+                '</span></span>';
+            offlineMsg.style.display = 'none';
+            passUI.style.display = 'none';
+            mainUI.style.display = 'block';
+            if (!clockInterval) startClock();
+            if (periodNum) periodNum.textContent = periodCounter;
+            if (!predictionInterval) startPrediction();
+        }
+
+        function showConnLostUI() {
+            signalPanel.classList.add('offline');
+            panelHeader.classList.add('offline');
+            panelHeader.innerHTML = '<span>⚡ LOST</span>';
+            offlineMsg.style.display = 'none';
+            passUI.style.display = 'none';
+            mainUI.style.display = 'block';
+            sigRes.textContent = '--';
+            sigRes.className = '--';
+            timerDiv.textContent = '--:--';
+            numberDisplay.textContent = '--';
+            numberDisplay.className = '--';
+            colorDisplay.textContent = '--';
+            colorDisplay.className = '--';
+            numberColorRow.className = '--';
+            if (predictionInterval) { clearInterval(predictionInterval);
+                predictionInterval = null; }
+        }
+
+        // ===== CONNECTIVITY =====
+        function updateConnectivity() {
+            isOnline = navigator.onLine;
+            if (!isOnline) {
+                if (isLoggedIn) showConnLostUI();
+                else showOfflineUI();
+                return;
+            }
+            if (isLoggedIn) showSignalUI();
+            else showLoginUI();
+        }
+
+        // ===== LOGIN =====
+        function activatePanel() {
+            if (!navigator.onLine) { alert('⚠️ No internet connection.'); return; }
+            if (passInput.value === "VIPAI9S") {
+                isLoggedIn = true;
+                periodCounter = 0;
+                showSignalUI();
+                passInput.value = '';
             } else {
-                const result = analyzeQuantumSignal(lastP || "0");
-                sigBox.innerHTML = `<span class="res-${result.size.toLowerCase()}">${result.size}</span>`;
+                alert("❌ Wrong Key!");
+                passInput.value = '';
+                passInput.focus();
             }
         }
 
-        // স্মুথ ড্রাগিং সিস্টেম
-        const box = document.getElementById("dragBox");
-        let active = false, currentX = 0, currentY = 0, initialX = 0, initialY = 0;
+        // ===== PREDICTION ENGINE =====
+        function startPrediction() {
+            if (predictionInterval) { clearInterval(predictionInterval);
+                predictionInterval = null; }
 
-        function dragStart(e) {
-            if(e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('svg') || e.target.classList.contains('vpn-dot') || e.target.closest('#periodID') || e.target.classList.contains('logo-ring')) return;
-            
-            const clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
-            const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
-            
-            initialX = clientX - currentX;
-            initialY = clientY - currentY;
-            active = true;
+            sigRes.textContent = '--';
+            sigRes.className = '--';
+            timerDiv.textContent = '00:30';
+            numberDisplay.textContent = '--';
+            numberDisplay.className = '--';
+            colorDisplay.textContent = '--';
+            colorDisplay.className = '--';
+            numberColorRow.className = '--';
+            currentSignalData = { number: null, color: null, signal: null };
+
+            predictionInterval = setInterval(() => {
+                if (!navigator.onLine) { showConnLostUI(); return; }
+                if (!isLoggedIn) { showLoginUI(); return; }
+
+                const now = new Date();
+                const seconds = now.getSeconds();
+                const remaining = 30 - (seconds % 30);
+
+                timerDiv.textContent = "00:" + (remaining < 10 ? "0" : "") + remaining;
+
+                // Period increment at cycle start
+                if (remaining === 30) {
+                    periodCounter++;
+                    const pNum = document.getElementById('periodNum');
+                    if (pNum) pNum.textContent = periodCounter;
+                    const badge = document.querySelector('#signalPanel .badge');
+                    if (badge) badge.innerHTML = '#' + periodCounter;
+                }
+
+                // Trigger prediction at cycle start (30) and end (1)
+                if (remaining === 30 || remaining === 1) {
+                    if (window._predictionTimeout) {
+                        clearTimeout(window._predictionTimeout);
+                        window._predictionTimeout = null;
+                    }
+
+                    const isCycleStart = (remaining === 30);
+                    const notingDuration = isCycleStart ? 5000 : 1200;
+
+                    // Show NOTING
+                    sigRes.textContent = 'NOTING';
+                    sigRes.className = 'NOTING';
+                    // Hide number & color during NOTING
+                    numberDisplay.textContent = '--';
+                    numberDisplay.className = '--';
+                    colorDisplay.textContent = '--';
+                    colorDisplay.className = '--';
+                    numberColorRow.className = '--';
+
+                    window._predictionTimeout = setTimeout(() => {
+                        // === Generate signal ===
+                        const rand = Math.random();
+                        let signal = rand > 0.5 ? "BIG" : "SMALL";
+
+                        const gameRand = Math.random();
+                        const gameResult = gameRand > 0.5 ? "BIG" : "SMALL";
+                        const isWin = (signal === gameResult);
+                        const outcome = isWin ? "WIN" : "LOSS";
+
+                        // Generate number 0-9
+                        let num = Math.floor(Math.random() * 10);
+
+                        // Determine color based on number
+                        let color;
+                        if (num === 0 || num === 5) {
+                            color = "VALLEY";
+                        } else if (num === 2 || num === 4 || num === 6 || num === 8) {
+                            color = "RED";
+                        } else {
+                            color = "GREEN";
+                        }
+
+                        // Store current signal data
+                        currentSignalData = { number: num, color: color, signal: signal };
+
+                        // === Update UI ===
+                        // Main signal
+                        sigRes.textContent = signal;
+                        sigRes.className = signal;
+
+                        // Number
+                        numberDisplay.textContent = num;
+                        numberDisplay.className = '';
+
+                        // Color
+                        colorDisplay.textContent = color;
+                        colorDisplay.className = color;
+
+                        // Row
+                        numberColorRow.className = '';
+
+                        // === Push to Firebase ===
+                        try {
+                            database.ref('signals_30s').set({
+                                type: signal,
+                                color: color,
+                                number: num,
+                                gameResult: gameResult,
+                                outcome: outcome,
+                                period: periodCounter,
+                                timestamp: now.getTime()
+                            });
+                        } catch (e) { /* ignore */ }
+
+                        window._predictionTimeout = null;
+                    }, notingDuration);
+                }
+            }, 1000);
         }
 
-        function dragEnd() { active = false; }
+        // ===== EVENTS =====
+        window.addEventListener('online', () => {
+            if (isLoggedIn) showSignalUI();
+            else showLoginUI();
+        });
+        window.addEventListener('offline', () => {
+            if (isLoggedIn) showConnLostUI();
+            else showOfflineUI();
+        });
 
-        function drag(e) {
-            if (active) {
+        // ===== INIT =====
+        if (navigator.onLine) {
+            showLoginUI();
+            startClock();
+        } else {
+            showOfflineUI();
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                updateConnectivity();
+                if (isLoggedIn && !clockInterval) startClock();
+            }
+        });
+
+        // ===== DRAGGABLE PANEL =====
+        function makeDraggable(panel) {
+            let offsetX = 0,
+                offsetY = 0,
+                isDragging = false;
+
+            const startDrag = (clientX, clientY) => {
+                const rect = panel.getBoundingClientRect();
+                offsetX = clientX - rect.left;
+                offsetY = clientY - rect.top;
+                isDragging = true;
+                panel.style.transition = 'none';
+            };
+
+            const moveDrag = (clientX, clientY) => {
+                if (!isDragging) return;
+                let left = clientX - offsetX;
+                let top = clientY - offsetY;
+                const w = panel.offsetWidth;
+                const h = panel.offsetHeight;
+                left = Math.max(0, Math.min(window.innerWidth - w, left));
+                top = Math.max(0, Math.min(window.innerHeight - h, top));
+                panel.style.left = left + 'px';
+                panel.style.top = top + 'px';
+            };
+
+            const endDrag = () => {
+                isDragging = false;
+                panel.style.transition = '';
+            };
+
+            panel.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                startDrag(touch.clientX, touch.clientY);
+            }, { passive: true });
+
+            panel.addEventListener('touchmove', (e) => {
+                const touch = e.touches[0];
+                moveDrag(touch.clientX, touch.clientY);
                 e.preventDefault();
-                const clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
-                const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
-                
-                currentX = clientX - initialX;
-                currentY = clientY - initialY;
-                
-                box.style.transform = `translate(${currentX}px, ${currentY}px)`;
-            }
+            }, { passive: false });
+
+            panel.addEventListener('touchend', endDrag, { passive: true });
+            panel.addEventListener('touchcancel', endDrag, { passive: true });
+
+            panel.addEventListener('mousedown', (e) => {
+                const target = e.target;
+                if (target.tagName === 'INPUT' || target.tagName === 'BUTTON') return;
+                startDrag(e.clientX, e.clientY);
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                moveDrag(e.clientX, e.clientY);
+            });
+            document.addEventListener('mouseup', endDrag);
         }
 
-        window.addEventListener("mousedown", dragStart);
-        window.addEventListener("mouseup", dragEnd);
-        window.addEventListener("mousemove", drag);
-        window.addEventListener("touchstart", dragStart, { passive: false });
-        window.addEventListener("touchend", dragEnd);
-        window.addEventListener("touchmove", drag, { passive: false });
+        makeDraggable(document.getElementById('signalPanel'));
+
+        // ===== KEYBOARD SHORTCUT =====
+        passInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') activatePanel();
+        });
+
+        console.log('🔌 HGZY VIP PREDICTOR — color trading panel (GREEN / VALLEY / RED)');
+        console.log('📡 Status:', navigator.onLine ? 'ONLINE' : 'OFFLINE');
+        console.log('🎨 Colors: GREEN | VALLEY | RED');
+        console.log('📊 Signal: BIG / SMALL + number + color');
     </script>
+
 </body>
 </html>

@@ -2,456 +2,585 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>HGZY VIP PREDICTOR - 30S</title>
-
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js">
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>DKWIN</title>
+    
+    <!-- Firebase SDK Integration -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
-            user-select: none;
-            touch-action: pan-x pan-y;
+        /* =========================================================================
+           CSS RESET AND BASE STYLES
+           ========================================================================= */
+        html, body { 
+            margin: 0; 
+            padding: 0; 
+            height: 100%; 
+            width: 100%; 
+            overflow: hidden; 
+            background: #000; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent;
         }
 
-        body {
-            background: #000;
-            overflow: hidden;
-            height: 100vh;
-        }
-
-        iframe {
-            width: 100%;
+        /* =========================================================================
+           GAME BACKGROUND IFRAME CONTAINER
+           ========================================================================= */
+        .iframe-container {
+            position: absolute;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
             height: 100%;
-            border: none;
-            pointer-events: auto;
+            z-index: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        iframe { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+            display: block;
         }
 
-        /* ===== FLOATING PANEL ===== */
-        .float-panel {
+        /* =========================================================================
+           VISUAL EFFECTS LAYER (Only Fireflies - Falling Balls Removed)
+           ========================================================================= */
+        .effects-layer {
             position: fixed;
-            z-index: 9999;
-            background: rgba(10, 10, 10, 0.92);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border-radius: 22px;
-            padding: 16px 14px 18px;
-            text-align: center;
-            border: 2px solid rgba(0, 255, 0, 0.25);
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 255, 0, 0.08);
-            transition: border-color 0.3s, box-shadow 0.3s;
-            min-width: 150px;
-            max-width: 200px;
-            touch-action: none;
-            cursor: grab;
-        }
-        .float-panel:active {
-            cursor: grabbing;
-        }
-        .float-panel.offline {
-            border-color: rgba(255, 62, 62, 0.4);
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 62, 62, 0.08);
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            overflow: hidden;
         }
 
-        /* --- Signal Panel --- */
-        #signalPanel {
-            top: 20px;
-            left: 12px;
-            width: 185px;
-            border-color: rgba(0, 255, 0, 0.3);
+        .firefly {
+            position: absolute;
+            width: 5px; 
+            height: 5px;
+            background: #fffb00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #fffb00, 0 0 20px #fffb00;
+            opacity: 0;
+            animation: flyAround 6s infinite ease-in-out;
         }
-        #signalPanel .panel-header {
-            font-size: 11px;
-            color: #00ff00;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            border-bottom: 1.5px solid rgba(0, 255, 0, 0.12);
-            padding-bottom: 6px;
-            margin-bottom: 8px;
+
+        @keyframes flyAround {
+            0% { transform: translate(0, 0) scale(1); opacity: 0; }
+            20% { opacity: 1; }
+            50% { transform: translate(40px, -50px) scale(1.5); opacity: 0.8; }
+            80% { opacity: 1; }
+            100% { transform: translate(80px, -100px) scale(0.8); opacity: 0; }
+        }
+
+        /* =========================================================================
+           PREMIUM SIGNAL PANEL (MADE SLIGHTLY SMALLER & CIRCULAR/ROUNDED)
+           ========================================================================= */
+        .box { 
+            width: 175px; /* Slightly smaller width */
+            height: auto;
+            background: rgba(5, 5, 5, 0.95); 
+            border-radius: 70px; /* Slightly adjusted for smaller size */
+            color: #ffffff; 
+            text-align: center; 
+            padding: 12px 8px; /* Slightly reduced padding */
+            position: fixed; 
+            top: 40px; /* Adjusted top to fit butterfly */
+            right: 10px;
+            z-index: 9999; 
+            cursor: grab; 
+            backdrop-filter: blur(20px); 
+            box-sizing: border-box;
+            touch-action: none; 
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
-        }
-        #signalPanel .panel-header .badge {
-            background: rgba(0, 255, 0, 0.1);
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 9px;
-            font-weight: 800;
-            color: #00ff00;
-            border: 1px solid rgba(0, 255, 0, 0.15);
-        }
-        #signalPanel .panel-header.offline {
-            color: #ff3e3e;
-            border-bottom-color: rgba(255, 62, 62, 0.12);
-        }
-        #signalPanel .panel-header.offline .badge {
-            color: #ff3e3e;
-            border-color: rgba(255, 62, 62, 0.2);
-            background: rgba(255, 62, 62, 0.08);
+            gap: 8px; /* Tighter gap */
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+            border: 2px solid #00ff66;
         }
 
-        /* Clock */
-        #clockDisplay {
-            font-size: 17px;
-            color: #00ff88;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            padding: 2px 0 8px;
-            border-bottom: 1px solid rgba(0, 255, 136, 0.08);
-            margin-bottom: 4px;
-            font-variant-numeric: tabular-nums;
-            text-shadow: 0 0 18px rgba(0, 255, 136, 0.15);
-        }
-        #clockDisplay .clock-icon {
-            margin-right: 6px;
-            font-size: 15px;
+        .box::before {
+            content: "";
+            position: absolute;
+            top: -3px; left: -3px; right: -3px; bottom: -3px;
+            background: linear-gradient(45deg, #ff0055, #00ff66, #0099ff, #ff0055);
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 72px; 
+            animation: rgbBorder 4s linear infinite;
+            opacity: 0.6; 
         }
 
-        /* Timer */
-        #timer {
-            font-size: 18px;
+        @keyframes rgbBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .box:active { cursor: grabbing; }
+
+        /* =========================================================================
+           RED BUTTERFLY COVER (প্রজাপতির ঢাকনা)
+           ========================================================================= */
+        .butterfly-cover {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 65px;
+            height: 65px;
+            z-index: 10001;
+            pointer-events: none;
+            filter: drop-shadow(0 0 12px rgba(255, 0, 0, 0.8));
+            animation: flutter 2s infinite ease-in-out;
+        }
+
+        @keyframes flutter {
+            0% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
+            50% { transform: translateX(-50%) translateY(-8px) rotate(5deg); }
+            100% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
+        }
+
+        .wing-l, .wing-r { transform-origin: 50px 50px; }
+        .wing-l { animation: flapL 0.3s infinite alternate ease-in-out; }
+        .wing-r { animation: flapR 0.3s infinite alternate ease-in-out; }
+
+        @keyframes flapL { from { transform: rotateY(0deg); } to { transform: rotateY(60deg); } }
+        @keyframes flapR { from { transform: rotateY(0deg); } to { transform: rotateY(-60deg); } }
+
+        /* Header & Logo */
+        .panel-header {
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 5px; 
+            width: 100%;
+            margin-top: 15px; /* Added margin to accommodate butterfly */
+        }
+
+        .premium-logo-area {
+            position: relative; 
+            width: 50px; /* Smaller size */
+            height: 50px; /* Smaller size */
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+
+        .logo-image {
+            width: 100%; 
+            height: 100%; 
+            border-radius: 50%; 
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.2); 
+            z-index: 2;
+        }
+
+        .logo-ring {
+            position: absolute; 
+            width: 120%; 
+            height: 120%;
+            border: 1px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 50%; 
+            animation: spinRing 4s infinite linear; 
+            z-index: 1;
+        }
+
+        @keyframes spinRing { 100% { transform: rotate(360deg); } }
+
+        .server-badge {
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 4px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 20px;
+            padding: 3px 8px; 
+            font-size: 8px; 
+            font-weight: 800; 
             color: #fff;
-            font-weight: 700;
+            text-transform: uppercase;
+            width: 100%; 
+            letter-spacing: 0.5px;
+        }
+        
+        .vpn-dot {
+            width: 6px; 
+            height: 6px; 
+            background-color: #00ff66;
+            border-radius: 50%; 
+            box-shadow: 0 0 6px #00ff66;
+            animation: blink 1.5s infinite;
+        }
+
+        /* Login Section */
+        .login-part { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 6px; 
+            width: 100%; 
+        }
+        
+        .login-part input { 
+            width: 100%; 
+            padding: 6px; 
+            background: rgba(255, 255, 255, 0.1); 
+            border: 1px solid #00ff66; 
+            border-radius: 20px; 
+            color: #fff; 
+            font-size: 9px; 
+            text-align: center; 
+            outline: none; 
+            box-sizing: border-box;
+        }
+        
+        .login-btn { 
+            width: 100%; 
+            padding: 6px; 
+            background: #00ff66; 
+            color: #000; 
+            border: none; 
+            border-radius: 20px; 
+            font-weight: 900; 
+            cursor: pointer; 
+            font-size: 9px; 
+            text-transform: uppercase; 
+            box-shadow: 0 4px 10px rgba(0, 255, 102, 0.3);
+            transition: transform 0.2s;
+        }
+        
+        .login-btn:hover { 
+            background: #00cc55; 
+            transform: scale(1.02);
+        }
+
+        /* Signal Application Section */
+        .app-part { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 6px; 
+            width: 100%; 
+        }
+        
+        .period-top-box {
+            background: transparent;
+            border-radius: 20px; 
+            padding: 0; 
+            width: 100%; 
+            text-align: center; 
+            box-sizing: border-box;
+        }
+
+        .period-label { 
+            font-size: 8px; 
+            color: #888; 
+            display: block; 
+            font-weight: 600; 
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        #periodID { 
+            font-size: 12px; 
+            font-weight: 800; 
+            display: block; 
+            color: #fff; 
+            letter-spacing: 0.5px;
+        }
+
+        .timer-container { 
+            text-align: center; 
+            width: 100%; 
+        }
+        
+        .timer-txt { 
+            font-size: 11px; 
+            color: #ffaa00; 
+            font-weight: 800; 
+            background: rgba(255, 170, 0, 0.15); 
+            padding: 4px; 
+            border-radius: 20px;
+            display: block;
+        }
+
+        /* Signal Output Area */
+        #signalContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+            padding: 10px; 
+            box-sizing: border-box;
+            border: 1px solid #00ff66; 
+            background: rgba(0, 255, 102, 0.08); 
+            border-radius: 30px; 
+        }
+
+        .signal-label { 
+            font-size: 8px; 
+            color: #00ff66; 
+            text-transform: uppercase; 
+            font-weight: bold; 
             letter-spacing: 1px;
-            font-variant-numeric: tabular-nums;
-            display: block;
-            margin: 2px 0 3px;
-            text-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
         }
 
-        /* Signal (BIG / SMALL) */
-        #signalResult {
-            font-size: 30px;
-            font-weight: 900;
-            margin: 0;
-            text-shadow: 0 0 24px currentColor;
-            letter-spacing: 3px;
-            line-height: 1.2;
-            transition: all 0.3s ease;
-            min-height: 38px;
-            display: block;
+        .output-row { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            width: 100%; 
         }
-        #signalResult.BIG {
-            color: #FFD700 !important;
-            text-shadow: 0 0 35px #FFD700, 0 0 70px rgba(255, 215, 0, 0.3) !important;
-        }
-        #signalResult.SMALL {
-            color: #ff3e3e !important;
-            text-shadow: 0 0 35px #ff3e3e, 0 0 70px rgba(255, 62, 62, 0.3) !important;
-        }
-        #signalResult.NOTING {
-            color: #ffaa00 !important;
-            text-shadow: 0 0 30px #ffaa00, 0 0 60px rgba(255, 170, 0, 0.2) !important;
-            animation: pulse 0.8s ease-in-out infinite alternate;
-        }
-        #signalResult.-- {
-            color: #555 !important;
-            text-shadow: none !important;
+        
+        /* MASSIVE TEXT, THICK AND TAN-TAN (GLOWING) - Made slightly smaller for panel */
+        .size-txt { 
+            font-size: 36px; 
+            font-weight: 950; 
+            text-transform: uppercase; 
+            line-height: 1; 
+            text-shadow: 0 0 15px currentColor, 0 0 30px currentColor;
+            letter-spacing: -2px;
+            animation: glowPulse 1s infinite alternate;
         }
 
-        @keyframes pulse {
-            0% {
-                opacity: 0.6;
-                transform: scale(0.97);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1.03);
-            }
+        @keyframes glowPulse {
+            from { text-shadow: 0 0 10px currentColor, 0 0 20px currentColor; }
+            to { text-shadow: 0 0 20px currentColor, 0 0 40px currentColor; }
         }
 
-        /* ---- Number + Color (below signal) ---- */
-        #numberColorRow {
+        /* Colors */
+        .res-big { color: #FFFF00; }  
+        .res-small { color: #ff3366; } 
+        
+        .processing { 
+            font-size: 11px; 
+            color: #ffaa00; 
+            animation: blink 0.5s infinite; 
+            display: block; 
+            font-weight: 900; 
+            letter-spacing: 1px;
+            padding: 12px 0;
+        }
+        
+        @keyframes blink { 50% { opacity: 0.3; } }
+        
+        .hidden { display: none !important; }
+
+        /* =========================================================================
+           RESULT CHAT PANEL (LIVE RESULT GHOST) - INCREASED SIZE
+           ========================================================================= */
+        .chat-panel {
+            width: 190px; /* Increased width from 150px */
+            max-height: 420px; /* Increased max-height from 350px */
+            background: rgba(5, 5, 5, 0.95);
+            border-radius: 35px; 
+            color: #fff;
+            padding: 12px; /* Increased padding from 8px */
+            position: fixed;
+            top: 520px; 
+            right: 10px; 
+            z-index: 9998;
+            cursor: grab;
+            backdrop-filter: blur(20px);
+            box-sizing: border-box;
+            display: none;
+            flex-direction: column;
+            gap: 8px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+            border: 2px solid #00ff66;
+            touch-action: none;
+        }
+
+        .chat-panel::before {
+            content: "";
+            position: absolute;
+            top: -4px; left: -4px; right: -4px; bottom: -4px;
+            background: linear-gradient(45deg, #ff0055, #00ff66, #0099ff, #ff0055);
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 38px;
+            animation: rgbBorder 4s linear infinite;
+            opacity: 0.6;
+        }
+        
+        .chat-panel:active { cursor: grabbing; }
+
+        .chat-header {
+            font-size: 11px; /* Increased font size from 9px */
+            font-weight: 800;
+            text-align: center;
+            color: #00ff66;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-bottom: 8px; 
+            border-bottom: 1px solid rgba(0,255,102,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .chat-header .live-dot {
+            width: 7px; /* Increased dot size */
+            height: 7px; 
+            background: #ff0044;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ff0044;
+            animation: blink 1s infinite;
+        }
+
+        .chat-body {
+            max-height: 360px; /* Increased max-height from 290px */
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px; /* Increased gap from 4px */
+            padding-right: 3px;
+        }
+        
+        .chat-body::-webkit-scrollbar { width: 4px; }
+        .chat-body::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .chat-body::-webkit-scrollbar-thumb { background: #00ff66; border-radius: 4px; }
+
+        .chat-msg {
+            font-size: 9px; /* Increased font size from 7px */
+            font-weight: 800;
+            padding: 6px 8px; /* Increased padding from 4px 5px */
+            border-radius: 12px;
+            text-align: center;
+            letter-spacing: 0.5px;
+            animation: msgIn 0.4s ease;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
-            margin-top: 4px;
-            min-height: 28px;
-            font-weight: 700;
-            font-size: 16px;
-            letter-spacing: 0.5px;
-        }
-        #numberDisplay {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.06);
-            padding: 0 10px;
-            border-radius: 8px;
-            line-height: 26px;
-            min-width: 26px;
-            font-size: 18px;
-        }
-        #numberDisplay.-- {
-            color: #555;
-            background: rgba(255, 255, 255, 0.03);
-        }
-        #colorDisplay {
-            padding: 0 10px;
-            border-radius: 8px;
-            line-height: 26px;
-            font-size: 16px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            min-width: 50px;
-        }
-        #colorDisplay.GREEN {
-            color: #00ff41;
-            text-shadow: 0 0 20px rgba(0, 255, 65, 0.25);
-            background: rgba(0, 255, 65, 0.08);
-        }
-        #colorDisplay.VALLEY {
-            color: #bb66ff;
-            text-shadow: 0 0 20px rgba(187, 102, 255, 0.25);
-            background: rgba(187, 102, 255, 0.08);
-        }
-        #colorDisplay.RED {
-            color: #ff3e3e;
-            text-shadow: 0 0 20px rgba(255, 62, 62, 0.25);
-            background: rgba(255, 62, 62, 0.08);
-        }
-        #colorDisplay.-- {
-            color: #555;
-            background: rgba(255, 255, 255, 0.03);
-            text-shadow: none;
-        }
-        #numberColorRow.-- .-- {
-            color: #555 !important;
-            background: rgba(255, 255, 255, 0.03) !important;
-            text-shadow: none !important;
+            gap: 4px;
+            flex-direction: column;
         }
 
-        /* Divider line between signal and number/color */
-        .sig-divider {
-            width: 60%;
-            height: 1.5px;
-            margin: 4px auto 4px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
-            border-radius: 2px;
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        /* --- LOGIN UI --- */
-        #passUI {
-            display: block;
+        .chat-msg.win {
+            background: rgba(0, 255, 102, 0.15);
+            color: #00ff66;
+            border: 1px solid #00ff66;
         }
-        #passInput {
-            width: 100%;
-            padding: 8px 12px;
-            margin-bottom: 8px;
-            background: #1a1a1a;
-            border: 1.5px solid #333;
-            color: #00ff00;
-            border-radius: 10px;
-            font-size: 13px;
-            outline: none;
-            transition: border 0.2s, box-shadow 0.2s;
+        
+        .chat-msg.loss {
+            background: rgba(255, 0, 68, 0.15);
+            color: #ff0044;
+            border: 1px solid #ff0044;
+        }
+
+        .chat-msg .msg-label {
+            font-size: 11px; /* Increased font size from 8px */
+            font-weight: 900;
+        }
+        
+        .chat-msg .msg-period {
+            font-size: 8px; /* Increased font size from 6px */
+            opacity: 0.8;
+            font-weight: 600;
+        }
+
+        .chat-empty {
+            font-size: 10px; /* Increased font size from 8px */
+            color: #888;
             text-align: center;
-        }
-        #passInput:focus {
-            border-color: #00ff00;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.05);
-        }
-        .btn {
-            background: linear-gradient(135deg, #00ff00, #00cc00);
-            color: #000;
-            border: none;
-            padding: 8px 0;
-            width: 100%;
-            font-weight: 800;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 13px;
-            letter-spacing: 0.5px;
-            transition: transform 0.1s, box-shadow 0.2s;
-        }
-        .btn:active {
-            transform: scale(0.96);
-            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
-        }
-
-        #offlineMsg {
-            display: none;
-            color: #ff3e3e;
-            font-size: 12px;
-            font-weight: 700;
-            padding: 10px 0 6px;
-            letter-spacing: 0.5px;
-            line-height: 1.4;
-        }
-        #offlineMsg .icon {
-            font-size: 28px;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        #mainUI {
-            display: none;
-        }
-
-        /* hidden compat */
-        .loader,
-        #statsBar,
-        #historyList,
-        #periodDisplay,
-        #resultDisplayOld {
-            display: none !important;
-        }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 520px) {
-            #signalPanel {
-                width: 155px;
-                padding: 12px 10px 14px;
-                top: 12px;
-                left: 6px;
-            }
-            #clockDisplay {
-                font-size: 14px;
-                padding: 1px 0 6px;
-            }
-            #timer {
-                font-size: 16px;
-            }
-            #signalResult {
-                font-size: 26px;
-                min-height: 32px;
-            }
-            #numberColorRow {
-                font-size: 14px;
-                gap: 6px;
-                min-height: 24px;
-            }
-            #numberDisplay {
-                font-size: 15px;
-                line-height: 22px;
-                min-width: 22px;
-                padding: 0 8px;
-            }
-            #colorDisplay {
-                font-size: 13px;
-                line-height: 22px;
-                min-width: 40px;
-                padding: 0 8px;
-            }
-            #signalPanel .panel-header {
-                font-size: 10px;
-            }
-            #signalPanel .panel-header .badge {
-                font-size: 8px;
-                padding: 1px 8px;
-            }
-            #passInput {
-                font-size: 11px;
-                padding: 6px 10px;
-            }
-            .btn {
-                font-size: 11px;
-                padding: 6px 0;
-            }
-            .sig-divider {
-                width: 50%;
-                margin: 3px auto 3px;
-            }
-        }
-        @media (max-width: 380px) {
-            #signalPanel {
-                width: 135px;
-                padding: 10px 8px 12px;
-                top: 8px;
-                left: 4px;
-            }
-            #clockDisplay {
-                font-size: 12px;
-            }
-            #timer {
-                font-size: 14px;
-            }
-            #signalResult {
-                font-size: 22px;
-                min-height: 28px;
-            }
-            #numberColorRow {
-                font-size: 12px;
-                gap: 4px;
-                min-height: 20px;
-            }
-            #numberDisplay {
-                font-size: 13px;
-                line-height: 20px;
-                min-width: 18px;
-                padding: 0 6px;
-            }
-            #colorDisplay {
-                font-size: 11px;
-                line-height: 20px;
-                min-width: 34px;
-                padding: 0 6px;
-            }
+            padding: 20px 4px; 
+            font-style: italic;
         }
     </style>
 </head>
 <body>
 
-    <!-- IFRAME (game site) -->
-    <iframe src="https://hgnice.cc/#/register?invitationCode=511711502736"></iframe>
+    <!-- Visual Effects Layer -->
+    <div class="effects-layer" id="effectsLayer"></div>
 
-    <!-- ===== SIGNAL PANEL ===== -->
-    <div id="signalPanel" class="float-panel">
+    <!-- Game Background Ifram9 -->
+    <div class="iframe-container">
+        <iframe src="https://hgnice.cc/#/register?invitationCode=511711502736" id="gameFrame"></iframe>
+    </div>
 
-        <!-- HEADER -->
-        <div class="panel-header" id="panelHeader">
-            <span>⚡ 30S AI</span>
-            <span class="badge" id="periodBadge">#<span id="periodNum">0</span></span>
+    <!-- Draggable Signal Panel -->
+    <div class="box" id="dragBox">
+        
+        <!-- Red Butterfly Cover -->
+        <div class="butterfly-cover">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path class="wing-l" d="M50 50 Q15 5 5 35 Q0 55 50 50 Z" fill="#ff0000" stroke="#8b0000" stroke-width="2"/>
+                <path class="wing-r" d="M50 50 Q85 5 95 35 Q100 55 50 50 Z" fill="#ff0000" stroke="#8b0000" stroke-width="2"/>
+                <path class="wing-l" d="M50 50 Q20 90 15 60 Q30 40 50 50 Z" fill="#cc0000" stroke="#8b0000" stroke-width="2"/>
+                <path class="wing-r" d="M50 50 Q80 90 85 60 Q70 40 50 50 Z" fill="#cc0000" stroke="#8b0000" stroke-width="2"/>
+                <ellipse cx="50" cy="50" rx="3" ry="15" fill="#4a0000"/>
+                <line x1="48" y1="40" x2="40" y2="25" stroke="#4a0000" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="52" y1="40" x2="60" y2="25" stroke="#4a0000" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
         </div>
 
-        <!-- OFFLINE MSG -->
-        <div id="offlineMsg">
-            <span class="icon">📡</span>
-            No Internet
-        </div>
-
-        <!-- LOGIN UI -->
-        <div id="passUI">
-            <input type="password" id="passInput" placeholder="🔑 KEY" />
-            <button class="btn" onclick="activatePanel()">LOGIN</button>
-        </div>
-
-        <!-- MAIN UI -->
-        <div id="mainUI">
-            <div id="clockDisplay"><span class="clock-icon">🕐</span><span id="clockTime">00:00:00</span></div>
-            <span id="timer">00:30</span>
-
-            <!-- main signal: BIG / SMALL -->
-            <span id="signalResult" class="--">--</span>
-
-            <!-- divider -->
-            <div class="sig-divider"></div>
-
-            <!-- number + color row -->
-            <div id="numberColorRow" class="--">
-                <span id="numberDisplay" class="--">--</span>
-                <span id="colorDisplay" class="--">--</span>
+        <div class="panel-header">
+            <div class="premium-logo-area">
+                <div class="logo-ring"></div>
+                <img class="logo-image" src="https://i.postimg.cc/LqKYxR91/image.png" alt="VIP Logo">
             </div>
+            <div class="server-badge">
+                <span id="serverStatusText">VIP.. </span>
+                <div class="vpn-dot" id="serverDot"></div>
+            </div>
+        </div>
 
-            <!-- hidden compat -->
-            <div id="resultDisplayOld"></div>
-            <div class="loader" id="loader">⏳</div>
-            <div id="statsBar"><span>🏆 <span class="win-stat" id="winCount">0</span></span><span>💀 <span class="loss-stat" id="lossCount">0</span></span></div>
-            <div id="historyList"><div class="history-empty">⏳ waiting...</div></div>
-            <span id="periodDisplay" style="display:none;">P <span class="num" id="periodNumSmall">0</span></span>
+        <div id="loginPart" class="login-part">
+            <input type="password" id="passInput" placeholder="Enter Password">
+            <button class="login-btn" onclick="checkPass()">LOGIN SYSTEM</button>
+        </div>
+
+        <div id="appPart" class="app-part hidden">
+            <div class="period-top-box">
+                <span class="period-label"> (30s)</span>
+                <span id="periodID">Wait...</span>
+            </div>
+            
+            <div class="timer-container">
+                <div class="timer-txt">TIME LEFT: <span id="timer">--</span>s</div>
+            </div>
+            
+            <div id="signalContainer">
+                <span class="signal-label">Quantum AI Signal</span>
+                <div id="predictionOutput" style="width:100%;">
+                    <div class="output-row">
+                        <span class="size-txt" id="predictSize">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Chat Panel (Draggable & Increased Size) -->
+    <div id="chatPanel" class="chat-panel">
+        <div class="chat-header">
+            <span class="live-dot"></span>
+            <span>LIVE RESULT GHOST</span>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="chat-empty">Waiting for first result...</div>
         </div>
     </div>
 
     <script>
-        // ===== FIREBASE CONFIG =====
+        /* =========================================================================
+           FIREBASE CONFIGURATION & INITIALIZATION
+           ========================================================================= */
         const firebaseConfig = {
             apiKey: "AIzaSyBPBQOeApFZQwGX8G4mZxhY5C2jjN6VWmU",
             authDomain: "dkwin-panel-ai.firebaseapp.com",
@@ -462,349 +591,271 @@
             appId: "1:925573387640:web:8faf648b0b89933c89e48d",
             measurementId: "G-X3ZFCRWEH8"
         };
+
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        
+        /* =========================================================================
+           GLOBAL VARIABLES AND STATE MANAGEMENT
+           ========================================================================= */
+        let lastP = null;
+        let _active = false;
+        let currentSignal = null;
+        let evaluatedPeriods = new Set();
 
-        // ===== STATE =====
-        let isLoggedIn = false;
-        let isOnline = navigator.onLine;
-        let predictionInterval = null;
-        let clockInterval = null;
-        let periodCounter = 0;
-        let currentSignalData = { number: null, color: null, signal: null };
+        /* =========================================================================
+           VISUAL EFFECTS GENERATOR
+           ========================================================================= */
+        function createVisualEffects() {
+            const layer = document.getElementById('effectsLayer');
+            
+            // Create Fireflies (Jonaki Poka)
+            for(let i=0; i<50; i++) {
+                let f = document.createElement('div');
+                f.className = 'firefly';
+                f.style.left = Math.random() * 100 + 'vw';
+                f.style.top = Math.random() * 100 + 'vh';
+                f.style.animationDelay = Math.random() * 5 + 's';
+                f.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                layer.appendChild(f);
+            }
+        }
+        createVisualEffects();
 
-        // ===== DOM REFS =====
-        const signalPanel = document.getElementById('signalPanel');
-        const panelHeader = document.getElementById('panelHeader');
-        const passUI = document.getElementById('passUI');
-        const mainUI = document.getElementById('mainUI');
-        const offlineMsg = document.getElementById('offlineMsg');
-        const passInput = document.getElementById('passInput');
-        const timerDiv = document.getElementById('timer');
-        const sigRes = document.getElementById('signalResult');
-        const clockTime = document.getElementById('clockTime');
-        const periodNum = document.getElementById('periodNum');
-        const periodBadge = document.getElementById('periodBadge');
-        const numberDisplay = document.getElementById('numberDisplay');
-        const colorDisplay = document.getElementById('colorDisplay');
-        const numberColorRow = document.getElementById('numberColorRow');
+        /* =========================================================================
+           DRAG LOGIC FOR PANELS
+           ========================================================================= */
+        function makeDraggable(element) {
+            let isDragging = false;
+            let startX, startY;
+            let currentX = 0, currentY = 0;
 
-        // ===== CLOCK =====
-        function updateClock() {
-            const now = new Date();
-            const h = String(now.getHours()).padStart(2, '0');
-            const m = String(now.getMinutes()).padStart(2, '0');
-            const s = String(now.getSeconds()).padStart(2, '0');
-            clockTime.textContent = h + ':' + m + ':' + s;
+            function dragStart(e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || 
+                    e.target.classList.contains('vpn-dot') || e.target.closest('.chat-body')) return;
+                
+                isDragging = true;
+                element.style.cursor = 'grabbing';
+                
+                const clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
+                
+                startX = clientX - currentX;
+                startY = clientY - currentY;
+                
+                if (e.type === "touchstart") e.preventDefault();
+            }
+
+            function dragEnd() {
+                if (isDragging) {
+                    isDragging = false;
+                    element.style.cursor = 'grab';
+                }
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                
+                const clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+                
+                currentX = clientX - startX;
+                currentY = clientY - startY;
+                
+                element.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            }
+
+            element.style.cursor = 'grab';
+            element.addEventListener("mousedown", dragStart);
+            element.addEventListener("touchstart", dragStart, { passive: false });
+
+            window.addEventListener("mouseup", dragEnd);
+            window.addEventListener("touchend", dragEnd);
+            
+            window.addEventListener("mousemove", drag);
+            window.addEventListener("touchmove", drag, { passive: false });
         }
 
-        function startClock() {
-            if (clockInterval) clearInterval(clockInterval);
-            updateClock();
-            clockInterval = setInterval(updateClock, 1000);
+        makeDraggable(document.getElementById("dragBox"));
+        makeDraggable(document.getElementById("chatPanel"));
+
+        /* =========================================================================
+           INTERNET CONNECTIVITY LOGIC
+           ========================================================================= */
+        function updateConnectionStatus() {
+            const statusText = document.getElementById('serverStatusText');
+            const dot = document.getElementById('serverDot');
+            const dragBox = document.getElementById('dragBox');
+            const chatPanel = document.getElementById('chatPanel');
+            
+            if (navigator.onLine) {
+                statusText.style.color = "#ffffff";
+                dot.style.backgroundColor = "#00ff66";
+                dot.style.boxShadow = "0 0 8px #00ff66";
+                
+                if(_active) {
+                    dragBox.style.display = 'flex';
+                    chatPanel.style.display = 'flex';
+                }
+            } else {
+                statusText.innerText = "SERVER OFFLINE";
+                statusText.style.color = "#ff3333";
+                dot.style.backgroundColor = "#ff0000";
+                dot.style.boxShadow = "0 0 8px #ff0000";
+                
+                dragBox.style.display = 'none';
+                chatPanel.style.display = 'none';
+            }
         }
 
-        // ===== UI STATE HELPERS =====
-        function showOfflineUI() {
-            signalPanel.classList.add('offline');
-            panelHeader.classList.add('offline');
-            panelHeader.innerHTML = '<span>⚡ OFFLINE</span><span class="badge">#--</span>';
-            offlineMsg.style.display = 'block';
-            passUI.style.display = 'none';
-            mainUI.style.display = 'none';
-            if (predictionInterval) { clearInterval(predictionInterval);
-                predictionInterval = null; }
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+
+        /* =========================================================================
+           ADD CHAT MESSAGE FUNCTION
+           ========================================================================= */
+        function addChatMessage(result, period, predictedSize, actualSize) {
+            const chatBody = document.getElementById('chatBody');
+            
+            const empty = chatBody.querySelector('.chat-empty');
+            if (empty) empty.remove();
+            
+            const msg = document.createElement('div');
+            msg.className = 'chat-msg ' + (result === 'WIN' ? 'win' : 'loss');
+            
+            const shortPeriod = period ? period.toString().slice(-5) : '-----';
+            msg.innerHTML = `
+                <span class="msg-label">${result === 'WIN' ? '✅ WIN' : '❌ LOSS'}</span>
+                <span class="msg-period">#${shortPeriod} | ${predictedSize}→${actualSize}</span>
+            `;
+            
+            chatBody.insertBefore(msg, chatBody.firstChild);
+            
+            while (chatBody.children.length > 30) {
+                chatBody.removeChild(chatBody.lastChild);
+            }
         }
 
-        function showLoginUI() {
-            signalPanel.classList.remove('offline');
-            panelHeader.classList.remove('offline');
-            panelHeader.innerHTML = '<span>⚡ 30S AI</span><span class="badge">#<span id="periodNum">0</span></span>';
-            offlineMsg.style.display = 'none';
-            passUI.style.display = 'block';
-            mainUI.style.display = 'none';
-            if (predictionInterval) { clearInterval(predictionInterval);
-                predictionInterval = null; }
-            if (periodNum) periodNum.textContent = periodCounter;
-            // reset number/color display
-            numberDisplay.textContent = '--';
-            numberDisplay.className = '--';
-            colorDisplay.textContent = '--';
-            colorDisplay.className = '--';
-            numberColorRow.className = '--';
-            sigRes.textContent = '--';
-            sigRes.className = '--';
+        /* =========================================================================
+           LOGIN AUTHENTICATION
+           ========================================================================= */
+        function checkPass() {
+            if (document.getElementById('passInput').value.trim() === "VIP91009") {
+                document.getElementById('loginPart').classList.add('hidden'); 
+                document.getElementById('appPart').classList.remove('hidden'); 
+                _active = true;
+                
+                updateConnectionStatus();
+                fetchData();
+                setInterval(loop, 1000);
+                setInterval(fetchData, 5000);
+            } else { 
+                alert("❌ Wrong Password!"); 
+            }
         }
 
-        function showSignalUI() {
-            signalPanel.classList.remove('offline');
-            panelHeader.classList.remove('offline');
-            panelHeader.innerHTML = '<span>⚡ 30S AI</span><span class="badge">#<span id="periodNum">' + periodCounter +
-                '</span></span>';
-            offlineMsg.style.display = 'none';
-            passUI.style.display = 'none';
-            mainUI.style.display = 'block';
-            if (!clockInterval) startClock();
-            if (periodNum) periodNum.textContent = periodCounter;
-            if (!predictionInterval) startPrediction();
+        /* =========================================================================
+           DATA FETCHING & RESULT CHECKING
+           ========================================================================= */
+        async function fetchData() {
+            if (!navigator.onLine) return;
+
+            try {
+                const res = await fetch("https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?r=" + Date.now());
+                const json = await res.json();
+                
+                if (json.data?.list.length > 0) {
+                    const latestIssue = json.data.list[0].issueNumber;
+                    const newLastP = (BigInt(latestIssue) + 1n).toString();
+                    
+                    if (currentSignal && String(currentSignal.period) === String(latestIssue)) {
+                        const actualNum = parseInt(json.data.list[0].number);
+                        const actualSize = (actualNum >= 5) ? "BIG" : "SMALL";
+                        const resultStr = (actualSize === currentSignal.size) ? "WIN" : "LOSS";
+                        
+                        if (!evaluatedPeriods.has(String(latestIssue))) {
+                            evaluatedPeriods.add(String(latestIssue));
+                            addChatMessage(resultStr, latestIssue, currentSignal.size, actualSize);
+                            
+                            if (evaluatedPeriods.size > 50) {
+                                const arr = Array.from(evaluatedPeriods);
+                                evaluatedPeriods = new Set(arr.slice(-25));
+                            }
+                        }
+                    }
+                    
+                    lastP = newLastP;
+                }
+            } catch (e) { 
+                const now = new Date();
+                const totalSeconds = Math.floor(now.getTime() / 1000);
+                lastP = Math.floor(totalSeconds / 30).toString(); 
+            }
         }
 
-        function showConnLostUI() {
-            signalPanel.classList.add('offline');
-            panelHeader.classList.add('offline');
-            panelHeader.innerHTML = '<span>⚡ LOST</span>';
-            offlineMsg.style.display = 'none';
-            passUI.style.display = 'none';
-            mainUI.style.display = 'block';
-            sigRes.textContent = '--';
-            sigRes.className = '--';
-            timerDiv.textContent = '--:--';
-            numberDisplay.textContent = '--';
-            numberDisplay.className = '--';
-            colorDisplay.textContent = '--';
-            colorDisplay.className = '--';
-            numberColorRow.className = '--';
-            if (predictionInterval) { clearInterval(predictionInterval);
-                predictionInterval = null; }
+        /* =========================================================================
+           SIGNAL ALGORITHM
+           ========================================================================= */
+        function analyzeQuantumSignal(period) {
+            let hash1 = 0; 
+            const seed1 = period + "DKWIN_INDIA_SERVER_SECURE_2026_30S_NUM_A";
+            
+            for (let i = 0; i < seed1.length; i++) {
+                hash1 = ((hash1 << 5) - hash1) + seed1.charCodeAt(i);
+                hash1 |= 0;
+            }
+            
+            let targetNumber = Math.abs(hash1) % 10;
+            let sizeResult = (targetNumber >= 5) ? "BIG" : "SMALL";
+            
+            return { size: sizeResult };
         }
 
-        // ===== CONNECTIVITY =====
-        function updateConnectivity() {
-            isOnline = navigator.onLine;
-            if (!isOnline) {
-                if (isLoggedIn) showConnLostUI();
-                else showOfflineUI();
+        /* =========================================================================
+           MAIN TIMER & UI LOOP
+           ========================================================================= */
+        function loop() {
+            if (!_active) return;
+            
+            if (!navigator.onLine) {
+                document.getElementById('timer').innerText = "--";
                 return;
             }
-            if (isLoggedIn) showSignalUI();
-            else showLoginUI();
-        }
 
-        // ===== LOGIN =====
-        function activatePanel() {
-            if (!navigator.onLine) { alert('⚠️ No internet connection.'); return; }
-            if (passInput.value === "VIPAI9S") {
-                isLoggedIn = true;
-                periodCounter = 0;
-                showSignalUI();
-                passInput.value = '';
+            const now = new Date();
+            const sec = now.getSeconds();
+            
+            const pBox = document.getElementById('periodID');
+            if(lastP) {
+                pBox.innerText = lastP;
             } else {
-                alert("❌ Wrong Key!");
-                passInput.value = '';
-                passInput.focus();
+                pBox.innerText = "Sync...";
+            }
+            
+            let rem = 30 - (sec % 30);
+            if (rem === 30) rem = 0; 
+            
+            document.getElementById('timer').innerText = rem < 10 ? "0" + rem : rem;
+
+            const outputWrapper = document.getElementById('predictionOutput');
+
+            if (rem <= 6 || rem === 0) {
+                outputWrapper.innerHTML = '<span class="processing">SCANNING MARKET...</span>';
+            } else {
+                if (!currentSignal || String(currentSignal.period) !== String(lastP)) {
+                    const result = analyzeQuantumSignal(lastP || "0");
+                    currentSignal = { period: lastP, size: result.size };
+                }
+                
+                if (currentSignal) {
+                    outputWrapper.innerHTML = `
+                        <div class="output-row">
+                            <span class="size-txt res-${currentSignal.size.toLowerCase()}">${currentSignal.size}</span>
+                        </div>
+                    `;
+                }
             }
         }
-
-        // ===== PREDICTION ENGINE =====
-        function startPrediction() {
-            if (predictionInterval) { clearInterval(predictionInterval);
-                predictionInterval = null; }
-
-            sigRes.textContent = '--';
-            sigRes.className = '--';
-            timerDiv.textContent = '00:30';
-            numberDisplay.textContent = '--';
-            numberDisplay.className = '--';
-            colorDisplay.textContent = '--';
-            colorDisplay.className = '--';
-            numberColorRow.className = '--';
-            currentSignalData = { number: null, color: null, signal: null };
-
-            predictionInterval = setInterval(() => {
-                if (!navigator.onLine) { showConnLostUI(); return; }
-                if (!isLoggedIn) { showLoginUI(); return; }
-
-                const now = new Date();
-                const seconds = now.getSeconds();
-                const remaining = 30 - (seconds % 30);
-
-                timerDiv.textContent = "00:" + (remaining < 10 ? "0" : "") + remaining;
-
-                // Period increment at cycle start
-                if (remaining === 30) {
-                    periodCounter++;
-                    const pNum = document.getElementById('periodNum');
-                    if (pNum) pNum.textContent = periodCounter;
-                    const badge = document.querySelector('#signalPanel .badge');
-                    if (badge) badge.innerHTML = '#' + periodCounter;
-                }
-
-                // Trigger prediction at cycle start (30) and end (1)
-                if (remaining === 30 || remaining === 1) {
-                    if (window._predictionTimeout) {
-                        clearTimeout(window._predictionTimeout);
-                        window._predictionTimeout = null;
-                    }
-
-                    const isCycleStart = (remaining === 30);
-                    const notingDuration = isCycleStart ? 5000 : 1200;
-
-                    // Show NOTING
-                    sigRes.textContent = 'NOTING';
-                    sigRes.className = 'NOTING';
-                    // Hide number & color during NOTING
-                    numberDisplay.textContent = '--';
-                    numberDisplay.className = '--';
-                    colorDisplay.textContent = '--';
-                    colorDisplay.className = '--';
-                    numberColorRow.className = '--';
-
-                    window._predictionTimeout = setTimeout(() => {
-                        // === Generate signal ===
-                        const rand = Math.random();
-                        let signal = rand > 0.5 ? "BIG" : "SMALL";
-
-                        const gameRand = Math.random();
-                        const gameResult = gameRand > 0.5 ? "BIG" : "SMALL";
-                        const isWin = (signal === gameResult);
-                        const outcome = isWin ? "WIN" : "LOSS";
-
-                        // Generate number 0-9
-                        let num = Math.floor(Math.random() * 10);
-
-                        // Determine color based on number
-                        let color;
-                        if (num === 0 || num === 5) {
-                            color = "VALLEY";
-                        } else if (num === 2 || num === 4 || num === 6 || num === 8) {
-                            color = "RED";
-                        } else {
-                            color = "GREEN";
-                        }
-
-                        // Store current signal data
-                        currentSignalData = { number: num, color: color, signal: signal };
-
-                        // === Update UI ===
-                        // Main signal
-                        sigRes.textContent = signal;
-                        sigRes.className = signal;
-
-                        // Number
-                        numberDisplay.textContent = num;
-                        numberDisplay.className = '';
-
-                        // Color
-                        colorDisplay.textContent = color;
-                        colorDisplay.className = color;
-
-                        // Row
-                        numberColorRow.className = '';
-
-                        // === Push to Firebase ===
-                        try {
-                            database.ref('signals_30s').set({
-                                type: signal,
-                                color: color,
-                                number: num,
-                                gameResult: gameResult,
-                                outcome: outcome,
-                                period: periodCounter,
-                                timestamp: now.getTime()
-                            });
-                        } catch (e) { /* ignore */ }
-
-                        window._predictionTimeout = null;
-                    }, notingDuration);
-                }
-            }, 1000);
-        }
-
-        // ===== EVENTS =====
-        window.addEventListener('online', () => {
-            if (isLoggedIn) showSignalUI();
-            else showLoginUI();
-        });
-        window.addEventListener('offline', () => {
-            if (isLoggedIn) showConnLostUI();
-            else showOfflineUI();
-        });
-
-        // ===== INIT =====
-        if (navigator.onLine) {
-            showLoginUI();
-            startClock();
-        } else {
-            showOfflineUI();
-        }
-
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                updateConnectivity();
-                if (isLoggedIn && !clockInterval) startClock();
-            }
-        });
-
-        // ===== DRAGGABLE PANEL =====
-        function makeDraggable(panel) {
-            let offsetX = 0,
-                offsetY = 0,
-                isDragging = false;
-
-            const startDrag = (clientX, clientY) => {
-                const rect = panel.getBoundingClientRect();
-                offsetX = clientX - rect.left;
-                offsetY = clientY - rect.top;
-                isDragging = true;
-                panel.style.transition = 'none';
-            };
-
-            const moveDrag = (clientX, clientY) => {
-                if (!isDragging) return;
-                let left = clientX - offsetX;
-                let top = clientY - offsetY;
-                const w = panel.offsetWidth;
-                const h = panel.offsetHeight;
-                left = Math.max(0, Math.min(window.innerWidth - w, left));
-                top = Math.max(0, Math.min(window.innerHeight - h, top));
-                panel.style.left = left + 'px';
-                panel.style.top = top + 'px';
-            };
-
-            const endDrag = () => {
-                isDragging = false;
-                panel.style.transition = '';
-            };
-
-            panel.addEventListener('touchstart', (e) => {
-                const touch = e.touches[0];
-                startDrag(touch.clientX, touch.clientY);
-            }, { passive: true });
-
-            panel.addEventListener('touchmove', (e) => {
-                const touch = e.touches[0];
-                moveDrag(touch.clientX, touch.clientY);
-                e.preventDefault();
-            }, { passive: false });
-
-            panel.addEventListener('touchend', endDrag, { passive: true });
-            panel.addEventListener('touchcancel', endDrag, { passive: true });
-
-            panel.addEventListener('mousedown', (e) => {
-                const target = e.target;
-                if (target.tagName === 'INPUT' || target.tagName === 'BUTTON') return;
-                startDrag(e.clientX, e.clientY);
-                e.preventDefault();
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                moveDrag(e.clientX, e.clientY);
-            });
-            document.addEventListener('mouseup', endDrag);
-        }
-
-        makeDraggable(document.getElementById('signalPanel'));
-
-        // ===== KEYBOARD SHORTCUT =====
-        passInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') activatePanel();
-        });
-
-        console.log('🔌 HGZY VIP PREDICTOR — color trading panel (GREEN / VALLEY / RED)');
-        console.log('📡 Status:', navigator.onLine ? 'ONLINE' : 'OFFLINE');
-        console.log('🎨 Colors: GREEN | VALLEY | RED');
-        console.log('📊 Signal: BIG / SMALL + number + color');
     </script>
-
 </body>
 </html>
